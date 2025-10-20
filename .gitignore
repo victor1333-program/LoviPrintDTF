@@ -51,3 +51,7 @@ next
 
 # Backups (datos sensibles - no subir a GitHub)
 /backups
+
+# Logs del servidor
+server.log
+*.log
