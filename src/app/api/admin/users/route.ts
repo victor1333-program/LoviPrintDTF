@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
         isProfessional: true,
         professionalDiscount: true,
         shippingAddress: true,
-        billingAddress: true,
         createdAt: true,
         loyaltyPoints: true,
         totalSpent: true,

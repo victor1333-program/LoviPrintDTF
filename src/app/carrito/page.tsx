@@ -7,10 +7,12 @@ import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Badge } from "@/components/ui/Badge"
-import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket } from "lucide-react"
+import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
+import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
+import { AuthModal } from "@/components/AuthModal"
 
 interface CartItem {
   id: string
@@ -34,6 +36,8 @@ export default function CarritoPage() {
   const [pointsDiscount, setPointsDiscount] = useState(0)
   const [availablePoints, setAvailablePoints] = useState(0)
   const [useMeterVouchers, setUseMeterVouchers] = useState(true)
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
     loadCart()
@@ -110,7 +114,7 @@ export default function CarritoPage() {
 
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
-      toast.error('Por favor ingresa un código de bono')
+      toast.error('Por favor ingresa un código de descuento')
       return
     }
 
@@ -128,13 +132,13 @@ export default function CarritoPage() {
 
       if (data.isValid) {
         setAppliedVoucher(data)
-        toast.success('Bono aplicado correctamente')
+        toast.success('Código de descuento aplicado correctamente')
       } else {
-        toast.error(data.error || 'Bono no válido')
+        toast.error(data.error || 'Código de descuento no válido')
       }
     } catch (error) {
       console.error('Error applying voucher:', error)
-      toast.error('Error al aplicar bono')
+      toast.error('Error al aplicar código de descuento')
     }
   }
 
@@ -143,7 +147,19 @@ export default function CarritoPage() {
     setPointsDiscount(discount)
   }
 
-  const proceedToCheckout = async () => {
+  const openCheckoutModal = () => {
+    // Validar que el usuario esté autenticado
+    if (!session?.user) {
+      toast.error('Debes iniciar sesión para realizar un pedido')
+      setShowAuthModal(true)
+      return
+    }
+
+    // Abrir el modal
+    setShowCheckoutModal(true)
+  }
+
+  const handleCheckoutSuccess = async (checkoutData: CheckoutData) => {
     setProcessingCheckout(true)
 
     try {
@@ -152,9 +168,10 @@ export default function CarritoPage() {
 
       // Crear el pedido
       const orderPayload = {
-        customerName: session?.user?.name || '',
-        customerEmail: session?.user?.email || '',
-        customerPhone: session?.user?.phone || '',
+        customerName: checkoutData.customerName,
+        customerEmail: checkoutData.customerEmail,
+        customerPhone: checkoutData.customerPhone,
+        shippingAddress: checkoutData.shippingAddress,
         items: cart.items.map((item: CartItem) => ({
           productId: item.product.id,
           productName: item.product.name,
@@ -173,6 +190,7 @@ export default function CarritoPage() {
         pointsUsed: pointsToUse,
         pointsDiscount: pointsDiscount,
         voucherId: appliedVoucher?.voucher?.code,
+        discountCodeId: appliedVoucher?.discountCode?.code,
         useMeterVouchers, // Indicar si se usan bonos de metros
         meterVouchersInfo: useMeterVouchers ? {
           metersNeeded: cart.meterVouchers.totalMetersNeeded,
@@ -192,6 +210,9 @@ export default function CarritoPage() {
       }
 
       const order = await res.json()
+
+      // Cerrar modal
+      setShowCheckoutModal(false)
 
       // Limpiar carrito
       await fetch('/api/cart', { method: 'DELETE' })
@@ -245,9 +266,12 @@ export default function CarritoPage() {
   const subtotal = cart.subtotal || 0
   const voucherDiscount = appliedVoucher?.discountAmount || 0
 
-  // Si usa bonos de metros y tiene envíos disponibles, envío gratis
+  // Verificar si hay envío gratuito por código de descuento
+  const hasFreeShippingCode = appliedVoucher?.discountType === 'FREE_SHIPPING'
+
+  // Si usa bonos de metros y tiene envíos disponibles, o tiene código de envío gratis, envío gratis
   const hasVoucherShipment = cart.meterVouchers?.canUseVoucherShipment || false
-  const shipping = hasVoucherShipment || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const shipping = hasVoucherShipment || hasFreeShippingCode || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
 
   const taxableAmount = subtotal - voucherDiscount - pointsDiscount
   const tax = taxableAmount * TAX_RATE
@@ -296,9 +320,13 @@ export default function CarritoPage() {
                       </div>
 
                       {item.fileName && (
-                        <p className="text-sm text-gray-600 mb-3">
-                          Archivo: {item.fileName}
-                        </p>
+                        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-blue-900">Diseño adjuntado:</p>
+                            <p className="text-xs text-blue-700 truncate">{item.fileName}</p>
+                          </div>
+                        </div>
                       )}
 
                       {/* Mostrar extras si los hay */}
@@ -308,7 +336,7 @@ export default function CarritoPage() {
                           <div className="flex flex-wrap gap-2">
                             {item.customizations.extras.prioritize && (
                               <Badge variant="warning" className="text-xs">
-                                ⚡ Priorizar Pedido (+{formatCurrency(item.customizations.extras.prioritize.price)})
+                                ⚡ Priorizar Pedido (Calculado sobre total de metros)
                               </Badge>
                             )}
                             {item.customizations.extras.layout && (
@@ -434,11 +462,11 @@ export default function CarritoPage() {
                   </div>
                 )}
 
-                {/* Aplicar bono de descuento (solo si no hay bonos de metros aplicables) */}
+                {/* Aplicar código de descuento (solo si no hay bonos de metros aplicables) */}
                 {!cart.meterVouchers?.canUseVoucherMeters && (
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Código de Bono de Descuento
+                      Código de Descuento
                     </label>
                     <div className="flex gap-2">
                       <Input
@@ -465,9 +493,21 @@ export default function CarritoPage() {
                       )}
                     </div>
                     {appliedVoucher && (
-                      <p className="text-sm text-green-600 mt-2">
-                        Bono aplicado: {appliedVoucher.voucher.code}
-                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm text-green-600">
+                          Código aplicado: {appliedVoucher.voucher?.code || appliedVoucher.discountCode?.code}
+                        </p>
+                        {appliedVoucher.discountType === 'FREE_SHIPPING' && (
+                          <p className="text-sm text-green-600 font-semibold">
+                            ✓ Envío gratuito aplicado
+                          </p>
+                        )}
+                        {appliedVoucher.discountType === 'FREE_PRODUCT' && (
+                          <p className="text-sm text-green-600 font-semibold">
+                            ✓ Producto gratuito aplicado
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -488,6 +528,21 @@ export default function CarritoPage() {
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="font-semibold">{formatCurrency(subtotal)}</span>
                   </div>
+
+                  {/* Mostrar priorización global si está habilitada */}
+                  {cart.prioritization?.enabled && (
+                    <div className="flex justify-between text-sm border-l-4 border-orange-500 pl-2 bg-orange-50 py-2 -mx-2 px-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-orange-900 font-semibold">⚡ Priorizar Pedido</span>
+                        <span className="text-xs text-orange-700">
+                          ({cart.prioritization.totalMeters} metros totales)
+                        </span>
+                      </div>
+                      <span className="font-bold text-orange-600">
+                        {formatCurrency(cart.prioritization.price)}
+                      </span>
+                    </div>
+                  )}
 
                   {voucherDiscount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
@@ -536,15 +591,33 @@ export default function CarritoPage() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={proceedToCheckout}
-                  disabled={processingCheckout}
-                  size="lg"
-                  className="w-full"
-                >
-                  Proceder al Pago
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </Button>
+                {!session?.user ? (
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-800 text-center">
+                        Debes iniciar sesión para proceder con el pedido
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => setShowAuthModal(true)}
+                      size="lg"
+                      className="w-full"
+                    >
+                      Iniciar Sesión
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={openCheckoutModal}
+                    disabled={processingCheckout}
+                    size="lg"
+                    className="w-full"
+                  >
+                    {processingCheckout ? 'Procesando...' : 'Proceder al Pago'}
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                  </Button>
+                )}
 
                 <Button
                   variant="ghost"
@@ -558,6 +631,30 @@ export default function CarritoPage() {
           </div>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSuccess={handleCheckoutSuccess}
+        orderSummary={{
+          subtotal: subtotal,
+          discount: voucherDiscount + pointsDiscount,
+          tax: tax,
+          shipping: shipping,
+          total: total
+        }}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false)
+          loadCart() // Recargar carrito después de iniciar sesión
+        }}
+      />
     </div>
   )
 }

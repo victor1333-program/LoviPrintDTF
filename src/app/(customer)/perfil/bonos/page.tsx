@@ -181,7 +181,7 @@ export default function BonosPage() {
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Activo
                               </Badge>
-                              <Badge variant="outline">
+                              <Badge variant="info">
                                 Código: {voucher.code}
                               </Badge>
                             </div>
@@ -274,7 +274,7 @@ export default function BonosPage() {
                         <p className="text-sm text-gray-600">Código: {voucher.code}</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-gray-600">
+                    <Badge variant="default" className="text-gray-600">
                       Agotado
                     </Badge>
                   </div>

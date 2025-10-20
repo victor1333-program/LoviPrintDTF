@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { sendOrderStatusUpdateEmail } from '@/lib/email'
 
 /**
  * POST /api/admin/print-queue/[id]/receive
@@ -8,7 +9,7 @@ import { prisma } from '@/lib/prisma'
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -17,7 +18,7 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Actualizar estado del pedido
     const order = await prisma.order.update({
@@ -33,6 +34,11 @@ export async function POST(
         }
       }
     })
+
+    // Enviar notificación al cliente
+    sendOrderStatusUpdateEmail(order, 'IN_PRODUCTION').catch(err =>
+      console.error('Error sending status update email:', err)
+    )
 
     return NextResponse.json({ success: true, order })
   } catch (error) {

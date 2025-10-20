@@ -68,15 +68,15 @@ export default function ContactoPage() {
     {
       icon: <Phone className="w-6 h-6" />,
       title: 'Teléfono',
-      value: 'Por confirmar',
-      link: null,
+      value: '+34 614 04 02 96',
+      link: 'tel:+34614040296',
       color: 'from-green-500 to-green-600'
     },
     {
       icon: <MapPin className="w-6 h-6" />,
       title: 'Dirección',
-      value: 'Calle Antonio López del Oro 7, Hellín, Albacete',
-      link: 'https://maps.google.com/?q=Calle+Antonio+López+del+Oro+7+Hellín+Albacete',
+      value: 'Calle Antonio Lopes del Oro 7, Hellín, Albacete',
+      link: 'https://maps.app.goo.gl/xFaTPNsGpKBAb6Ku6',
       color: 'from-red-500 to-red-600'
     },
     {
@@ -302,25 +302,31 @@ export default function ContactoPage() {
                 </CardContent>
               </Card>
 
-              {/* Location Map Placeholder */}
+              {/* Location Map */}
               <Card>
                 <CardContent className="p-0">
-                  <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 text-sm">
-                        Calle Antonio López del Oro 7<br />
-                        Hellín, Albacete
-                      </p>
-                      <a
-                        href="https://maps.google.com/?q=Calle+Antonio+López+del+Oro+7+Hellín+Albacete"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-orange-600 hover:underline text-sm mt-2 inline-block"
-                      >
-                        Ver en Google Maps →
-                      </a>
-                    </div>
+                  <div className="aspect-video rounded-lg overflow-hidden">
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3118.789!2d-1.6984334!3d38.5085122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd642fa3cf6f90ad%3A0xdfb28a45482e45a!2sC.%20de%20Antonio%20L%C3%B3pez%20del%20Oro%2C%207%2C%2002400%20Hell%C3%ADn%2C%20Albacete!5e0!3m2!1ses!2ses!4v1697000000000!5m2!1ses!2ses"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Ubicación de LoviPrintDTF"
+                    ></iframe>
+                  </div>
+                  <div className="p-4 bg-gray-50 text-center">
+                    <a
+                      href="https://maps.app.goo.gl/xFaTPNsGpKBAb6Ku6"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-600 hover:underline text-sm font-medium inline-flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Abrir en Google Maps
+                    </a>
                   </div>
                 </CardContent>
               </Card>

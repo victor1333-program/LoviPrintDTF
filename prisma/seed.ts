@@ -833,6 +833,37 @@ async function main() {
   ])
   console.log('✅ Settings created')
 
+  // 8. Crear métodos de envío
+  await Promise.all([
+    prisma.shippingMethod.upsert({
+      where: { id: 'shipping-standard' },
+      update: {},
+      create: {
+        id: 'shipping-standard',
+        name: 'Envío Estándar 24/48h',
+        description: 'Entrega en 24-48 horas laborables',
+        price: 6.00,
+        estimatedDays: '24-48h',
+        isActive: true,
+        order: 1,
+      },
+    }),
+    prisma.shippingMethod.upsert({
+      where: { id: 'shipping-express' },
+      update: {},
+      create: {
+        id: 'shipping-express',
+        name: 'Envío Urgente 24h',
+        description: 'Entrega urgente en 24 horas',
+        price: 12.00,
+        estimatedDays: '24h',
+        isActive: true,
+        order: 2,
+      },
+    }),
+  ])
+  console.log('✅ Shipping methods created')
+
   console.log('🎉 Seed completed successfully!')
 }
 

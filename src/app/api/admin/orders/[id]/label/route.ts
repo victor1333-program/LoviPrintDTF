@@ -9,7 +9,7 @@ import { GLSService } from '@/lib/services/gls-service'
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -18,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Obtener el pedido con su shipment
     const order = await prisma.order.findUnique({

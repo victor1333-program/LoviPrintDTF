@@ -5,7 +5,7 @@ import OrdersTable from "@/components/admin/OrdersTable"
 import TrackingUpdateButton from "@/components/admin/TrackingUpdateButton"
 
 export default async function PedidosPage() {
-  const orders = await prisma.order.findMany({
+  const ordersRaw = await prisma.order.findMany({
     orderBy: {
       createdAt: 'desc'
     },
@@ -21,9 +21,29 @@ export default async function PedidosPage() {
           trackingNumber: true,
           glsReference: true
         }
+      },
+      invoice: {
+        select: {
+          id: true,
+          invoiceNumber: true,
+          pdfUrl: true
+        }
       }
     }
   })
+
+  // Serializar los Decimals a números para el Client Component
+  const orders = ordersRaw.map(order => ({
+    ...order,
+    subtotal: Number(order.subtotal),
+    discountAmount: Number(order.discountAmount),
+    taxAmount: Number(order.taxAmount),
+    shippingCost: Number(order.shippingCost),
+    totalPrice: Number(order.totalPrice),
+    metersOrdered: order.metersOrdered ? Number(order.metersOrdered) : null,
+    pricePerMeter: order.pricePerMeter ? Number(order.pricePerMeter) : null,
+    pointsDiscount: order.pointsDiscount ? Number(order.pointsDiscount) : null,
+  }))
 
   return (
     <div>

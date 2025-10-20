@@ -87,6 +87,24 @@ export async function GET(request: NextRequest) {
         priceCalc = calculateUnitPrice(qty, item.product.priceRanges)
       }
 
+      // IMPORTANTE: Sumar extras al subtotal del item (excepto priorización que es global)
+      let extrasTotal = 0
+      const customizations = item.customizations as any
+      if (customizations?.extras) {
+        // Maquetación y Corte se suman por item
+        if (customizations.extras.layout) {
+          extrasTotal += Number(customizations.extras.layout.price || 0)
+        }
+        if (customizations.extras.cutting) {
+          extrasTotal += Number(customizations.extras.cutting.price || 0)
+        }
+        // NOTA: Priorización NO se suma aquí, se calculará globalmente más adelante
+      }
+
+      // Actualizar subtotal del item con extras
+      priceCalc.subtotal += extrasTotal
+      priceCalc.extrasTotal = extrasTotal
+
       // Si es producto DTF, sumar metros necesarios
       if (isDTFProduct) {
         totalMetersNeeded += qty
@@ -99,6 +117,35 @@ export async function GET(request: NextRequest) {
         isDTFProduct,
       }
     })
+
+    // Calcular PRIORIZACIÓN GLOBAL (sobre el total de metros DTF del carrito)
+    let prioritizationPrice = 0
+    let hasPrioritization = false
+
+    // Verificar si algún item DTF tiene priorización seleccionada
+    for (const item of itemsWithPrices) {
+      const customizations = item.customizations as any
+      if (item.isDTFProduct && customizations?.extras?.prioritize) {
+        hasPrioritization = true
+        break
+      }
+    }
+
+    // Si hay priorización, calcular precio según TOTAL de metros DTF
+    if (hasPrioritization && totalMetersNeeded > 0) {
+      // Tabla de precios de priorización (misma que en el frontend)
+      const PRIORITIZE_PRICING: Record<number, number> = {
+        1: 4.5, 2: 4.5, 3: 4.5, 4: 4.5, 5: 6, 6: 7.5, 7: 9, 8: 10.5, 9: 12, 10: 13.5,
+        11: 15, 12: 16.5, 13: 18, 14: 19.5, 15: 21, 16: 22.5, 17: 24, 18: 25.5, 19: 27, 20: 28.5,
+        21: 30, 22: 31.5, 23: 33, 24: 34.5, 25: 36, 26: 37.5, 27: 39, 28: 40.5, 29: 42, 30: 43.5,
+        31: 45, 32: 46.5, 33: 48, 34: 49.5, 35: 51, 36: 52.5, 37: 54, 38: 55.5, 39: 57, 40: 58.5,
+        41: 60, 42: 61.5, 43: 63, 44: 64.5, 45: 66, 46: 67.5, 47: 69, 48: 70.5, 49: 72, 50: 73.5
+      }
+
+      const meters = Math.floor(totalMetersNeeded)
+      prioritizationPrice = PRIORITIZE_PRICING[meters] || PRIORITIZE_PRICING[50] || 0
+      subtotal += prioritizationPrice // Sumar al subtotal global
+    }
 
     // Calcular si se pueden aplicar bonos (total o parcialmente)
     const canUseVoucherMeters = totalMetersNeeded > 0 && totalMetersAvailable >= totalMetersNeeded
@@ -155,6 +202,11 @@ export async function GET(request: NextRequest) {
       items: itemsWithPrices,
       subtotal: finalSubtotal, // Subtotal ajustado si usa bonos
       originalSubtotal: subtotal, // Subtotal original sin bonos
+      prioritization: {
+        enabled: hasPrioritization,
+        price: prioritizationPrice,
+        totalMeters: totalMetersNeeded,
+      },
       meterVouchers: {
         available: availableMeterVouchers.length > 0,
         vouchers: availableMeterVouchers,
@@ -233,16 +285,22 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Verificar si el producto ya está en el carrito
-    const existingItem = await prisma.cartItem.findFirst({
-      where: {
-        cartId: cart.id,
-        productId,
-      },
-    })
+    // Si hay archivo adjunto, SIEMPRE crear un nuevo item (para permitir múltiples diseños)
+    // Si NO hay archivo, buscar item existente y actualizar cantidad
+    let existingItem = null
+
+    if (!fileUrl && !fileName) {
+      existingItem = await prisma.cartItem.findFirst({
+        where: {
+          cartId: cart.id,
+          productId,
+          fileName: null, // Solo agrupar items SIN archivos
+        },
+      })
+    }
 
     if (existingItem) {
-      // Actualizar cantidad
+      // Actualizar cantidad del item existente (solo para items sin archivos)
       const newQuantity = Number(existingItem.quantity) + Number(quantity)
 
       let newPriceCalc
@@ -266,7 +324,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } else {
-      // Crear nuevo item
+      // Crear nuevo item (siempre para items con archivos, o si no existe item sin archivo)
       await prisma.cartItem.create({
         data: {
           cartId: cart.id,

@@ -4,8 +4,20 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { prisma } from '@/lib/prisma'
+import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Aplicar rate limiting para uploads
+  const identifier = getRateLimitIdentifier(request)
+  const rateLimit = applyRateLimit(identifier, RATE_LIMIT_CONFIGS.upload)
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Demasiados uploads. Por favor, espera un momento.' },
+      { status: 429, headers: rateLimit.headers }
+    )
+  }
+
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -14,6 +26,54 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { error: 'No se ha proporcionado ningún archivo' },
+        { status: 400 }
+      )
+    }
+
+    // VALIDACIONES DE SEGURIDAD - Ejecutar ANTES de cualquier procesamiento
+
+    // 1. Validar tipo de archivo
+    const allowedTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'application/pdf',
+      'image/vnd.adobe.photoshop',
+      'application/postscript',
+      'image/svg+xml'
+    ]
+
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: 'Tipo de archivo no permitido. Solo se aceptan: PNG, JPG, PDF, PSD, AI, SVG' },
+        { status: 400 }
+      )
+    }
+
+    // 2. Validar extensión del archivo (protección adicional contra cambio de MIME)
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.pdf', '.psd', '.ai', '.svg']
+    const fileExt = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+
+    if (!allowedExtensions.includes(fileExt)) {
+      return NextResponse.json(
+        { error: 'Extensión de archivo no permitida' },
+        { status: 400 }
+      )
+    }
+
+    // 3. Validar tamaño del archivo (50MB para archivos de diseño)
+    const maxSize = 50 * 1024 * 1024 // 50MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: 'El archivo es demasiado grande. Máximo 50MB' },
+        { status: 400 }
+      )
+    }
+
+    // 4. Validar nombre del archivo (prevenir path traversal)
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+      return NextResponse.json(
+        { error: 'Nombre de archivo inválido' },
         { status: 400 }
       )
     }
@@ -65,30 +125,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function uploadToLocal(file: File, buffer: Buffer) {
-  // Validar tipo de archivo
-  const allowedTypes = [
-    'image/png',
-    'image/jpeg',
-    'application/pdf',
-    'image/vnd.adobe.photoshop',
-    'application/postscript'
-  ]
-
-  if (!allowedTypes.includes(file.type)) {
-    return NextResponse.json(
-      { error: 'Tipo de archivo no permitido. Solo PNG y PDF' },
-      { status: 400 }
-    )
-  }
-
-  // Validar tamaño (100MB por defecto para local)
-  const maxSize = 100 * 1024 * 1024
-  if (file.size > maxSize) {
-    return NextResponse.json(
-      { error: 'El archivo es demasiado grande. Máximo 100MB' },
-      { status: 400 }
-    )
-  }
+  // Las validaciones ya se realizaron en el POST handler principal
 
   // Crear directorio si no existe
   const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'designs')

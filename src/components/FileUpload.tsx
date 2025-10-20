@@ -3,12 +3,20 @@
 import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { Button } from "./ui/Button"
-import { Upload, X, FileImage, CheckCircle2 } from "lucide-react"
+import { Upload, X, FileImage, CheckCircle2, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
 
+interface UploadedFileData {
+  url: string
+  name: string
+  size: number
+  publicId?: string
+  metadata?: any
+}
+
 interface FileUploadProps {
-  onFileUpload: (file: File) => void
-  currentFile?: File | null
+  onFileUpload: (fileData: UploadedFileData) => void
+  currentFile?: UploadedFileData | null
   onRemove?: () => void
 }
 
@@ -27,8 +35,45 @@ export function FileUpload({ onFileUpload, currentFile, onRemove }: FileUploadPr
       return
     }
 
-    onFileUpload(file)
-    toast.success("Archivo cargado correctamente")
+    // Subir archivo al servidor
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'customer-designs')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Error al subir el archivo')
+      }
+
+      const data = await response.json()
+
+      if (!data.success || !data.fileUrl) {
+        throw new Error('No se recibió la URL del archivo')
+      }
+
+      // Pasar los datos del archivo subido
+      onFileUpload({
+        url: data.fileUrl,
+        name: data.fileName || file.name,
+        size: data.fileSize || file.size,
+        publicId: data.publicId,
+        metadata: data.metadata,
+      })
+
+      toast.success("Archivo subido correctamente")
+    } catch (error: any) {
+      console.error('Error uploading file:', error)
+      toast.error(error.message || "Error al subir el archivo")
+    } finally {
+      setUploading(false)
+    }
   }, [onFileUpload])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -42,8 +87,27 @@ export function FileUpload({ onFileUpload, currentFile, onRemove }: FileUploadPr
     },
     maxFiles: 1,
     multiple: false,
+    disabled: uploading,
   })
 
+  // Mostrar estado de carga
+  if (uploading) {
+    return (
+      <div className="border-2 border-blue-500 rounded-lg p-6 bg-blue-50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">Subiendo archivo...</p>
+            <p className="text-sm text-gray-600">Por favor espera</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar archivo subido
   if (currentFile) {
     return (
       <div className="border-2 border-green-500 rounded-lg p-6 bg-green-50">
@@ -57,6 +121,9 @@ export function FileUpload({ onFileUpload, currentFile, onRemove }: FileUploadPr
               <p className="text-sm text-gray-600">
                 {(currentFile.size / (1024 * 1024)).toFixed(2)} MB
               </p>
+              {currentFile.url && (
+                <p className="text-xs text-green-600 mt-1">✓ Archivo guardado en el servidor</p>
+              )}
             </div>
           </div>
           {onRemove && (

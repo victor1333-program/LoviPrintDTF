@@ -33,6 +33,16 @@ interface Setting {
   category: string
 }
 
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  estimatedDays: string | null
+  isActive: boolean
+  order: number
+}
+
 export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState<Tab>('general')
   const [settings, setSettings] = useState<Record<string, Setting[]>>({})
@@ -45,15 +55,40 @@ export default function ConfiguracionPage() {
   const [testingCloudinary, setTestingCloudinary] = useState(false)
   const [testingGLS, setTestingGLS] = useState(false)
   const [testingStripe, setTestingStripe] = useState(false)
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+  const [editingMethod, setEditingMethod] = useState<ShippingMethod | null>(null)
+  const [showMethodModal, setShowMethodModal] = useState(false)
 
   useEffect(() => {
     loadSettings()
+    loadShippingMethods()
   }, [])
+
+  const loadShippingMethods = async () => {
+    try {
+      const res = await fetch('/api/admin/shipping-methods')
+      const data = await res.json()
+      setShippingMethods(data)
+    } catch (error) {
+      console.error('Error loading shipping methods:', error)
+    }
+  }
 
   const loadSettings = async () => {
     try {
       const res = await fetch('/api/settings')
+
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${res.statusText}`)
+      }
+
       const data = await res.json()
+
+      // Verificar si la respuesta es un error
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
       setSettings(data)
 
       // Inicializar formData con los valores actuales
@@ -201,6 +236,57 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const handleSaveShippingMethod = async (method: Partial<ShippingMethod>) => {
+    try {
+      if (editingMethod?.id) {
+        // Actualizar
+        const res = await fetch(`/api/admin/shipping-methods/${editingMethod.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(method),
+        })
+
+        if (!res.ok) throw new Error('Error updating method')
+
+        toast.success('Método de envío actualizado')
+      } else {
+        // Crear
+        const res = await fetch('/api/admin/shipping-methods', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(method),
+        })
+
+        if (!res.ok) throw new Error('Error creating method')
+
+        toast.success('Método de envío creado')
+      }
+
+      await loadShippingMethods()
+      setShowMethodModal(false)
+      setEditingMethod(null)
+    } catch (error) {
+      toast.error('Error al guardar método de envío')
+    }
+  }
+
+  const handleDeleteShippingMethod = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este método de envío?')) return
+
+    try {
+      const res = await fetch(`/api/admin/shipping-methods/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) throw new Error('Error deleting method')
+
+      toast.success('Método de envío eliminado')
+      await loadShippingMethods()
+    } catch (error) {
+      toast.error('Error al eliminar método de envío')
+    }
+  }
+
   const tabs = [
     { id: 'general' as Tab, label: 'General', icon: Settings },
     { id: 'whatsapp' as Tab, label: 'WhatsApp', icon: MessageCircle },
@@ -287,7 +373,45 @@ export default function ConfiguracionPage() {
     )
   }
 
-  const currentSettings = settings[activeTab] || []
+  // Definir orden personalizado para los campos de envío
+  const shippingFieldOrder = [
+    'gls_enabled',
+    'gls_username',
+    'gls_password',
+    'gls_client_id',
+    'gls_api_url',
+    'gls_test_mode',
+    'gls_sender_name',
+    'gls_sender_address',
+    'gls_sender_city',
+    'gls_sender_zipcode',
+    'gls_sender_country',
+    'gls_sender_phone',
+    'gls_sender_email',
+    'free_shipping_threshold',
+    'shipping_provider',
+  ]
+
+  // Obtener settings y ordenarlos si es la pestaña de envíos
+  let currentSettings = settings[activeTab] || []
+
+  if (activeTab === 'shipping' && currentSettings.length > 0) {
+    currentSettings = [...currentSettings].sort((a, b) => {
+      const indexA = shippingFieldOrder.indexOf(a.key)
+      const indexB = shippingFieldOrder.indexOf(b.key)
+
+      // Si ambos están en el orden personalizado, usar ese orden
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB
+      }
+      // Si solo A está en el orden, va primero
+      if (indexA !== -1) return -1
+      // Si solo B está en el orden, va primero
+      if (indexB !== -1) return 1
+      // Si ninguno está en el orden, mantener orden alfabético
+      return a.key.localeCompare(b.key)
+    })
+  }
 
   return (
     <div>
@@ -471,33 +595,105 @@ export default function ConfiguracionPage() {
 
       {/* Test GLS section (only for shipping tab) */}
       {activeTab === 'shipping' && currentSettings.length > 0 && (
-        <Card className="mt-6">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Truck className="h-5 w-5 text-primary-600" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Probar Conexión con GLS</h3>
-                <p className="text-sm text-gray-600">Verifica que tus credenciales de GLS sean correctas</p>
+        <>
+          <Card className="mt-6">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Truck className="h-5 w-5 text-primary-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Probar Conexión con GLS</h3>
+                  <p className="text-sm text-gray-600">Verifica que tus credenciales de GLS sean correctas</p>
+                </div>
               </div>
-            </div>
 
-            <Button onClick={handleTestGLS} disabled={testingGLS}>
-              <Truck className="h-4 w-4 mr-2" />
-              {testingGLS ? 'Probando conexión...' : 'Probar Conexión'}
-            </Button>
+              <Button onClick={handleTestGLS} disabled={testingGLS}>
+                <Truck className="h-4 w-4 mr-2" />
+                {testingGLS ? 'Probando conexión...' : 'Probar Conexión'}
+              </Button>
 
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Información sobre GLS</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Contacta con GLS España para obtener tus credenciales de API</li>
-                <li>• Necesitarás: Client ID, Usuario y Contraseña</li>
-                <li>• Completa los datos del remitente (tu dirección de envío)</li>
-                <li>• Usa el modo de prueba para realizar tests sin crear envíos reales</li>
-                <li>• Una vez configurado, podrás generar etiquetas de envío automáticamente desde los pedidos</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Información sobre GLS</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Contacta con GLS España para obtener tus credenciales de API</li>
+                  <li>• Necesitarás: Client ID, Usuario y Contraseña</li>
+                  <li>• Completa los datos del remitente (tu dirección de envío)</li>
+                  <li>• Usa el modo de prueba para realizar tests sin crear envíos reales</li>
+                  <li>• Una vez configurado, podrás generar etiquetas de envío automáticamente desde los pedidos</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Shipping Methods Management */}
+          <Card className="mt-6">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Truck className="h-5 w-5 text-primary-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Tipos de Envío</h3>
+                    <p className="text-sm text-gray-600">Configura los diferentes tipos de envío disponibles</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setEditingMethod(null)
+                    setShowMethodModal(true)
+                  }}
+                >
+                  Añadir Tipo de Envío
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {shippingMethods.map((method) => (
+                  <div key={method.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className="font-semibold text-gray-900">{method.name}</h4>
+                        <Badge variant={method.isActive ? 'success' : 'default'}>
+                          {method.isActive ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
+                      {method.description && (
+                        <p className="text-sm text-gray-600 mt-1">{method.description}</p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2">
+                        <span className="text-sm text-gray-500">
+                          Precio: <strong>{method.price.toFixed(2)}€</strong>
+                        </span>
+                        {method.estimatedDays && (
+                          <span className="text-sm text-gray-500">
+                            Tiempo: <strong>{method.estimatedDays}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingMethod(method)
+                          setShowMethodModal(true)
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteShippingMethod(method.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* WhatsApp section (only for whatsapp tab) */}
@@ -558,6 +754,150 @@ export default function ConfiguracionPage() {
           <li>• Los cambios se aplican inmediatamente al guardar</li>
           <li>• Asegúrate de probar la configuración después de guardar</li>
         </ul>
+      </div>
+
+      {/* Modal para crear/editar método de envío */}
+      {showMethodModal && (
+        <ShippingMethodModal
+          method={editingMethod}
+          onClose={() => {
+            setShowMethodModal(false)
+            setEditingMethod(null)
+          }}
+          onSave={handleSaveShippingMethod}
+        />
+      )}
+    </div>
+  )
+}
+
+// Modal Component
+function ShippingMethodModal({
+  method,
+  onClose,
+  onSave,
+}: {
+  method: ShippingMethod | null
+  onClose: () => void
+  onSave: (method: Partial<ShippingMethod>) => void
+}) {
+  const [formData, setFormData] = useState({
+    name: method?.name || '',
+    description: method?.description || '',
+    price: method?.price?.toString() || '',
+    estimatedDays: method?.estimatedDays || '',
+    isActive: method?.isActive ?? true,
+    order: method?.order?.toString() || '0',
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave({
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      estimatedDays: formData.estimatedDays,
+      isActive: formData.isActive,
+      order: parseInt(formData.order),
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl font-bold mb-4">
+          {method ? 'Editar' : 'Crear'} Método de Envío
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre *
+            </label>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ej: Envío Estándar 24/48h"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Descripción opcional"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Precio (€) *
+            </label>
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              placeholder="6.00"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tiempo estimado
+            </label>
+            <Input
+              type="text"
+              value={formData.estimatedDays}
+              onChange={(e) => setFormData({ ...formData, estimatedDays: e.target.value })}
+              placeholder="Ej: 24-48h"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Orden
+            </label>
+            <Input
+              type="number"
+              value={formData.order}
+              onChange={(e) => setFormData({ ...formData, order: e.target.value })}
+              placeholder="0"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isActive}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+            </label>
+            <span className="text-sm text-gray-600">
+              {formData.isActive ? 'Activo' : 'Inactivo'}
+            </span>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" className="flex-1">
+              {method ? 'Actualizar' : 'Crear'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   )

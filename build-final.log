@@ -1,0 +1,88 @@
+
+> dtf-print-services@0.1.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 450ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+   ▲ Next.js 15.5.5
+   - Environments: .env
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 4.4s
+
+./node_modules/@prisma/client/runtime/wasm-engine-edge.js
+A Node.js API is used (setImmediate at line: 11) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@prisma/client/runtime/wasm-engine-edge.js
+./node_modules/.prisma/client/wasm.js
+./node_modules/.prisma/client/default.js
+./node_modules/@prisma/client/default.js
+./src/lib/prisma.ts
+./src/auth.ts
+
+./node_modules/bcryptjs/index.js
+A Node.js module is loaded ('crypto' at line 32) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+Import trace for requested module:
+./node_modules/bcryptjs/index.js
+./src/auth.ts
+
+./node_modules/bcryptjs/index.js
+A Node.js API is used (process.nextTick at line: 337) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/bcryptjs/index.js
+./src/auth.ts
+
+./node_modules/bcryptjs/index.js
+A Node.js API is used (setImmediate at line: 338) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/bcryptjs/index.js
+./src/auth.ts
+
+./node_modules/bcryptjs/index.js
+A Node.js API is used (setImmediate at line: 339) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/bcryptjs/index.js
+./src/auth.ts
+
+./node_modules/bcryptjs/index.js
+A Node.js API is used (process.nextTick at line: 340) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/bcryptjs/index.js
+./src/auth.ts
+
+ ✓ Compiled successfully in 34.7s
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/lib/logger.ts:138:7
+Type error: Type 'T' is generic and can only be indexed for reading.
+
+[0m [90m 136 |[39m   [36mfor[39m ([36mconst[39m key [36mof[39m keysToRedact) {
+ [90m 137 |[39m     [36mif[39m (key [36min[39m sanitized) {
+[31m[1m>[22m[39m[90m 138 |[39m       sanitized[key] [33m=[39m [32m'***REDACTED***'[39m
+ [90m     |[39m       [31m[1m^[22m[39m
+ [90m 139 |[39m     }
+ [90m 140 |[39m   }
+ [90m 141 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null

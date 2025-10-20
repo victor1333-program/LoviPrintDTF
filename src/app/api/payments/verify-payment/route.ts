@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-09-30.clover',
     })
 
     const body = await request.json()
@@ -129,64 +129,17 @@ export async function POST(request: NextRequest) {
 
         // Si el pedido tiene un userId (original o recién vinculado), otorgar puntos de fidelidad
         if (updatedUserId) {
-          const { calculatePointsEarned, calculateTier } = await import('@/lib/loyalty')
+          const { awardLoyaltyPointsForOrder } = await import('@/lib/loyalty')
 
-          // Obtener o crear registro de loyalty points
-          let loyaltyRecord = await prisma.loyaltyPoints.findUnique({
-            where: { userId: updatedUserId },
-          })
-
-          if (!loyaltyRecord) {
-            loyaltyRecord = await prisma.loyaltyPoints.create({
-              data: {
-                userId: updatedUserId,
-                totalPoints: 0,
-                availablePoints: 0,
-                lifetimePoints: 0,
-                tier: 'BRONZE',
-              },
-            })
-          }
-
-          // Calcular puntos ganados basado en el tier actual
-          const amountSpent = parseFloat(order.totalPrice.toString())
-          const pointsEarned = calculatePointsEarned(amountSpent, loyaltyRecord.tier, false)
-
-          // Calcular nuevo lifetimePoints y tier
-          const newLifetimePoints = loyaltyRecord.lifetimePoints + amountSpent
-          const newTier = calculateTier(newLifetimePoints)
-
-          // Actualizar loyalty points
-          await prisma.loyaltyPoints.update({
-            where: { id: loyaltyRecord.id },
-            data: {
-              availablePoints: { increment: pointsEarned },
-              totalPoints: { increment: pointsEarned },
-              lifetimePoints: newLifetimePoints,
-              tier: newTier,
-            },
-          })
-
-          // Actualizar users table también
-          await prisma.user.update({
-            where: { id: updatedUserId },
-            data: {
-              loyaltyPoints: { increment: pointsEarned },
-              totalSpent: { increment: amountSpent },
-              loyaltyTier: newTier,
-            },
-          })
-
-          // Crear transacción de puntos
-          await prisma.pointTransaction.create({
-            data: {
-              pointsId: loyaltyRecord.id,
-              points: pointsEarned,
-              type: 'earned',
-              description: `Puntos ganados por pedido ${order.orderNumber} (${amountSpent.toFixed(2)}€)`,
-              orderId: order.id,
-            },
-          })
+          // Otorgar puntos usando la función compartida
+          const { pointsEarned } = await awardLoyaltyPointsForOrder(
+            prisma,
+            updatedUserId,
+            order.id,
+            order.orderNumber,
+            parseFloat(order.totalPrice.toString()),
+            false // verify-payment no detecta si es voucher, solo webhook
+          )
 
           console.log(`[Verify Payment] Awarded ${pointsEarned} points to user for order ${order.orderNumber}`)
         }
@@ -218,7 +171,7 @@ export async function POST(request: NextRequest) {
       // Si no podemos verificar con Stripe, devolver el estado actual del pedido
       return NextResponse.json({
         success: true,
-        paid: order.paymentStatus === 'PAID',
+        paid: false,
         order: {
           paymentStatus: order.paymentStatus,
           status: order.status,

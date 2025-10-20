@@ -48,3 +48,6 @@ next
 
 # Claude
 /.claude
+
+# Backups (datos sensibles - no subir a GitHub)
+/backups

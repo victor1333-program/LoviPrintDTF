@@ -9,15 +9,52 @@ import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { FileUpload } from "@/components/FileUpload"
 import { formatCurrency } from "@/lib/utils"
-import { ArrowLeft, CreditCard, Tag, Ticket, AlertCircle } from "lucide-react"
+import { ArrowLeft, CreditCard, Tag, Ticket, AlertCircle, MapPin, User, Building, CheckCircle, Truck } from "lucide-react"
 import Link from "next/link"
 import toast from "react-hot-toast"
+
+interface Address {
+  id: string
+  street: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isDefault: boolean
+}
+
+interface UserProfile {
+  name: string
+  email: string
+  phone: string
+  company: string | null
+  taxId: string | null
+  isProfessional: boolean
+}
+
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  estimatedDays: string | null
+  isActive: boolean
+  order: number
+}
+
+interface UploadedFileData {
+  url: string
+  name: string
+  size: number
+  publicId?: string
+  metadata?: any
+}
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [orderData, setOrderData] = useState<any>(null)
-  const [designFile, setDesignFile] = useState<File | null>(null)
+  const [designFile, setDesignFile] = useState<UploadedFileData | null>(null)
   const [loading, setLoading] = useState(false)
   const [discountCode, setDiscountCode] = useState("")
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null)
@@ -25,14 +62,31 @@ export default function CheckoutPage() {
   const [userVouchers, setUserVouchers] = useState<any[]>([])
   const [selectedVoucher, setSelectedVoucher] = useState<string | null>(null)
   const [showVoucherPrompt, setShowVoucherPrompt] = useState(false)
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingMethod | null>(null)
+
+  // Estado del perfil del usuario
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userAddresses, setUserAddresses] = useState<Address[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [useNewAddress, setUseNewAddress] = useState(false)
+  const [profileMissing, setProfileMissing] = useState(false)
+  const [addressMissing, setAddressMissing] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    company: '',
+    taxId: '',
+    isProfessional: false,
     address: '',
     city: '',
+    state: '',
     postalCode: '',
-    notes: ''
+    country: 'España',
+    notes: '',
+    saveAddress: true, // Nueva opción para guardar dirección
   })
 
   useEffect(() => {
@@ -42,14 +96,120 @@ export default function CheckoutPage() {
     } else {
       router.push('/')
     }
+
+    // Cargar métodos de envío
+    loadShippingMethods()
   }, [router])
 
-  // Cargar bonos del usuario si está autenticado
+  const loadShippingMethods = async () => {
+    try {
+      const res = await fetch('/api/shipping-methods')
+      if (res.ok) {
+        const methods = await res.json()
+        setShippingMethods(methods)
+
+        // Seleccionar el primer método por defecto
+        if (methods.length > 0) {
+          setSelectedShippingMethod(methods[0])
+        }
+      }
+    } catch (error) {
+      console.error('Error loading shipping methods:', error)
+    }
+  }
+
+  // Cargar perfil y direcciones del usuario autenticado
   useEffect(() => {
-    if (session?.user && orderData) {
+    if (session?.user) {
+      loadUserProfile()
+      loadUserAddresses()
       loadUserVouchers()
     }
-  }, [session, orderData])
+  }, [session])
+
+  const loadUserProfile = async () => {
+    try {
+      const res = await fetch('/api/user/profile')
+      if (res.ok) {
+        const profile = await res.json()
+        setUserProfile(profile)
+
+        // Pre-llenar datos de facturación
+        setFormData(prev => ({
+          ...prev,
+          name: profile.name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          company: profile.company || '',
+          taxId: profile.taxId || '',
+          isProfessional: profile.isProfessional || false,
+        }))
+
+        // Verificar si faltan datos críticos de facturación
+        const missingBilling = !profile.name || !profile.phone
+        setProfileMissing(missingBilling)
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    }
+  }
+
+  const loadUserAddresses = async () => {
+    try {
+      const res = await fetch('/api/user/addresses')
+      if (res.ok) {
+        const addresses = await res.json()
+        setUserAddresses(addresses)
+
+        if (addresses.length === 0) {
+          setAddressMissing(true)
+          setUseNewAddress(true)
+        } else {
+          // Seleccionar dirección predeterminada
+          const defaultAddr = addresses.find((a: Address) => a.isDefault)
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id)
+            fillAddressFromSaved(defaultAddr)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading addresses:', error)
+    }
+  }
+
+  const fillAddressFromSaved = (address: Address) => {
+    setFormData(prev => ({
+      ...prev,
+      address: address.street,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country,
+    }))
+  }
+
+  const handleAddressChange = (addressId: string) => {
+    if (addressId === 'new') {
+      setUseNewAddress(true)
+      setSelectedAddressId(null)
+      setFormData(prev => ({
+        ...prev,
+        address: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'España',
+      }))
+    } else {
+      setUseNewAddress(false)
+      setSelectedAddressId(addressId)
+      const addr = userAddresses.find(a => a.id === addressId)
+      if (addr) {
+        fillAddressFromSaved(addr)
+      }
+    }
+  }
 
   const loadUserVouchers = async () => {
     try {
@@ -57,11 +217,10 @@ export default function CheckoutPage() {
       if (res.ok) {
         const vouchers = await res.json()
         const activeVouchers = vouchers.filter((v: any) =>
-          v.isActive && v.type === 'METERS' && Number(v.remainingMeters) >= orderData.meters
+          v.isActive && v.type === 'METERS' && Number(v.remainingMeters) >= orderData?.meters
         )
         setUserVouchers(activeVouchers)
 
-        // Mostrar prompt si tiene bonos disponibles
         if (activeVouchers.length > 0) {
           setShowVoucherPrompt(true)
         }
@@ -91,7 +250,7 @@ export default function CheckoutPage() {
       if (res.ok) {
         const discount = await res.json()
         setAppliedDiscount(discount)
-        recalculateOrder(discount, selectedVoucher)
+        recalculateOrder(discount, selectedVoucher, selectedShippingMethod)
         toast.success(`¡Código aplicado! ${discount.discountPct}% de descuento`)
       } else {
         const error = await res.json()
@@ -107,17 +266,16 @@ export default function CheckoutPage() {
   const selectVoucher = (voucherId: string | null) => {
     setSelectedVoucher(voucherId)
     setShowVoucherPrompt(false)
-    recalculateOrder(appliedDiscount, voucherId)
+    recalculateOrder(appliedDiscount, voucherId, selectedShippingMethod)
     if (voucherId) {
       toast.success("Bono seleccionado para este pedido")
     }
   }
 
-  const recalculateOrder = (discount: any, voucherId: string | null) => {
+  const recalculateOrder = (discount: any, voucherId: string | null, shippingMethod?: ShippingMethod | null) => {
     let subtotal = orderData.meters * orderData.pricePerMeter
     let discountAmount = 0
 
-    // Aplicar código de descuento
     if (discount) {
       if (discount.type === 'PERCENT') {
         discountAmount = subtotal * (Number(discount.discountPct) / 100)
@@ -126,7 +284,6 @@ export default function CheckoutPage() {
       }
     }
 
-    // Si usa bono de metros, el precio base es 0
     if (voucherId) {
       subtotal = 0
       discountAmount = 0
@@ -134,7 +291,11 @@ export default function CheckoutPage() {
 
     const afterDiscount = Math.max(0, subtotal - discountAmount)
     const tax = afterDiscount * 0.21
-    const shipping = afterDiscount >= 100 ? 0 : 5.95
+
+    // Usar el método de envío seleccionado o el del orderData
+    const method = shippingMethod !== undefined ? shippingMethod : selectedShippingMethod
+    const shipping = method ? Number(method.price) : 0
+
     const total = afterDiscount + tax + shipping
 
     setOrderData({
@@ -146,14 +307,21 @@ export default function CheckoutPage() {
       total: total,
       usingVoucher: !!voucherId,
       voucherId: voucherId,
-      discountCodeId: discount?.id
+      discountCodeId: discount?.id,
+      shippingMethodId: method?.id
     })
   }
 
+  const handleShippingMethodChange = (method: ShippingMethod) => {
+    setSelectedShippingMethod(method)
+    recalculateOrder(appliedDiscount, selectedVoucher, method)
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }))
   }
 
@@ -165,27 +333,36 @@ export default function CheckoutPage() {
       return
     }
 
+    // Validaciones adicionales
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error("Por favor, completa tus datos de facturación")
+      return
+    }
+
+    if (!formData.address || !formData.city || !formData.postalCode) {
+      toast.error("Por favor, completa la dirección de envío")
+      return
+    }
+
     setLoading(true)
 
     try {
-      // 1. Subir el archivo
-      const fileFormData = new FormData()
-      fileFormData.append('file', designFile)
+      // El archivo ya está subido gracias a FileUpload, solo usar la URL
+      const fileUrl = designFile?.url
+      const fileName = designFile?.name
 
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: fileFormData,
-      })
-
-      if (!uploadRes.ok) {
-        throw new Error('Error al subir el archivo')
+      if (!fileUrl) {
+        throw new Error('Error: archivo no subido correctamente')
       }
 
-      const { fileUrl, fileName } = await uploadRes.json()
-
-      // 2. Crear el pedido
+      // Crear el pedido (el endpoint guardará perfil y dirección si es necesario)
       const orderPayload = {
-        ...formData,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company || null,
+        taxId: formData.taxId || null,
+        isProfessional: formData.isProfessional,
         metersOrdered: orderData.meters,
         pricePerMeter: orderData.pricePerMeter,
         subtotal: orderData.subtotal,
@@ -197,11 +374,16 @@ export default function CheckoutPage() {
         designFileName: fileName,
         voucherCode: selectedVoucher,
         discountCodeId: orderData.discountCodeId,
+        notes: formData.notes,
         shippingAddress: {
-          address: formData.address,
+          street: formData.address,
           city: formData.city,
+          state: formData.state,
           postalCode: formData.postalCode,
-        }
+          country: formData.country,
+        },
+        saveProfile: session?.user ? true : false,
+        saveAddress: session?.user && formData.saveAddress && useNewAddress ? true : false,
       }
 
       const orderRes = await fetch('/api/orders', {
@@ -213,7 +395,8 @@ export default function CheckoutPage() {
       })
 
       if (!orderRes.ok) {
-        throw new Error('Error al crear el pedido')
+        const errorData = await orderRes.json()
+        throw new Error(errorData.error || 'Error al crear el pedido')
       }
 
       const order = await orderRes.json()
@@ -225,9 +408,9 @@ export default function CheckoutPage() {
       toast.success('¡Pedido creado con éxito!')
       router.push(`/pedido/${order.orderNumber}`)
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error)
-      toast.error('Error al procesar el pedido. Inténtalo de nuevo.')
+      toast.error(error.message || 'Error al procesar el pedido. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -256,6 +439,28 @@ export default function CheckoutPage() {
               Completa tus datos y sube tu diseño
             </p>
           </div>
+
+          {/* Advertencias de datos faltantes */}
+          {session?.user && (profileMissing || addressMissing) && (
+            <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-yellow-900 mb-2">
+                    Completa tu perfil
+                  </h3>
+                  <p className="text-yellow-800 mb-3">
+                    {profileMissing && addressMissing && "Faltan tus datos de facturación y dirección de envío."}
+                    {profileMissing && !addressMissing && "Faltan tus datos de facturación."}
+                    {!profileMissing && addressMissing && "No tienes direcciones de envío guardadas."}
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    Puedes completarlos aquí mismo o ir a <Link href="/cuenta/perfil" className="underline font-semibold">Mi Perfil</Link> para guardarlos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Prompt de Bonos */}
           {showVoucherPrompt && userVouchers.length > 0 && (
@@ -338,10 +543,13 @@ export default function CheckoutPage() {
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Formulario */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Datos de Contacto */}
+                {/* Datos de Facturación */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Datos de Contacto</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Datos de Facturación
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Input
@@ -350,7 +558,7 @@ export default function CheckoutPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      placeholder="Juan Pérez"
+                      placeholder="Juan Pérez García"
                     />
                     <div className="grid md:grid-cols-2 gap-4">
                       <Input
@@ -361,6 +569,7 @@ export default function CheckoutPage() {
                         onChange={handleInputChange}
                         required
                         placeholder="juan@ejemplo.com"
+                        disabled={!!session?.user}
                       />
                       <Input
                         label="Teléfono"
@@ -372,41 +581,195 @@ export default function CheckoutPage() {
                         placeholder="+34 600 000 000"
                       />
                     </div>
+
+                    {/* Checkbox Profesional */}
+                    <div className="flex items-center gap-2 pt-2">
+                      <input
+                        type="checkbox"
+                        id="isProfessional"
+                        name="isProfessional"
+                        checked={formData.isProfessional}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <label htmlFor="isProfessional" className="text-sm font-medium text-gray-700">
+                        Soy profesional / empresa
+                      </label>
+                    </div>
+
+                    {/* Campos profesionales */}
+                    {formData.isProfessional && (
+                      <div className="space-y-4 pt-2 border-t">
+                        <Input
+                          label="Razón Social"
+                          name="company"
+                          value={formData.company}
+                          onChange={handleInputChange}
+                          placeholder="Mi Empresa S.L."
+                        />
+                        <Input
+                          label="NIF/CIF/NIE/VAT"
+                          name="taxId"
+                          value={formData.taxId}
+                          onChange={handleInputChange}
+                          placeholder="B12345678"
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
                 {/* Dirección de Envío */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Dirección de Envío</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Dirección de Envío
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Input
-                      label="Dirección"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Calle Principal 123"
-                    />
-                    <div className="grid md:grid-cols-2 gap-4">
+                    {/* Selector de dirección guardada (solo si hay direcciones) */}
+                    {session?.user && userAddresses.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Selecciona una dirección
+                        </label>
+                        <select
+                          value={useNewAddress ? 'new' : (selectedAddressId || '')}
+                          onChange={(e) => handleAddressChange(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          {userAddresses.map((addr) => (
+                            <option key={addr.id} value={addr.id}>
+                              {addr.street}, {addr.city} ({addr.postalCode})
+                              {addr.isDefault && ' ⭐ Predeterminada'}
+                            </option>
+                          ))}
+                          <option value="new">➕ Usar otra dirección</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Formulario de dirección (siempre visible para editar o nueva) */}
+                    <div className="space-y-4">
                       <Input
-                        label="Ciudad"
-                        name="city"
-                        value={formData.city}
+                        label="Dirección"
+                        name="address"
+                        value={formData.address}
                         onChange={handleInputChange}
                         required
-                        placeholder="Madrid"
+                        placeholder="Calle Principal 123, Piso 2A"
                       />
-                      <Input
-                        label="Código Postal"
-                        name="postalCode"
-                        value={formData.postalCode}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="28001"
-                      />
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <Input
+                          label="Código Postal"
+                          name="postalCode"
+                          value={formData.postalCode}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="28001"
+                        />
+                        <Input
+                          label="Ciudad"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Madrid"
+                        />
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <Input
+                          label="Provincia/Estado"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Madrid"
+                        />
+                        <Input
+                          label="País"
+                          name="country"
+                          value={formData.country}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="España"
+                        />
+                      </div>
                     </div>
+
+                    {/* Opción de guardar dirección */}
+                    {session?.user && useNewAddress && (
+                      <div className="flex items-center gap-2 pt-2 bg-blue-50 rounded-lg p-3">
+                        <input
+                          type="checkbox"
+                          id="saveAddress"
+                          name="saveAddress"
+                          checked={formData.saveAddress}
+                          onChange={handleInputChange}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        />
+                        <label htmlFor="saveAddress" className="text-sm font-medium text-blue-900">
+                          Guardar esta dirección en mi perfil para futuros pedidos
+                        </label>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Método de Envío */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      Método de Envío
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {shippingMethods.length > 0 ? (
+                      shippingMethods.map((method) => (
+                        <div
+                          key={method.id}
+                          onClick={() => handleShippingMethodChange(method)}
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                            selectedShippingMethod?.id === method.id
+                              ? 'border-primary-600 bg-primary-50'
+                              : 'border-gray-200 hover:border-primary-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="radio"
+                                  checked={selectedShippingMethod?.id === method.id}
+                                  onChange={() => handleShippingMethodChange(method)}
+                                  className="w-4 h-4 text-primary-600"
+                                />
+                                <h4 className="font-semibold text-gray-900">{method.name}</h4>
+                              </div>
+                              {method.description && (
+                                <p className="text-sm text-gray-600 mt-1 ml-6">{method.description}</p>
+                              )}
+                              {method.estimatedDays && (
+                                <p className="text-xs text-gray-500 mt-1 ml-6">
+                                  Entrega estimada: {method.estimatedDays}
+                                </p>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <p className="text-lg font-bold text-primary-600">
+                                {method.price === 0 ? 'GRATIS' : `${method.price.toFixed(2)}€`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No hay métodos de envío disponibles
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

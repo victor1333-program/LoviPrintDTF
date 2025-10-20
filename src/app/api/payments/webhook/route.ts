@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-09-30.clover',
     })
 
     const body = await request.text()
@@ -149,65 +149,22 @@ export async function POST(request: NextRequest) {
 
         // Si el pedido tiene un userId, otorgar puntos de fidelidad
         if (order.userId) {
-          const { calculatePointsEarned, calculateTier } = await import('@/lib/loyalty')
-
-          // Obtener el usuario para calcular el nuevo totalSpent
-          const user = await prisma.user.findUnique({
-            where: { id: order.userId },
-            select: { totalSpent: true },
-          })
-
-          // Obtener o crear registro de loyalty points
-          let loyaltyRecord = await prisma.loyaltyPoints.findUnique({
-            where: { userId: order.userId },
-          })
-
-          if (!loyaltyRecord) {
-            loyaltyRecord = await prisma.loyaltyPoints.create({
-              data: {
-                userId: order.userId,
-                totalPoints: 0,
-                availablePoints: 0,
-                lifetimePoints: 0,
-                tier: 'BRONZE',
-              },
-            })
-          }
+          const { awardLoyaltyPointsForOrder } = await import('@/lib/loyalty')
 
           // Detectar si es compra de bono para aplicar bonus del 25%
           const isVoucherPurchase = order.items.some(
             item => item.product.productType === 'VOUCHER'
           )
 
-          // Calcular puntos ganados basado en el tier actual
-          const amountSpent = parseFloat(order.totalPrice.toString())
-          const pointsEarned = calculatePointsEarned(amountSpent, loyaltyRecord.tier, isVoucherPurchase)
-
-          // Calcular nuevo total gastado y tier basado en EUROS, no puntos
-          const currentTotalSpent = user ? parseFloat(user.totalSpent.toString()) : 0
-          const newTotalSpent = currentTotalSpent + amountSpent
-          const newTier = calculateTier(newTotalSpent)
-
-          // Actualizar loyalty points
-          await prisma.loyaltyPoints.update({
-            where: { id: loyaltyRecord.id },
-            data: {
-              availablePoints: { increment: pointsEarned },
-              totalPoints: { increment: pointsEarned },
-              lifetimePoints: { increment: pointsEarned }, // lifetimePoints debe ser puntos, no euros
-              tier: newTier,
-            },
-          })
-
-          // Actualizar users table también
-          await prisma.user.update({
-            where: { id: order.userId },
-            data: {
-              loyaltyPoints: { increment: pointsEarned },
-              totalSpent: { increment: amountSpent },
-              loyaltyTier: newTier,
-            },
-          })
+          // Otorgar puntos usando la función compartida
+          const { pointsEarned } = await awardLoyaltyPointsForOrder(
+            prisma,
+            order.userId,
+            order.id,
+            orderNumber || order.id,
+            parseFloat(order.totalPrice.toString()),
+            isVoucherPurchase
+          )
 
           // Actualizar el pedido con los puntos ganados y flag de voucher
           await prisma.order.update({
@@ -218,19 +175,20 @@ export async function POST(request: NextRequest) {
             },
           })
 
-          // Crear transacción de puntos
-          await prisma.pointTransaction.create({
-            data: {
-              pointsId: loyaltyRecord.id,
-              points: pointsEarned,
-              type: 'earned',
-              description: `Puntos ganados por pedido ${orderNumber} (${amountSpent.toFixed(2)}€)${isVoucherPurchase ? ' - Bono +25%' : ''}`,
-              orderId: order.id,
-            },
-          })
-
           console.log(`Awarded ${pointsEarned} points to user for order ${orderNumber}${isVoucherPurchase ? ' (Voucher bonus +25% applied)' : ''}`)
         }
+
+        // Enviar email de notificación al admin ahora que el pago está confirmado
+        const { sendAdminOrderNotification } = await import('@/lib/email')
+        sendAdminOrderNotification(updatedOrder).catch(err =>
+          console.error('Error sending admin notification:', err)
+        )
+
+        // Generar factura automáticamente
+        const { createInvoiceForOrder } = await import('@/lib/invoice')
+        createInvoiceForOrder(updatedOrder.id).catch(err =>
+          console.error('Error generating invoice:', err)
+        )
 
         console.log(`Payment confirmed for order ${orderNumber}`)
         break

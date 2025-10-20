@@ -87,14 +87,39 @@ export default function ColaImpresionPage() {
     }
   }
 
-  const downloadFile = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a')
-    link.href = fileUrl
-    link.download = fileName
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      // Para archivos de Cloudinary, modificar la URL para forzar descarga
+      let downloadUrl = fileUrl
+      if (fileUrl.includes('cloudinary.com')) {
+        // Agregar fl_attachment para forzar descarga en Cloudinary
+        downloadUrl = fileUrl.replace('/upload/', '/upload/fl_attachment/')
+      }
+
+      // Descargar el archivo
+      const response = await fetch(downloadUrl)
+      if (!response.ok) {
+        throw new Error('Error al descargar el archivo')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Limpiar el objeto URL
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Archivo descargado correctamente')
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      toast.error('Error al descargar el archivo')
+    }
   }
 
   if (loading) {
@@ -305,17 +330,31 @@ function OrderCard({
                   </div>
                 </div>
 
-                {/* Botón de descarga */}
-                {item.fileUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDownload(item.fileUrl, item.fileName || 'diseño.pdf')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar Diseño
-                  </Button>
-                )}
+                {/* Archivo adjunto */}
+                <div className="flex flex-col gap-2">
+                  {item.fileName && (
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Archivo adjunto:</p>
+                      <p className="text-xs font-medium text-gray-700 truncate max-w-xs">{item.fileName}</p>
+                    </div>
+                  )}
+                  {item.fileUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDownload(item.fileUrl, item.fileName || 'diseño.pdf')}
+                      className="bg-primary-50 hover:bg-primary-100"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Descargar
+                    </Button>
+                  )}
+                  {item.fileName && !item.fileUrl && (
+                    <Badge variant="warning" className="text-xs">
+                      ⚠️ Archivo sin URL
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               {/* Extras */}

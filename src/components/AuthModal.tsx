@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { signIn } from "next-auth/react"
 import { Modal } from "./ui/Modal"
 import { Input } from "./ui/Input"
@@ -11,26 +12,16 @@ import toast from "react-hot-toast"
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
+    confirmEmail: "",
     password: "",
-    name: "",
-    phone: "",
-    company: "",
-    taxId: "",
-    isProfessional: false,
-    shippingAddress: {
-      street: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "España",
-    },
   })
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -49,8 +40,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       } else {
         toast.success("Sesión iniciada correctamente")
         onClose()
-        // Usar router en lugar de reload para mejor experiencia
-        window.location.href = window.location.href
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          // Usar router en lugar de reload para mejor experiencia
+          window.location.href = window.location.href
+        }
       }
     } catch (error) {
       toast.error("Error al iniciar sesión")
@@ -61,13 +56,23 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validar que los emails coincidan
+    if (formData.email !== formData.confirmEmail) {
+      toast.error("Los emails no coinciden")
+      return
+    }
+
     setLoading(true)
 
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       })
 
       const data = await res.json()
@@ -77,19 +82,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         return
       }
 
-      toast.success("Cuenta creada correctamente")
-
-      // Auto login después de registrarse
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-
-      if (!result?.error) {
-        onClose()
-        window.location.href = window.location.href
-      }
+      toast.success("¡Cuenta creada! Revisa tu email para confirmarla.")
+      onClose()
+      resetForm()
     } catch (error) {
       toast.error("Error al crear cuenta")
     } finally {
@@ -97,221 +92,57 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   }
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    if (field.startsWith('shippingAddress.')) {
-      const addressField = field.split('.')[1]
-      setFormData((prev) => ({
-        ...prev,
-        shippingAddress: {
-          ...prev.shippingAddress,
-          [addressField]: value,
-        },
-      }))
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: value }))
-    }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const resetForm = () => {
     setFormData({
       email: "",
+      confirmEmail: "",
       password: "",
-      name: "",
-      phone: "",
-      company: "",
-      taxId: "",
-      isProfessional: false,
-      shippingAddress: {
-        street: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "España",
-      },
     })
+    setMode("login") // Siempre resetear a login cuando se cierra el modal
   }
 
   const switchMode = (newMode: "login" | "register") => {
     setMode(newMode)
+    setFormData({
+      email: "",
+      confirmEmail: "",
+      password: "",
+    })
+  }
+
+  const handleClose = () => {
     resetForm()
+    onClose()
   }
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
       maxWidth="md"
     >
+      <div className="flex justify-center mb-6 pb-4 border-b">
+        <div className="relative h-16 w-48">
+          <Image
+            src="/logo.png"
+            alt="LoviPrintDTF"
+            fill
+            className="object-contain"
+          />
+        </div>
+      </div>
       <form onSubmit={mode === "login" ? handleLogin : handleRegister} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
         {mode === "register" && (
-          <>
-            {/* Datos personales */}
-            <div className="space-y-4 pb-4 border-b">
-              <h3 className="font-semibold text-gray-900">Datos Personales</h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre completo *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Tu nombre completo"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono *
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="+34 600 123 456"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isProfessional"
-                  checked={formData.isProfessional}
-                  onChange={(e) => handleInputChange("isProfessional", e.target.checked)}
-                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                />
-                <label htmlFor="isProfessional" className="text-sm text-gray-700">
-                  Soy profesional (empresa)
-                </label>
-              </div>
-
-              {formData.isProfessional && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre de la empresa
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        type="text"
-                        value={formData.company}
-                        onChange={(e) => handleInputChange("company", e.target.value)}
-                        placeholder="Mi Empresa S.L."
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CIF/NIF
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.taxId}
-                      onChange={(e) => handleInputChange("taxId", e.target.value)}
-                      placeholder="B12345678"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Dirección de envío */}
-            <div className="space-y-4 pb-4 border-b">
-              <h3 className="font-semibold text-gray-900">Dirección de Envío</h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dirección *
-                </label>
-                <div className="relative">
-                  <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    value={formData.shippingAddress.street}
-                    onChange={(e) => handleInputChange("shippingAddress.street", e.target.value)}
-                    placeholder="Calle, número, piso, puerta"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ciudad *
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.shippingAddress.city}
-                    onChange={(e) => handleInputChange("shippingAddress.city", e.target.value)}
-                    placeholder="Ciudad"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Provincia *
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.shippingAddress.state}
-                    onChange={(e) => handleInputChange("shippingAddress.state", e.target.value)}
-                    placeholder="Provincia"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código Postal *
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      value={formData.shippingAddress.postalCode}
-                      onChange={(e) => handleInputChange("shippingAddress.postalCode", e.target.value)}
-                      placeholder="28001"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    País *
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.shippingAddress.country}
-                    onChange={(e) => handleInputChange("shippingAddress.country", e.target.value)}
-                    placeholder="España"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-          </>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              Crea tu cuenta con solo tu email y contraseña. Después de confirmar tu email, podrás completar tu perfil.
+            </p>
+          </div>
         )}
 
         <div>
@@ -331,6 +162,25 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         </div>
 
+        {mode === "register" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="email"
+                value={formData.confirmEmail}
+                onChange={(e) => handleInputChange("confirmEmail", e.target.value)}
+                placeholder="Confirma tu email"
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Contraseña
@@ -344,8 +194,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               placeholder="••••••••"
               className="pl-10"
               required
+              minLength={6}
             />
           </div>
+          {mode === "register" && (
+            <p className="text-xs text-gray-500 mt-1">
+              Mínimo 6 caracteres
+            </p>
+          )}
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>

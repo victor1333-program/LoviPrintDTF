@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered } from "lucide-react"
@@ -76,16 +77,16 @@ export default function AdminSidebar() {
     <aside className="w-64 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 h-screen flex flex-col fixed left-0 top-0 shadow-2xl">
       {/* Header */}
       <div className="p-6 border-b border-white/20">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center ring-2 ring-white/30">
-            <Printer className="h-7 w-7 text-white" />
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative h-16 w-48">
+            <Image
+              src="/logo.png"
+              alt="LoviPrintDTF"
+              fill
+              className="object-contain brightness-0 invert"
+            />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">
-              DTF Print
-            </h2>
-            <p className="text-xs text-white/80 font-medium">Panel de Control</p>
-          </div>
+          <p className="text-sm text-white/90 font-medium">Panel de Control</p>
         </div>
       </div>
 

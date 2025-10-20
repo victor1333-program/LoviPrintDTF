@@ -46,6 +46,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           role: user.role,
           loyaltyPoints: user.loyaltyPoints,
+          phone: user.phone,
         }
       }
     })
@@ -55,6 +56,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = user.role
         token.loyaltyPoints = user.loyaltyPoints
+        token.phone = user.phone
       }
 
       // Solo actualizar desde la DB cuando hay un trigger explícito de update
@@ -62,11 +64,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (trigger === "update") {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub as string },
-          select: { loyaltyPoints: true, role: true }
+          select: { loyaltyPoints: true, role: true, phone: true }
         })
         if (dbUser) {
           token.loyaltyPoints = dbUser.loyaltyPoints
           token.role = dbUser.role
+          token.phone = dbUser.phone
         }
       }
 
@@ -77,6 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as string
         session.user.id = token.sub as string
         session.user.loyaltyPoints = token.loyaltyPoints as number
+        session.user.phone = token.phone as string | null
       }
       return session
     }

@@ -16,6 +16,7 @@ import {
   LoyaltyPoints,
   Template,
   OrderItem,
+  ShippingMethod,
 } from '@prisma/client'
 
 export type {
@@ -36,6 +37,7 @@ export type {
   LoyaltyPoints,
   Template,
   OrderItem,
+  ShippingMethod,
 }
 
 // Extended types
@@ -52,10 +54,12 @@ export interface OrderWithRelations extends Order {
   user?: User | null
   items: (OrderItem & { product: Product })[]
   voucher?: Voucher | null
+  shippingMethod?: ShippingMethod | null
 }
 
-export interface UserWithRelations extends User {
-  loyaltyPoints?: LoyaltyPoints | null
+export interface UserWithRelations extends Omit<User, 'loyaltyPoints'> {
+  loyaltyPoints?: number
+  loyaltyPointsData?: LoyaltyPoints | null
   vouchers?: Voucher[]
 }
 
@@ -77,6 +81,7 @@ export interface PriceCalculationResult {
   discountPct: number
   discountAmount: number
   appliedRange?: PriceRange
+  extrasTotal?: number
 }
 
 // File upload

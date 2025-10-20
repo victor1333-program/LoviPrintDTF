@@ -16,6 +16,9 @@ import { OrderProcessSection } from "@/components/OrderProcessSection"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
 
+// Force dynamic rendering to always fetch fresh data from database
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   // Obtener los rangos de precios del producto Transfer DTF
   const transferDTF = await prisma.product.findFirst({

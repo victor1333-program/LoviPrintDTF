@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/Button"
-import { Download, Eye, Printer } from "lucide-react"
+import { Download, Eye, Printer, FileText, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
+import toast from "react-hot-toast"
 
 interface OrdersTableProps {
   orders: any[]
@@ -13,6 +14,11 @@ interface OrdersTableProps {
 export default function OrdersTable({ orders }: OrdersTableProps) {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [isPrinting, setIsPrinting] = useState(false)
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null)
+  const [changingStatus, setChangingStatus] = useState<string | null>(null)
+  const [statusModalOpen, setStatusModalOpen] = useState(false)
+  const [selectedOrderForStatus, setSelectedOrderForStatus] = useState<any>(null)
+  const [newStatus, setNewStatus] = useState<string>('')
 
   // Filtrar pedidos que están en estado READY (tienen etiqueta lista)
   const ordersWithLabels = orders.filter(order =>
@@ -68,6 +74,75 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       alert('Error al imprimir las etiquetas')
     } finally {
       setIsPrinting(false)
+    }
+  }
+
+  const downloadInvoice = async (invoiceId: string, invoiceNumber: string) => {
+    setDownloadingInvoice(invoiceId)
+    try {
+      const res = await fetch(`/api/admin/invoices/${invoiceId}/pdf`)
+
+      if (!res.ok) {
+        throw new Error('Error al descargar la factura')
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Factura-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Factura descargada')
+    } catch (error: any) {
+      console.error('Error downloading invoice:', error)
+      toast.error(error.message || 'Error al descargar la factura')
+    } finally {
+      setDownloadingInvoice(null)
+    }
+  }
+
+  const openStatusModal = (order: any) => {
+    setSelectedOrderForStatus(order)
+    setNewStatus(order.status)
+    setStatusModalOpen(true)
+  }
+
+  const closeStatusModal = () => {
+    setStatusModalOpen(false)
+    setSelectedOrderForStatus(null)
+    setNewStatus('')
+  }
+
+  const confirmStatusChange = async () => {
+    if (!selectedOrderForStatus || !newStatus) return
+
+    setChangingStatus(selectedOrderForStatus.id)
+    try {
+      const res = await fetch(`/api/orders/${selectedOrderForStatus.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus
+        })
+      })
+
+      if (!res.ok) {
+        throw new Error('Error al cambiar el estado')
+      }
+
+      toast.success('Estado actualizado correctamente')
+      closeStatusModal()
+      // Recargar la página para ver los cambios
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Error changing status:', error)
+      toast.error(error.message || 'Error al cambiar el estado')
+    } finally {
+      setChangingStatus(null)
     }
   }
 
@@ -175,9 +250,9 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                     {new Date(order.createdAt).toLocaleDateString('es-ES')}
                   </td>
                   <td className="p-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Link href={`/admin/pedidos/${order.orderNumber}`}>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" title="Ver detalles">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -188,11 +263,41 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" title="Descargar diseño">
                             <Download className="h-4 w-4" />
                           </Button>
                         </a>
                       )}
+                      {/* Botón de Factura */}
+                      {order.invoice && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadInvoice(order.invoice.id, order.invoice.invoiceNumber)}
+                          disabled={downloadingInvoice === order.invoice.id}
+                          title="Descargar factura"
+                        >
+                          {downloadingInvoice === order.invoice.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                      {/* Botón de Cambiar Estado */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openStatusModal(order)}
+                        disabled={changingStatus === order.id}
+                        title="Cambiar estado"
+                      >
+                        {changingStatus === order.id ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -201,6 +306,68 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Cambio de Estado */}
+      {statusModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">
+              Cambiar Estado del Pedido
+            </h3>
+
+            {selectedOrderForStatus && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Pedido: <span className="font-mono font-semibold">{selectedOrderForStatus.orderNumber}</span>
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Cliente: <span className="font-semibold">{selectedOrderForStatus.customerName}</span>
+                </p>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nuevo Estado
+                </label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="PENDING">Pendiente</option>
+                  <option value="CONFIRMED">Confirmado</option>
+                  <option value="IN_PRODUCTION">En Producción</option>
+                  <option value="READY">Listo</option>
+                  <option value="SHIPPED">Enviado</option>
+                  <option value="DELIVERED">Entregado</option>
+                  <option value="CANCELLED">Cancelado</option>
+                </select>
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={closeStatusModal}
+                disabled={changingStatus === selectedOrderForStatus?.id}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmStatusChange}
+                disabled={changingStatus === selectedOrderForStatus?.id}
+              >
+                {changingStatus === selectedOrderForStatus?.id ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Actualizando...
+                  </>
+                ) : (
+                  'Confirmar'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

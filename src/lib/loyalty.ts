@@ -208,3 +208,82 @@ export function validatePointsUsage(
 
   return { valid: true }
 }
+
+/**
+ * Otorga puntos de fidelidad a un usuario por un pedido
+ * Función compartida para evitar duplicación en webhook y verify-payment
+ */
+export async function awardLoyaltyPointsForOrder(
+  prisma: any,
+  userId: string,
+  orderId: string,
+  orderNumber: string,
+  totalPrice: number,
+  isVoucherPurchase: boolean = false
+): Promise<{ pointsEarned: number; newTier: string }> {
+  // Obtener el usuario para calcular el nuevo totalSpent
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { totalSpent: true },
+  })
+
+  // Obtener o crear registro de loyalty points
+  let loyaltyRecord = await prisma.loyaltyPoints.findUnique({
+    where: { userId: userId },
+  })
+
+  if (!loyaltyRecord) {
+    loyaltyRecord = await prisma.loyaltyPoints.create({
+      data: {
+        userId: userId,
+        totalPoints: 0,
+        availablePoints: 0,
+        lifetimePoints: 0,
+        tier: 'BRONZE',
+      },
+    })
+  }
+
+  // Calcular puntos ganados basado en el tier actual
+  const amountSpent = parseFloat(totalPrice.toString())
+  const pointsEarned = calculatePointsEarned(amountSpent, loyaltyRecord.tier, isVoucherPurchase)
+
+  // Calcular nuevo total gastado y tier basado en EUROS, no puntos
+  const currentTotalSpent = user ? parseFloat(user.totalSpent.toString()) : 0
+  const newTotalSpent = currentTotalSpent + amountSpent
+  const newTier = calculateTier(newTotalSpent)
+
+  // Actualizar loyalty points
+  await prisma.loyaltyPoints.update({
+    where: { id: loyaltyRecord.id },
+    data: {
+      availablePoints: { increment: pointsEarned },
+      totalPoints: { increment: pointsEarned },
+      lifetimePoints: { increment: pointsEarned },
+      tier: newTier,
+    },
+  })
+
+  // Actualizar users table también
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      loyaltyPoints: { increment: pointsEarned },
+      totalSpent: { increment: amountSpent },
+      loyaltyTier: newTier,
+    },
+  })
+
+  // Crear transacción de puntos
+  await prisma.pointTransaction.create({
+    data: {
+      pointsId: loyaltyRecord.id,
+      points: pointsEarned,
+      type: 'earned',
+      description: `Puntos ganados por pedido ${orderNumber} (${amountSpent.toFixed(2)}€)${isVoucherPurchase ? ' - Bono +25%' : ''}`,
+      orderId: orderId,
+    },
+  })
+
+  return { pointsEarned, newTier }
+}

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "./ui/Button"
 import { CartButton } from "./CartButton"
 import { AuthModal } from "./AuthModal"
@@ -70,21 +71,19 @@ export function Navbar() {
         </div>
 
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center gap-3 group">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                    <Printer className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                    LoviPrintDTF
-                  </h1>
-                  <p className="text-xs text-gray-500">Impresión DTF Express</p>
+              <Link href="/" className="flex items-center group relative">
+                <div className="absolute -left-4 -top-2 w-64 h-24 bg-gradient-to-br from-white to-gray-50 rounded-full shadow-2xl group-hover:shadow-orange-500/50 transition-all duration-300 group-hover:scale-105 border-4 border-orange-500/20"></div>
+                <div className="relative h-20 w-56 z-10 transition-all duration-300 group-hover:scale-105 pl-4">
+                  <Image
+                    src="/logo.png"
+                    alt="LoviPrintDTF - Impresión DTF"
+                    fill
+                    className="object-contain object-center"
+                    priority
+                  />
                 </div>
               </Link>
 

@@ -34,13 +34,21 @@ import { calculateUnitPrice } from "@/lib/pricing"
 import { FileUpload } from "@/components/FileUpload"
 import toast from "react-hot-toast"
 
+interface UploadedFileData {
+  url: string
+  name: string
+  size: number
+  publicId?: string
+  metadata?: any
+}
+
 export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [product, setProduct] = useState<ProductWithRelations | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
-  const [uploadedFile, setUploadedFile] = useState<any>(null)
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileData | null>(null)
   const [addingToCart, setAddingToCart] = useState(false)
   const [selectedExtras, setSelectedExtras] = useState({
     prioritize: false,
@@ -183,7 +191,7 @@ export default function ProductDetailPage() {
         body: JSON.stringify({
           productId: product.id,
           quantity,
-          fileUrl: uploadedFile?.url,
+          fileUrl: uploadedFile?.url, // URL del archivo subido
           fileName: uploadedFile?.name,
           fileSize: uploadedFile?.size,
           customizations: Object.keys(customizations).length > 0 ? customizations : undefined,
@@ -567,23 +575,28 @@ export default function ProductDetailPage() {
                       <div className="space-y-3">
                         {/* Priorizar mi Pedido */}
                         <label className="flex items-center justify-between p-3 border-2 rounded-lg cursor-pointer hover:border-orange-300 hover:bg-orange-50 transition group">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedExtras.prioritize}
-                              onChange={(e) => setSelectedExtras({ ...selectedExtras, prioritize: e.target.checked })}
-                              className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
-                            />
-                            <div>
-                              <span className="font-semibold text-gray-900">Priorizar mi Pedido</span>
-                              <div className="relative inline-block ml-2">
-                                <HelpCircle className="h-4 w-4 text-gray-400 inline hover:text-orange-600 transition" />
-                                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                                  Te colocamos en primera posición de la cola y garantizamos que tu pedido salga el mismo día
-                                  <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                              <input
+                                type="checkbox"
+                                checked={selectedExtras.prioritize}
+                                onChange={(e) => setSelectedExtras({ ...selectedExtras, prioritize: e.target.checked })}
+                                className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                              />
+                              <div>
+                                <span className="font-semibold text-gray-900">Priorizar mi Pedido</span>
+                                <div className="relative inline-block ml-2">
+                                  <HelpCircle className="h-4 w-4 text-gray-400 inline hover:text-orange-600 transition" />
+                                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                                    Te colocamos en primera posición de la cola y garantizamos que tu pedido salga el mismo día
+                                    <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
+                            <p className="text-xs text-orange-700 ml-8 italic">
+                              ℹ️ El precio se calcula sobre el TOTAL de metros DTF en tu carrito
+                            </p>
                           </div>
                           <span className="font-bold text-orange-600">
                             +{formatCurrency(getExtraPrice('prioritize'))}
@@ -650,7 +663,12 @@ export default function ProductDetailPage() {
                         <Upload className="h-4 w-4 inline mr-1" />
                         Subir Diseño *
                       </label>
-                      <FileUpload onFileUpload={setUploadedFile} />
+                      <FileUpload
+                        onFileUpload={setUploadedFile}
+                        currentFile={uploadedFile}
+                        onRemove={() => setUploadedFile(null)}
+                      />
+
                       <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <p className="text-xs text-blue-900 font-medium mb-1">Requisitos del archivo:</p>
                         <ul className="text-xs text-blue-800 space-y-1">
@@ -659,6 +677,20 @@ export default function ProductDetailPage() {
                           <li>• Fondo transparente (PNG)</li>
                           <li>• Tamaño máximo: 150 MB</li>
                         </ul>
+                      </div>
+
+                      {/* Instrucciones para múltiples diseños */}
+                      <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-start gap-2">
+                          <Info className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-orange-900 mb-1">¿Necesitas diferentes diseños?</p>
+                            <p className="text-xs text-orange-800">
+                              Si quieres añadir varios metros con diseños diferentes, añade primero estos metros con su diseño al carrito,
+                              y luego vuelve a esta página para añadir otros metros con otro diseño. En el carrito aparecerán como productos separados.
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Información de WeTransfer */}

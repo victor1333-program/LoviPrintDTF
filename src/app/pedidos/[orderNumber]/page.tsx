@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { CheckCircle2, CreditCard, Download, Home, Loader2, Mail, Sparkles } from "lucide-react"
+import { CheckCircle2, CreditCard, Download, Home, Loader2, Mail, Sparkles, FileText } from "lucide-react"
 import Link from "next/link"
 import toast from "react-hot-toast"
 
@@ -27,6 +27,10 @@ interface Order {
   shippingAddress?: any
   items: any[]
   createdAt: string
+  invoice?: {
+    id: string
+    invoiceNumber: string
+  }
 }
 
 export default function OrderPage() {
@@ -38,6 +42,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true)
   const [processingPayment, setProcessingPayment] = useState(false)
   const [checkingPayment, setCheckingPayment] = useState(false)
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false)
 
   useEffect(() => {
     const initPage = async () => {
@@ -204,6 +209,66 @@ export default function OrderPage() {
     }
   }
 
+  const confirmFreeOrder = async () => {
+    if (!order) return
+
+    setProcessingPayment(true)
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentStatus: 'PAID',
+          paymentMethod: 'FREE',
+          status: 'CONFIRMED',
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Error al confirmar el pedido')
+      }
+
+      toast.success('¡Pedido confirmado correctamente!')
+      await loadOrder()
+    } catch (error: any) {
+      console.error('Error confirming order:', error)
+      toast.error(error.message || 'Error al confirmar el pedido')
+    } finally {
+      setProcessingPayment(false)
+    }
+  }
+
+  const downloadInvoice = async () => {
+    if (!order?.invoice) return
+
+    setDownloadingInvoice(true)
+    try {
+      const res = await fetch(`/api/invoices/${order.invoice.id}/pdf`)
+
+      if (!res.ok) {
+        throw new Error('Error al descargar la factura')
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Factura-${order.invoice.invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Factura descargada')
+    } catch (error: any) {
+      console.error('Error downloading invoice:', error)
+      toast.error(error.message || 'Error al descargar la factura')
+    } finally {
+      setDownloadingInvoice(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -275,14 +340,16 @@ export default function OrderPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-lg mb-1">
-                      Pago Pendiente
+                      {order.totalPrice === 0 ? 'Confirma tu Pedido' : 'Pago Pendiente'}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      Haz clic en el botón para completar el pago de forma segura con Stripe
+                      {order.totalPrice === 0
+                        ? 'Tu pedido es gratuito. Haz clic en el botón para confirmar'
+                        : 'Haz clic en el botón para completar el pago de forma segura con Stripe'}
                     </p>
                   </div>
                   <Button
-                    onClick={handlePayment}
+                    onClick={order.totalPrice === 0 ? confirmFreeOrder : handlePayment}
                     disabled={processingPayment}
                     size="lg"
                     className="ml-4"
@@ -290,12 +357,21 @@ export default function OrderPage() {
                     {processingPayment ? (
                       <>
                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Procesando...
+                        {order.totalPrice === 0 ? 'Confirmando...' : 'Procesando...'}
                       </>
                     ) : (
                       <>
-                        <CreditCard className="h-5 w-5 mr-2" />
-                        Pagar {formatCurrency(order.totalPrice)}
+                        {order.totalPrice === 0 ? (
+                          <>
+                            <CheckCircle2 className="h-5 w-5 mr-2" />
+                            Confirmar Pedido
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="h-5 w-5 mr-2" />
+                            Pagar {formatCurrency(order.totalPrice)}
+                          </>
+                        )}
                       </>
                     )}
                   </Button>
@@ -330,9 +406,20 @@ export default function OrderPage() {
                             Cantidad: {item.quantity} {item.product?.unit || 'unidades'}
                           </p>
                           {item.fileName && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Archivo: {item.fileName}
-                            </p>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                              <span>Archivo: {item.fileName}</span>
+                              {item.fileUrl && (
+                                <a
+                                  href={item.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
+                                >
+                                  <Download className="h-3 w-3" />
+                                  Descargar
+                                </a>
+                              )}
+                            </div>
                           )}
                           {/* Mostrar extras si los hay */}
                           {item.customizations?.extras && (
@@ -445,14 +532,20 @@ export default function OrderPage() {
                     <h3 className="font-semibold text-gray-900 mb-3">
                       Dirección de Envío
                     </h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="font-semibold">
-                        {order.shippingAddress.address}
-                      </p>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                      {order.shippingAddress.street && (
+                        <p className="font-semibold">{order.shippingAddress.street}</p>
+                      )}
                       <p className="text-gray-600">
                         {order.shippingAddress.postalCode}{' '}
                         {order.shippingAddress.city}
                       </p>
+                      {order.shippingAddress.state && (
+                        <p className="text-gray-600">{order.shippingAddress.state}</p>
+                      )}
+                      {order.shippingAddress.country && (
+                        <p className="text-gray-600">{order.shippingAddress.country}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -547,7 +640,7 @@ export default function OrderPage() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/">
               <Button variant="outline" size="lg">
                 <Home className="h-5 w-5 mr-2" />
@@ -559,6 +652,27 @@ export default function OrderPage() {
                 Ver Mis Pedidos
               </Button>
             </Link>
+            {/* Botón de factura si el pedido está pagado */}
+            {isPaid && order.invoice && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={downloadInvoice}
+                disabled={downloadingInvoice}
+              >
+                {downloadingInvoice ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Descargando...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-5 w-5 mr-2" />
+                    Descargar Factura
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>

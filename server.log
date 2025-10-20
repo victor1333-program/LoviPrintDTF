@@ -1,0 +1,158 @@
+
+> dtf-print-services@0.1.0 start
+> node server.js
+
+✓ PDFKit fonts copied successfully
+> DTF Print Services ready on http://0.0.0.0:3000
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /middleware in 3.9s (697 modules)
+ ○ Compiling /admin/configuracion ...
+ GET /api/auth/session 200 in 5588ms
+ ✓ Compiled /admin/configuracion in 5.4s (949 modules)
+ GET /api/auth/session 200 in 5283ms
+ GET /admin/configuracion 200 in 6094ms
+ GET /admin/notificaciones 200 in 6103ms
+ GET /admin/notificaciones 200 in 185ms
+ GET /admin/configuracion 200 in 186ms
+ GET /admin/notificaciones 200 in 77ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1540ms (789 modules)
+ GET / 200 in 2764ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 527ms (244 modules)
+ GET /api/auth/session 200 in 862ms
+ GET /api/auth/session 200 in 90ms
+ GET /api/auth/session 200 in 185ms
+ GET /api/auth/session 200 in 119ms
+ ✓ Compiled / in 312ms (618 modules)
+ GET / 200 in 1359ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 817ms (948 modules)
+ GET /.well-known/security.txt 404 in 1179ms
+ GET /_profiler/phpinfo 404 in 223ms
+ GET /.env 404 in 172ms
+ GET /api/auth/session 200 in 419ms
+ GET /api/auth/session 200 in 106ms
+ ○ Compiling /bonos ...
+ ✓ Compiled /bonos in 3s (932 modules)
+ GET /bonos 200 in 3389ms
+ ✓ Compiled /_not-found in 374ms (937 modules)
+ GET /grid.svg 404 in 779ms
+ ○ Compiling /productos/bonos/[slug] ...
+ ✓ Compiled /productos/bonos/[slug] in 1136ms (957 modules)
+ GET /productos/bonos/bono-dtf-50-metros 200 in 1794ms
+ GET /productos/bonos/bono-dtf-25-metros 200 in 2599ms
+ GET /productos/bonos/bono-dtf-100-metros 200 in 1297ms
+ ○ Compiling /api/vouchers/templates ...
+ ✓ Compiled /api/vouchers/templates in 1975ms (964 modules)
+ GET /api/vouchers/templates 200 in 2343ms
+ GET /api/auth/session 200 in 2432ms
+ GET /api/settings?key=whatsapp_greeting 200 in 2517ms
+ GET /api/settings?key=whatsapp_enabled 200 in 2524ms
+ GET /api/settings?key=whatsapp_number 200 in 2527ms
+ GET /api/settings?key=whatsapp_message 200 in 2529ms
+ GET /api/cart 200 in 2567ms
+ GET /api/vouchers/templates 200 in 252ms
+ GET /api/settings?key=whatsapp_greeting 200 in 431ms
+ GET /api/auth/session 200 in 484ms
+ GET /api/settings?key=whatsapp_enabled 200 in 510ms
+ GET /api/settings?key=whatsapp_number 200 in 515ms
+ GET /api/settings?key=whatsapp_message 200 in 510ms
+ GET /api/vouchers/templates 200 in 364ms
+ GET /api/cart 200 in 557ms
+ GET /api/settings?key=whatsapp_greeting 200 in 341ms
+ GET /api/settings?key=whatsapp_enabled 200 in 343ms
+ GET /api/auth/session 200 in 342ms
+ GET /api/settings?key=whatsapp_number 200 in 374ms
+ GET /api/settings?key=whatsapp_message 200 in 366ms
+ GET /api/cart 200 in 323ms
+ GET /api/auth/session 200 in 88ms
+ GET /api/auth/session 200 in 85ms
+ GET /api/auth/session 200 in 81ms
+ GET /api/auth/session 200 in 87ms
+ GET /api/auth/session 200 in 77ms
+ GET /api/auth/session 200 in 71ms
+ GET /api/auth/session 200 in 111ms
+ GET /api/auth/session 200 in 80ms
+ GET /api/auth/session 200 in 87ms
+ GET /api/auth/session 200 in 82ms
+ GET /api/auth/session 200 in 95ms
+ GET /api/auth/session 200 in 102ms
+ GET /api/auth/session 200 in 78ms
+ GET /api/auth/session 200 in 94ms
+ GET /api/auth/session 200 in 112ms
+ GET /api/auth/session 200 in 81ms
+ GET /api/auth/session 200 in 95ms
+ GET /api/auth/session 200 in 130ms
+ GET /api/auth/session 200 in 99ms
+ GET /api/auth/session 200 in 103ms
+ GET /api/auth/session 200 in 91ms
+ GET /api/auth/session 200 in 65ms
+ GET /api/auth/session 200 in 101ms
+ ○ Compiling /productos/[slug] ...
+ ✓ Compiled /productos/[slug] in 1294ms (1028 modules)
+ GET /api/auth/session 200 in 241ms
+ GET /api/auth/session 200 in 152ms
+ GET /api/auth/session 200 in 126ms
+ GET /productos/transfer-dtf 200 in 2585ms
+ ✓ Compiled /api/products in 492ms (1030 modules)
+ GET /api/products 200 in 612ms
+ GET /api/products 200 in 72ms
+ GET /productos/transfer-dtf 200 in 619ms
+ GET /api/products 200 in 428ms
+ GET /api/settings?key=whatsapp_number 200 in 449ms
+ GET /api/settings?key=whatsapp_message 200 in 453ms
+ GET /api/cart 200 in 518ms
+ GET /api/settings?key=whatsapp_enabled 200 in 482ms
+ GET /api/auth/session 200 in 469ms
+ GET /api/settings?key=whatsapp_greeting 200 in 476ms
+ GET /api/auth/session 200 in 107ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1452ms (686 modules)
+ GET / 200 in 2265ms
+ GET / 200 in 498ms
+ GET /grid.svg 404 in 130ms
+ GET /api/cart 200 in 177ms
+ GET /api/settings?key=whatsapp_enabled 200 in 241ms
+ GET /api/settings?key=whatsapp_number 200 in 243ms
+ GET /api/settings?key=whatsapp_message 200 in 237ms
+ GET /api/auth/session 200 in 269ms
+ GET /api/settings?key=whatsapp_greeting 200 in 307ms
+ GET /api/auth/session 200 in 84ms
+ GET /api/auth/session 200 in 137ms
+ GET /api/auth/session 200 in 116ms
+ GET /api/auth/signout 200 in 134ms
+ POST /api/auth/signout 302 in 140ms
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 1345ms (1064 modules)
+ GET /admin/login 200 in 1762ms
+ GET /api/settings?key=whatsapp_enabled 200 in 175ms
+ GET /api/auth/session 200 in 263ms
+ GET /api/settings?key=whatsapp_number 200 in 333ms
+ GET /api/settings?key=whatsapp_message 200 in 293ms
+ GET /api/settings?key=whatsapp_greeting 200 in 293ms
+ GET /api/auth/session 200 in 88ms
+ ○ Compiling /contacto ...
+ ✓ Compiled /contacto in 2s (1072 modules)
+ GET /contacto 200 in 2647ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /api/cart 200 in 445ms
+ GET /api/settings?key=whatsapp_enabled 200 in 543ms
+ GET /api/settings?key=whatsapp_number 200 in 547ms
+ GET /api/settings?key=whatsapp_message 200 in 546ms
+ GET /api/settings?key=whatsapp_greeting 200 in 375ms
+ GET /api/auth/session 200 in 439ms
+ GET /api/cart 200 in 142ms
+ GET /api/settings?key=whatsapp_enabled 200 in 169ms
+ GET /api/settings?key=whatsapp_number 200 in 166ms
+ GET /api/settings?key=whatsapp_message 200 in 169ms
+ GET /api/settings?key=whatsapp_greeting 200 in 169ms
+ GET /api/auth/session 200 in 136ms
+ GET /api/auth/session 200 in 74ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/auth/session 200 in 194ms
+ GET /api/auth/session 200 in 100ms
+ ✓ Compiled in 2.6s (1076 modules)
+ GET /contacto 200 in 469ms
+ GET /productos/transfer-dtf 200 in 513ms
+ GET /admin/login 200 in 455ms

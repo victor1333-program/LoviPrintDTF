@@ -113,16 +113,6 @@ export default function AdminLoginPage() {
               {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center">
-              Credenciales por defecto:
-            </p>
-            <div className="mt-2 bg-gray-50 rounded-lg p-3 text-xs font-mono text-gray-700">
-              <div>Email: admin@dtfprint.com</div>
-              <div>Password: admin123</div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

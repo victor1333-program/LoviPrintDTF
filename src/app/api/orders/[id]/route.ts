@@ -9,9 +9,11 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const order = await prisma.order.findUnique({
+
+    // Try to find by database ID first, then by orderNumber
+    let order = await prisma.order.findUnique({
       where: {
-        orderNumber: id
+        id: id
       },
       include: {
         user: {
@@ -38,6 +40,38 @@ export async function GET(
       }
     })
 
+    // If not found by ID, try by orderNumber
+    if (!order) {
+      order = await prisma.order.findUnique({
+        where: {
+          orderNumber: id
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          items: {
+            include: {
+              product: true
+            }
+          },
+          shipment: {
+            include: {
+              trackingEvents: {
+                orderBy: {
+                  eventDate: 'desc'
+                }
+              }
+            }
+          }
+        }
+      })
+    }
+
     if (!order) {
       return NextResponse.json(
         { error: 'Pedido no encontrado' },
@@ -63,19 +97,21 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { status, paymentStatus, adminNotes, trackingNumber, notes } = body
+    const { status, paymentStatus, paymentMethod, adminNotes, trackingNumber, notes } = body
 
     const updateData: any = {}
 
     if (status) updateData.status = status
     if (paymentStatus) updateData.paymentStatus = paymentStatus
+    if (paymentMethod) updateData.paymentMethod = paymentMethod
     if (adminNotes !== undefined) updateData.adminNotes = adminNotes
     if (trackingNumber !== undefined) updateData.trackingNumber = trackingNumber
     if (notes !== undefined) updateData.notes = notes
 
     // Obtener el pedido actual antes de actualizarlo
-    const currentOrder = await prisma.order.findUnique({
-      where: { orderNumber: id },
+    // Try by database ID first, then by orderNumber
+    let currentOrder = await prisma.order.findUnique({
+      where: { id: id },
       select: {
         id: true,
         status: true,
@@ -91,6 +127,26 @@ export async function PATCH(
       }
     })
 
+    // If not found by ID, try by orderNumber
+    if (!currentOrder) {
+      currentOrder = await prisma.order.findUnique({
+        where: { orderNumber: id },
+        select: {
+          id: true,
+          status: true,
+          userId: true,
+          totalPrice: true,
+          pointsEarned: true,
+          isVoucherPurchase: true,
+          items: {
+            include: {
+              product: true
+            }
+          }
+        }
+      })
+    }
+
     if (!currentOrder) {
       return NextResponse.json(
         { error: 'Pedido no encontrado' },
@@ -100,9 +156,9 @@ export async function PATCH(
 
     // Actualizar orden usando transacción para manejar puntos
     const order = await prisma.$transaction(async (tx) => {
-      // Actualizar la orden
+      // Actualizar la orden using the database ID
       const updatedOrder = await tx.order.update({
-        where: { orderNumber: id },
+        where: { id: currentOrder.id },
         data: updateData,
         include: {
           items: {
@@ -114,10 +170,10 @@ export async function PATCH(
         }
       })
 
-      // Si el estado cambió a COMPLETED y tiene usuario, asignar puntos
+      // Si el estado cambió a DELIVERED y tiene usuario, asignar puntos
       if (
-        status === 'COMPLETED' &&
-        currentOrder.status !== 'COMPLETED' &&
+        status === 'DELIVERED' &&
+        currentOrder.status !== 'DELIVERED' &&
         currentOrder.userId &&
         currentOrder.pointsEarned === 0 // Solo si no se han asignado puntos antes
       ) {
@@ -167,13 +223,40 @@ export async function PATCH(
             }
           })
 
+          // Obtener o crear LoyaltyPoints
+          let loyaltyPoints = await tx.loyaltyPoints.findUnique({
+            where: { userId: currentOrder.userId }
+          })
+
+          if (!loyaltyPoints) {
+            loyaltyPoints = await tx.loyaltyPoints.create({
+              data: {
+                userId: currentOrder.userId,
+                totalPoints: pointsEarned,
+                availablePoints: pointsEarned,
+                lifetimePoints: pointsEarned,
+                tier: newTier
+              }
+            })
+          } else {
+            await tx.loyaltyPoints.update({
+              where: { id: loyaltyPoints.id },
+              data: {
+                totalPoints: { increment: pointsEarned },
+                availablePoints: { increment: pointsEarned },
+                lifetimePoints: { increment: pointsEarned },
+                tier: newTier
+              }
+            })
+          }
+
           // Crear registro en historial de puntos
-          await tx.loyaltyPoints.create({
+          await tx.pointTransaction.create({
             data: {
-              userId: currentOrder.userId,
+              pointsId: loyaltyPoints.id,
               points: pointsEarned,
-              type: 'EARNED',
-              description: `Puntos ganados por pedido completado ${id}${isVoucherPurchase ? ' (Bono +25%)' : ''}`,
+              type: 'earned',
+              description: `Puntos ganados por pedido completado ${updatedOrder.orderNumber}${isVoucherPurchase ? ' (Bono +25%)' : ''}`,
               orderId: currentOrder.id
             }
           })

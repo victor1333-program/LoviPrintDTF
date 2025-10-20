@@ -5,6 +5,13 @@ interface GLSConfig {
   clientId: string
   username: string
   password: string
+  senderName: string
+  senderAddress: string
+  senderCity: string
+  senderZipcode: string
+  senderCountry: string
+  senderPhone: string
+  senderEmail: string
 }
 
 interface CreateShipmentParams {
@@ -42,7 +49,20 @@ export class GLSService {
       where: {
         category: 'shipping',
         key: {
-          in: ['gls_api_url', 'gls_client_id', 'gls_username', 'gls_password', 'gls_enabled']
+          in: [
+            'gls_api_url',
+            'gls_client_id',
+            'gls_username',
+            'gls_password',
+            'gls_enabled',
+            'gls_sender_name',
+            'gls_sender_address',
+            'gls_sender_city',
+            'gls_sender_zipcode',
+            'gls_sender_country',
+            'gls_sender_phone',
+            'gls_sender_email'
+          ]
         }
       }
     })
@@ -64,7 +84,14 @@ export class GLSService {
       apiUrl: config.gls_api_url.replace('?wsdl', '').replace('?WSDL', ''),
       clientId: config.gls_client_id,
       username: config.gls_username,
-      password: config.gls_password
+      password: config.gls_password,
+      senderName: config.gls_sender_name || '',
+      senderAddress: config.gls_sender_address || '',
+      senderCity: config.gls_sender_city || '',
+      senderZipcode: config.gls_sender_zipcode || '',
+      senderCountry: config.gls_sender_country || 'ES',
+      senderPhone: config.gls_sender_phone || '',
+      senderEmail: config.gls_sender_email || ''
     }
   }
 
@@ -72,49 +99,61 @@ export class GLSService {
    * Crear un envío en GLS
    */
   async createShipment(params: CreateShipmentParams): Promise<GLSShipmentResponse> {
-    // Preparar el SOAP envelope para crear envío
+    // Construir el XML interno del servicio
+    const servicioXml = `<Servicios>
+  <Servicio uid="${this.config.clientId}">
+    <Remitente>
+      <Cuenta>${this.config.username}</Cuenta>
+      <Nombre>${this.escapeXml(this.config.senderName)}</Nombre>
+      <Direccion>${this.escapeXml(this.config.senderAddress)}</Direccion>
+      <Poblacion>${this.escapeXml(this.config.senderCity)}</Poblacion>
+      <CodPostal>${this.config.senderZipcode}</CodPostal>
+      <Pais>${this.config.senderCountry}</Pais>
+      ${this.config.senderPhone ? `<Telefono>${this.config.senderPhone}</Telefono>` : ''}
+      ${this.config.senderEmail ? `<Email>${this.config.senderEmail}</Email>` : ''}
+    </Remitente>
+    <Destinatario>
+      <Nombre>${this.escapeXml(params.recipientName)}</Nombre>
+      <Direccion>${this.escapeXml(params.recipientAddress)}</Direccion>
+      <Poblacion>${this.escapeXml(params.recipientCity)}</Poblacion>
+      <Provincia>${this.escapeXml(params.recipientCity)}</Provincia>
+      <CodPostal>${params.recipientPostal}</CodPostal>
+      <Pais>${params.recipientCountry || 'ES'}</Pais>
+      ${params.recipientPhone ? `<Telefono>${params.recipientPhone}</Telefono>` : ''}
+      ${params.recipientEmail ? `<Email>${params.recipientEmail}</Email>` : ''}
+    </Destinatario>
+    <Envio>
+      <Bultos>${params.packages || 1}</Bultos>
+      ${params.weight ? `<Peso>${params.weight}</Peso>` : ''}
+      <Retorno>N</Retorno>
+      <POD>N</POD>
+      ${params.notes ? `<Observaciones>${this.escapeXml(params.notes)}</Observaciones>` : ''}
+    </Envio>
+    <Referencia>${params.orderId}</Referencia>
+  </Servicio>
+</Servicios>`
+
+    // Preparar el SOAP envelope para crear envío usando GrabaServicios
+    // El docIn se pasa como CDATA para que no se parsee como XML
     const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
-    <GrabaExpedicion xmlns="http://www.asmred.com/">
-      <uid>${this.config.clientId}</uid>
-      <datos>
-        <Expedicion>
-          <Remitente>
-            <Cuenta>${this.config.username}</Cuenta>
-            <Codigo>1</Codigo>
-          </Remitente>
-          <Destinatario>
-            <Nombre>${this.escapeXml(params.recipientName)}</Nombre>
-            <Direccion>${this.escapeXml(params.recipientAddress)}</Direccion>
-            <Poblacion>${this.escapeXml(params.recipientCity)}</Poblacion>
-            <Provincia>${this.escapeXml(params.recipientCity)}</Provincia>
-            <CodPostal>${params.recipientPostal}</CodPostal>
-            <Pais>${params.recipientCountry || 'ES'}</Pais>
-            ${params.recipientPhone ? `<Telefono>${params.recipientPhone}</Telefono>` : ''}
-            ${params.recipientEmail ? `<Email>${params.recipientEmail}</Email>` : ''}
-          </Destinatario>
-          <Envio>
-            <Bultos>${params.packages || 1}</Bultos>
-            ${params.weight ? `<Peso>${params.weight}</Peso>` : ''}
-            <Retorno>N</Retorno>
-            <POD>N</POD>
-            ${params.notes ? `<Observaciones>${this.escapeXml(params.notes)}</Observaciones>` : ''}
-          </Envio>
-          <Referencia>${params.orderId}</Referencia>
-        </Expedicion>
-      </datos>
-    </GrabaExpedicion>
+    <GrabaServicios xmlns="http://www.asmred.com/">
+      <docIn><![CDATA[${servicioXml}]]></docIn>
+    </GrabaServicios>
   </soap:Body>
 </soap:Envelope>`
+
+    // Log del SOAP envelope para debug
+    console.log('GLS SOAP Request:', soapEnvelope)
 
     const response = await fetch(this.config.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml; charset=utf-8',
-        'SOAPAction': 'http://www.asmred.com/GrabaExpedicion',
+        'SOAPAction': 'http://www.asmred.com/GrabaServicios',
       },
       body: soapEnvelope,
       signal: AbortSignal.timeout(30000) // 30 segundos timeout
@@ -122,14 +161,26 @@ export class GLSService {
 
     const responseText = await response.text()
 
+    // Log de la respuesta para debug
+    console.log('GLS Response Status:', response.status)
+    console.log('GLS Response Text:', responseText)
+
     // Verificar errores SOAP
     if (response.status === 500 && responseText.includes('soap:Fault')) {
       const faultMatch = responseText.match(/<faultstring>(.*?)<\/faultstring>/)
+      const faultDetailMatch = responseText.match(/<detail>(.*?)<\/detail>/s)
       const errorMessage = faultMatch ? faultMatch[1] : 'Error SOAP desconocido'
-      throw new Error(`Error GLS: ${errorMessage}`)
+      const errorDetail = faultDetailMatch ? faultDetailMatch[1] : ''
+
+      console.error('SOAP Fault:', errorMessage)
+      console.error('SOAP Detail:', errorDetail)
+      console.error('Full Response:', responseText)
+
+      throw new Error(`Error GLS: ${errorMessage}${errorDetail ? ' - ' + errorDetail : ''}`)
     }
 
     if (!response.ok) {
+      console.error('HTTP Error Response:', responseText)
       throw new Error(`Error HTTP ${response.status}: ${response.statusText}`)
     }
 

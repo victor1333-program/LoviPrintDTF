@@ -60,9 +60,16 @@ model User {
   isProfessional Boolean  @default(false)
   professionalDiscount Decimal? @db.Decimal(5, 2) // % de descuento
   shippingAddress Json?   // Dirección de envío por defecto
+  // Dirección fiscal para profesionales
+  billingStreet String?   // Dirección fiscal
+  billingCity   String?   // Ciudad de facturación
+  billingState  String?   // Provincia de facturación
+  billingPostalCode String? // Código postal de facturación
   loyaltyPoints Int       @default(0) // Puntos de fidelidad disponibles
   totalSpent    Decimal   @db.Decimal(10, 2) @default(0) // Total histórico gastado
   loyaltyTier   LoyaltyTier @default(BRONZE) // Tier de fidelidad
+  verificationToken String? // Token de verificación de email
+  verificationExpires DateTime? // Fecha de expiración del token
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -73,11 +80,32 @@ model User {
   vouchers      Voucher[]
   loyaltyPointsHistory LoyaltyPoints?
   discountUsage DiscountCodeUsage[]
+  addresses     Address[]
 
   @@index([email])
   @@index([role])
   @@index([loyaltyTier])
+  @@index([verificationToken])
   @@map("users")
+}
+
+// Direcciones de envío
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String   @default("España")
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
 }
 
 // Categorías de productos
@@ -291,6 +319,23 @@ model Template {
   @@map("templates")
 }
 
+// Métodos de envío
+model ShippingMethod {
+  id              String   @id @default(cuid())
+  name            String   // ej: "Estándar 24/48h", "Urgente 24h"
+  description     String?  @db.Text
+  price           Decimal  @db.Decimal(10, 2)
+  estimatedDays   String?  // ej: "24-48h", "24h"
+  isActive        Boolean  @default(true)
+  order           Int      @default(0) // Para ordenar en el frontend
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orders          Order[]
+
+  @@map("shipping_methods")
+}
+
 // Pedidos actualizados
 model Order {
   id              String       @id @default(cuid())
@@ -301,6 +346,7 @@ model Order {
   customerPhone   String?
   voucherId       String?
   discountCodeId  String?
+  shippingMethodId String?     // Método de envío seleccionado
   subtotal        Decimal      @db.Decimal(10, 2)
   discountAmount  Decimal      @db.Decimal(10, 2) @default(0)
   taxAmount       Decimal      @db.Decimal(10, 2)
@@ -330,15 +376,18 @@ model Order {
   user            User?        @relation(fields: [userId], references: [id])
   voucher         Voucher?     @relation(fields: [voucherId], references: [id])
   discountCode    DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  shippingMethod  ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
   items           OrderItem[]
   statusHistory   OrderStatusHistory[]
   shipment        Shipment?
+  invoice         Invoice?
 
   @@index([orderNumber])
   @@index([userId])
   @@index([status])
   @@index([customerEmail])
   @@index([createdAt])
+  @@index([shippingMethodId])
   @@map("orders")
 }
 
@@ -378,6 +427,55 @@ model OrderStatusHistory {
 
   @@index([orderId])
   @@map("order_status_history")
+}
+
+// Facturas
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique // Formato: FAC-YYYY-NNNNN
+  orderId         String   @unique
+
+  // Datos del cliente
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  customerTaxId   String?  // NIF/CIF del cliente
+  customerAddress Json?    // Dirección completa
+
+  // Datos de la empresa
+  companyName     String   @default("LoviPrintDTF")
+  companyTaxId    String   @default("B12345678")
+  companyAddress  String   @default("Calle Ejemplo, 123, 28001 Madrid")
+  companyPhone    String?
+  companyEmail    String?
+
+  // Importes
+  subtotal        Decimal  @db.Decimal(10, 2)
+  discountAmount  Decimal  @db.Decimal(10, 2) @default(0)
+  taxAmount       Decimal  @db.Decimal(10, 2)
+  taxRate         Decimal  @db.Decimal(5, 2) @default(21) // % IVA
+  shippingCost    Decimal  @db.Decimal(10, 2)
+  totalPrice      Decimal  @db.Decimal(10, 2)
+
+  // PDF
+  pdfUrl          String?  // URL del PDF en Cloudinary o local
+  pdfPublicId     String?  // Public ID en Cloudinary
+
+  // Metadatos
+  issueDate       DateTime @default(now())
+  dueDate         DateTime? // Fecha de vencimiento (para facturas a crédito)
+  notes           String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceNumber])
+  @@index([orderId])
+  @@index([customerEmail])
+  @@index([issueDate])
+  @@map("invoices")
 }
 
 // Configuración del sistema

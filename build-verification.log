@@ -1,0 +1,31 @@
+
+> dtf-print-services@0.1.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 394ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+   ▲ Next.js 15.5.5
+   - Environments: .env
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 28.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+[Error [PageNotFoundError]: Cannot find module for page: /admin/bonos] {
+  code: 'ENOENT'
+}
+[Error [PageNotFoundError]: Cannot find module for page: /admin/codigos-descuento] {
+  code: 'ENOENT'
+}
+
+> Build error occurred
+[Error: Failed to collect page data for /admin/bonos] { type: 'Error' }

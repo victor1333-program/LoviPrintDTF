@@ -49,7 +49,7 @@ async function getEmailConfig(): Promise<EmailConfig | null> {
       user: config.smtp_user,
       password: config.smtp_password,
       fromName: config.smtp_from_name || 'LoviPrintDTF',
-      fromEmail: config.smtp_from_email || 'info@loviprintdtf.com',
+      fromEmail: config.smtp_from_email || 'info@loviprintdtf.es',
     }
 
     configLastFetched = now
@@ -131,7 +131,7 @@ export async function sendAdminOrderNotification(order: any) {
       where: { key: 'admin_notification_email' }
     })
 
-    const adminEmail = adminEmailSetting?.value || 'admin@loviprintdtf.com'
+    const adminEmail = adminEmailSetting?.value || 'info@loviprintdtf.es'
 
     const html = generateAdminOrderNotificationHTML(order)
 
@@ -174,6 +174,7 @@ function generateOrderConfirmationHTML(order: any): string {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto; margin-bottom: 20px; filter: brightness(0) invert(1);" />
         <h1 style="color: white; margin: 0; font-size: 28px;">¡Pedido Confirmado!</h1>
       </div>
 
@@ -302,6 +303,7 @@ function generateOrderStatusUpdateHTML(order: any, newStatus: string): string {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: ${status.color}; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto; margin-bottom: 20px; filter: brightness(0) invert(1);" />
         <h1 style="color: white; margin: 0; font-size: 28px;">${status.title}</h1>
       </div>
 
@@ -367,7 +369,8 @@ function generateAdminOrderNotificationHTML(order: any): string {
       <title>Nuevo Pedido</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #1f2937; padding: 20px; text-align: center;">
+      <div style="background: #1f2937; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto; margin-bottom: 20px; filter: brightness(0) invert(1);" />
         <h1 style="color: white; margin: 0;">Nuevo Pedido Recibido</h1>
       </div>
 
