@@ -66,6 +66,25 @@ export async function GET(request: NextRequest) {
             orders: true,
           },
         },
+        loyaltyPointsHistory: {
+          select: {
+            availablePoints: true,
+            totalPoints: true,
+            lifetimePoints: true,
+            tier: true,
+          },
+        },
+        addresses: {
+          select: {
+            id: true,
+            street: true,
+            city: true,
+            state: true,
+            postalCode: true,
+            country: true,
+            isDefault: true,
+          },
+        },
       },
       take: search ? 10 : undefined,
     })

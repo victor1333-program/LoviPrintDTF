@@ -1,0 +1,16 @@
+# Robots.txt para LoviPrintDTF
+# Permite el rastreo de todas las páginas públicas
+
+User-agent: *
+Allow: /
+
+# Bloquear áreas privadas y administrativas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /cuenta/
+Disallow: /checkout/
+Disallow: /carrito/
+Disallow: /auth/
+
+# Sitemap
+Sitemap: https://loviprintdtf.es/sitemap.xml

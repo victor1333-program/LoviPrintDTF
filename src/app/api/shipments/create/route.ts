@@ -54,17 +54,38 @@ export async function POST(request: NextRequest) {
 
     const glsService = new GLSService(glsConfig)
 
+    // Normalizar código de país a formato ISO de 2 letras
+    const normalizeCountryCode = (country: string | undefined): string => {
+      if (!country) return 'ES'
+      const countryUpper = country.toUpperCase()
+      // Si ya es un código de 2 letras, devolverlo
+      if (countryUpper.length === 2) return countryUpper
+      // Mapeo de nombres comunes a códigos
+      const countryMap: { [key: string]: string } = {
+        'ESPAÑA': 'ES',
+        'SPAIN': 'ES',
+        'PORTUGAL': 'PT',
+        'FRANCIA': 'FR',
+        'FRANCE': 'FR',
+        'ITALIA': 'IT',
+        'ITALY': 'IT',
+        'ALEMANIA': 'DE',
+        'GERMANY': 'DE'
+      }
+      return countryMap[countryUpper] || 'ES'
+    }
+
     // Crear envío en GLS
     const glsResponse = await glsService.createShipment({
       orderId: order.id,
       recipientName: order.customerName,
-      recipientAddress: address.address,
-      recipientCity: address.city,
-      recipientPostal: address.postalCode,
-      recipientCountry: address.country || 'ES',
+      recipientAddress: address.street || address.address || '',
+      recipientCity: address.city || '',
+      recipientPostal: address.postalCode || address.zipCode || '',
+      recipientCountry: normalizeCountryCode(address.country),
       recipientPhone: order.customerPhone || undefined,
       recipientEmail: order.customerEmail,
-      weight: 1.0, // TODO: Calcular peso real
+      weight: 1.0,
       packages: 1,
       notes: order.notes || undefined
     })
@@ -78,10 +99,10 @@ export async function POST(request: NextRequest) {
         status: 'CREATED',
         carrier: 'GLS',
         recipientName: order.customerName,
-        recipientAddress: address.address,
-        recipientCity: address.city,
-        recipientPostal: address.postalCode,
-        recipientCountry: address.country || 'ES',
+        recipientAddress: address.street || address.address || '',
+        recipientCity: address.city || '',
+        recipientPostal: address.postalCode || address.zipCode || '',
+        recipientCountry: normalizeCountryCode(address.country),
         recipientPhone: order.customerPhone || undefined,
         recipientEmail: order.customerEmail,
         weight: 1.0,

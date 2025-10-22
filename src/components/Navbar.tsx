@@ -16,7 +16,8 @@ import {
   Mail,
   Zap,
   Menu,
-  X
+  X,
+  Phone
 } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 
@@ -62,10 +63,24 @@ export function Navbar() {
         {/* Banner superior */}
         <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 text-white py-2">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center gap-2 text-sm font-medium">
-              <Zap className="w-4 h-4 fill-white animate-pulse" />
-              <span>Envío 24h en toda España • Bonos con hasta 33% descuento</span>
-              <Zap className="w-4 h-4 fill-white animate-pulse" />
+            <div className="flex items-center justify-center gap-3 text-sm font-medium flex-wrap">
+              {/* Teléfono */}
+              <a
+                href="tel:+34614040296"
+                className="flex items-center gap-1.5 hover:text-orange-100 transition-colors group"
+              >
+                <Phone className="w-4 h-4 group-hover:animate-bounce" />
+                <span className="font-semibold">+34 614 04 02 96</span>
+              </a>
+
+              <span className="hidden sm:inline text-orange-200">•</span>
+
+              {/* Mensajes promocionales */}
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 fill-white animate-pulse hidden sm:inline" />
+                <span className="text-center sm:text-left">Envío 24h en toda España • Bonos con hasta 33% descuento</span>
+                <Zap className="w-4 h-4 fill-white animate-pulse hidden sm:inline" />
+              </div>
             </div>
           </div>
         </div>

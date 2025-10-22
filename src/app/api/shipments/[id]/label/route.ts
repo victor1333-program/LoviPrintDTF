@@ -45,6 +45,12 @@ export async function GET(
     // Obtener etiqueta PDF en base64
     const labelBase64 = await glsService.getLabel(shipment.glsReference)
 
+    if (!labelBase64) {
+      return NextResponse.json({
+        error: 'No se pudo obtener la etiqueta de GLS'
+      }, { status: 500 })
+    }
+
     // Convertir base64 a buffer
     const pdfBuffer = Buffer.from(labelBase64, 'base64')
 

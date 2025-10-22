@@ -115,6 +115,7 @@ export async function PATCH(
       select: {
         id: true,
         status: true,
+        paymentStatus: true,
         userId: true,
         totalPrice: true,
         pointsEarned: true,
@@ -134,6 +135,7 @@ export async function PATCH(
         select: {
           id: true,
           status: true,
+          paymentStatus: true,
           userId: true,
           totalPrice: true,
           pointsEarned: true,
@@ -170,15 +172,24 @@ export async function PATCH(
         }
       })
 
-      // Si el estado cambió a DELIVERED y tiene usuario, asignar puntos
-      if (
-        status === 'DELIVERED' &&
-        currentOrder.status !== 'DELIVERED' &&
+      // Si el pedido está pagado y tiene usuario, asignar puntos
+      // Esto cubre tanto cambios a DELIVERED como cambios manuales de estado con pago confirmado
+      const finalPaymentStatus = paymentStatus || currentOrder.paymentStatus
+      const finalStatus = status || currentOrder.status
+
+      const shouldAwardPoints = (
         currentOrder.userId &&
-        currentOrder.pointsEarned === 0 // Solo si no se han asignado puntos antes
-      ) {
+        currentOrder.pointsEarned === 0 && // Solo si no se han asignado puntos antes
+        finalPaymentStatus === 'PAID' && // El pago debe estar confirmado
+        (
+          // El estado debe ser READY, SHIPPED o DELIVERED
+          ['READY', 'SHIPPED', 'DELIVERED'].includes(finalStatus)
+        )
+      )
+
+      if (shouldAwardPoints) {
         const user = await tx.user.findUnique({
-          where: { id: currentOrder.userId },
+          where: { id: currentOrder.userId! }, // Ya verificamos que userId existe en shouldAwardPoints
           select: { loyaltyTier: true, totalSpent: true }
         })
 
@@ -204,7 +215,7 @@ export async function PATCH(
 
           // Actualizar usuario con puntos, totalSpent y tier
           await tx.user.update({
-            where: { id: currentOrder.userId },
+            where: { id: currentOrder.userId! },
             data: {
               loyaltyPoints: {
                 increment: pointsEarned
@@ -225,13 +236,13 @@ export async function PATCH(
 
           // Obtener o crear LoyaltyPoints
           let loyaltyPoints = await tx.loyaltyPoints.findUnique({
-            where: { userId: currentOrder.userId }
+            where: { userId: currentOrder.userId! }
           })
 
           if (!loyaltyPoints) {
             loyaltyPoints = await tx.loyaltyPoints.create({
               data: {
-                userId: currentOrder.userId,
+                userId: currentOrder.userId!,
                 totalPoints: pointsEarned,
                 availablePoints: pointsEarned,
                 lifetimePoints: pointsEarned,
@@ -267,7 +278,11 @@ export async function PATCH(
     })
 
     // Si cambió el estado, crear historial y enviar email
-    if (status && status !== currentOrder.status) {
+    const statusChanged = status && status !== currentOrder.status
+    const trackingNumberUpdated = trackingNumber !== undefined && trackingNumber !== '' && trackingNumber !== order.trackingNumber
+    const isShipped = status === 'SHIPPED' || (order.status === 'SHIPPED' && !status)
+
+    if (statusChanged) {
       await prisma.orderStatusHistory.create({
         data: {
           orderId: order.id,
@@ -284,6 +299,13 @@ export async function PATCH(
       // Notificar al admin también (en background)
       sendAdminOrderNotification(order).catch(err =>
         console.error('Error sending admin notification:', err)
+      )
+    }
+    // Si el pedido está en estado SHIPPED y se actualiza el número de seguimiento
+    else if (isShipped && trackingNumberUpdated) {
+      // Enviar email con el número de seguimiento actualizado
+      sendOrderStatusUpdateEmail(order, order.status).catch(err =>
+        console.error('Error sending tracking number update email:', err)
       )
     }
 

@@ -30,10 +30,8 @@ export function CartButton() {
       const itemsCount = data.items?.length || 0
       setItemCount(itemsCount)
 
-      // Calcular total del carrito
-      const total = data.items?.reduce((sum: number, item: any) => {
-        return sum + (Number(item.unitPrice) * Number(item.quantity))
-      }, 0) || 0
+      // Usar el subtotal calculado por el backend (ya incluye descuentos por bonos, extras, etc.)
+      const total = data.subtotal || 0
 
       setCartTotal(total)
     } catch (error) {

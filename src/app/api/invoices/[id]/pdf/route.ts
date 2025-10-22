@@ -31,7 +31,8 @@ export async function GET(
       include: {
         order: {
           select: {
-            userId: true
+            userId: true,
+            customerEmail: true
           }
         }
       }
@@ -44,11 +45,12 @@ export async function GET(
       )
     }
 
-    // Verificar permisos: admin o dueño del pedido
+    // Verificar permisos: admin, dueño del pedido, o mismo email
     const isAdmin = session.user.role === 'ADMIN'
     const isOwner = session.user.id === invoice.order.userId
+    const sameEmail = session.user.email === invoice.order.customerEmail
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin && !isOwner && !sameEmail) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }

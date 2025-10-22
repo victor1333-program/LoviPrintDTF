@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import Script from 'next/script'
 import { Badge } from "@/components/ui/Badge"
 import { Input } from "@/components/ui/Input"
 import { Card, CardContent } from "@/components/ui/Card"
@@ -182,7 +183,26 @@ export default function FAQPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <>
+      <Script
+        id="schema-faq"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })
+        }}
+      />
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-600 to-orange-700 text-white py-20">
         <div className="container mx-auto px-4">
@@ -334,6 +354,7 @@ export default function FAQPage() {
           </Card>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   )
 }

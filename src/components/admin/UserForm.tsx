@@ -41,6 +41,10 @@ interface UserFormProps {
 
 export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const [loading, setLoading] = useState(false)
+
+  // Obtener dirección predeterminada del usuario si existe
+  const defaultAddress = user?.addresses?.find((addr: any) => addr.isDefault) || user?.addresses?.[0]
+
   const [formData, setFormData] = useState<UserFormData>({
     name: user?.name || "",
     email: user?.email || "",
@@ -51,13 +55,19 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     taxId: user?.taxId || "",
     isProfessional: user?.isProfessional || false,
     professionalDiscount: user?.professionalDiscount?.toString() || "0",
-    shippingAddress: user?.shippingAddress || {
+    shippingAddress: defaultAddress ? {
+      street: defaultAddress.street || "",
+      city: defaultAddress.city || "",
+      state: defaultAddress.state || "",
+      postalCode: defaultAddress.postalCode || "",
+      country: defaultAddress.country || "España",
+    } : (user?.shippingAddress || {
       street: "",
       city: "",
       state: "",
       postalCode: "",
       country: "España",
-    },
+    }),
     billingAddress: user?.billingAddress || {
       street: "",
       city: "",

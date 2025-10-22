@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Loader2, MapPin, User, Plus, Check } from 'lucide-react'
+import { Loader2, MapPin, User, Plus, Check, Truck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency } from '@/lib/utils'
 
@@ -19,6 +19,16 @@ interface Address {
   isDefault: boolean
 }
 
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  estimatedDays: string | null
+  isActive: boolean
+  order: number
+}
+
 interface CheckoutModalProps {
   isOpen: boolean
   onClose: () => void
@@ -30,6 +40,8 @@ interface CheckoutModalProps {
     shipping: number
     total: number
   }
+  hasFreeShipping?: boolean
+  initialShippingMethodId?: string
 }
 
 export interface CheckoutData {
@@ -43,9 +55,10 @@ export interface CheckoutData {
     postalCode: string
     country: string
   }
+  shippingMethodId?: string
 }
 
-export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFreeShipping = false, initialShippingMethodId }: CheckoutModalProps) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState<'profile' | 'address'>('profile')
@@ -77,6 +90,10 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: Chec
     postalCode: '',
     country: 'España'
   })
+
+  // Métodos de envío
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+  const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('')
 
   useEffect(() => {
     if (isOpen) {
@@ -118,6 +135,28 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: Chec
         // Si no tiene direcciones, mostrar formulario de nueva dirección
         if (addressData.length === 0) {
           setShowNewAddressForm(true)
+        }
+      }
+
+      // Cargar métodos de envío siempre (se mostrará u ocultará según hasFreeShipping)
+      const shippingRes = await fetch('/api/shipping-methods')
+      if (shippingRes.ok) {
+        const shippingData = await shippingRes.json()
+        setShippingMethods(shippingData)
+
+        // Si hay un método pre-seleccionado del carrito, usarlo
+        if (initialShippingMethodId) {
+          // Verificar que el método existe en la lista
+          const methodExists = shippingData.find((m: ShippingMethod) => m.id === initialShippingMethodId)
+          if (methodExists) {
+            setSelectedShippingMethodId(initialShippingMethodId)
+          } else if (shippingData.length > 0) {
+            // Si no existe, seleccionar el primero
+            setSelectedShippingMethodId(shippingData[0].id)
+          }
+        } else if (shippingData.length > 0) {
+          // Si no hay pre-selección, seleccionar el primer método por defecto
+          setSelectedShippingMethodId(shippingData[0].id)
         }
       }
     } catch (error) {
@@ -189,6 +228,12 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: Chec
         toast.error('El código postal es obligatorio')
         return false
       }
+    }
+
+    // Validar método de envío solo si no hay envío gratis y hay métodos disponibles
+    if (!hasFreeShipping && shippingMethods.length > 0 && !selectedShippingMethodId) {
+      toast.error('Selecciona un método de envío')
+      return false
     }
 
     return true
@@ -263,7 +308,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: Chec
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
-        shippingAddress
+        shippingAddress,
+        shippingMethodId: selectedShippingMethodId || undefined
       })
 
     } catch (error: any) {
@@ -611,6 +657,65 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary }: Chec
                         />
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Selección de método de envío */}
+                {shippingMethods.length > 0 && (
+                  <div className="border-t pt-4 mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Truck className="h-5 w-5 text-primary-600" />
+                      <h4 className="font-semibold">Método de Envío</h4>
+                    </div>
+                    {hasFreeShipping && (
+                      <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          ✓ Tu pedido tiene envío gratis
+                        </p>
+                      </div>
+                    )}
+                    {!hasFreeShipping && (
+                      <div className="space-y-2">
+                        {shippingMethods.map((method) => (
+                          <div
+                            key={method.id}
+                            className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                              selectedShippingMethodId === method.id
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedShippingMethodId(method.id)}
+                          >
+                            <input
+                              type="radio"
+                              name="shipping-method"
+                              value={method.id}
+                              checked={selectedShippingMethodId === method.id}
+                              onChange={() => setSelectedShippingMethodId(method.id)}
+                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">{method.name}</div>
+                                <div className="font-semibold text-primary-600">
+                                  {method.price === 0 ? 'GRATIS' : formatCurrency(method.price)}
+                                </div>
+                              </div>
+                              {method.description && (
+                                <div className="text-sm text-gray-600 mt-0.5">
+                                  {method.description}
+                                </div>
+                              )}
+                              {method.estimatedDays && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Tiempo estimado: {method.estimatedDays}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

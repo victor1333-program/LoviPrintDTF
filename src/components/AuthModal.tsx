@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Modal } from "./ui/Modal"
 import { Input } from "./ui/Input"
 import { Button } from "./ui/Button"
@@ -18,6 +18,7 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
+  const { update: updateSession } = useSession()
   const [formData, setFormData] = useState({
     email: "",
     confirmEmail: "",
@@ -39,11 +40,18 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         toast.error("Credenciales incorrectas")
       } else {
         toast.success("Sesión iniciada correctamente")
+
+        // Forzar actualización de la sesión en el cliente
+        await updateSession()
+
+        // Pequeño delay para asegurar que la sesión se actualice completamente
+        await new Promise(resolve => setTimeout(resolve, 100))
+
         onClose()
         if (onSuccess) {
           onSuccess()
         } else {
-          // Usar router en lugar de reload para mejor experiencia
+          // Recargar la página
           window.location.href = window.location.href
         }
       }

@@ -30,6 +30,21 @@ interface UserData {
   _count: {
     orders: number
   }
+  loyaltyPointsHistory?: {
+    availablePoints: number
+    totalPoints: number
+    lifetimePoints: number
+    tier: LoyaltyTier
+  } | null
+  addresses?: Array<{
+    id: string
+    street: string
+    city: string
+    state: string
+    postalCode: string
+    country: string
+    isDefault: boolean
+  }>
 }
 
 export default function UsuariosPage() {
@@ -267,9 +282,9 @@ export default function UsuariosPage() {
                       </td>
                       <td className="p-3">
                         <div>
-                          <p className="font-semibold text-primary-600">{user.loyaltyPoints}</p>
+                          <p className="font-semibold text-primary-600">{user.loyaltyPointsHistory?.availablePoints ?? user.loyaltyPoints}</p>
                           <p className="text-xs text-gray-500">
-                            ≈ {pointsToEuros(user.loyaltyPoints).toFixed(2)}€
+                            ≈ {pointsToEuros(user.loyaltyPointsHistory?.availablePoints ?? user.loyaltyPoints).toFixed(2)}€
                           </p>
                         </div>
                       </td>
@@ -398,9 +413,9 @@ export default function UsuariosPage() {
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Puntos disponibles:</p>
-                    <p className="font-bold text-primary-600 text-lg">{selectedUser.loyaltyPoints}</p>
+                    <p className="font-bold text-primary-600 text-lg">{selectedUser.loyaltyPointsHistory?.availablePoints ?? selectedUser.loyaltyPoints}</p>
                     <p className="text-xs text-gray-500">
-                      ≈ {pointsToEuros(selectedUser.loyaltyPoints).toFixed(2)}€ en descuentos
+                      ≈ {pointsToEuros(selectedUser.loyaltyPointsHistory?.availablePoints ?? selectedUser.loyaltyPoints).toFixed(2)}€ en descuentos
                     </p>
                   </div>
                   <div>

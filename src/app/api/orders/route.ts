@@ -3,7 +3,6 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { generateOrderNumber } from '@/lib/utils'
-import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email'
 import { validatePointsUsage } from '@/lib/loyalty'
 
 export async function POST(request: NextRequest) {
@@ -232,6 +231,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Detectar si algún item es un bono (por customizations.voucherTemplateId)
+      const isVoucherOrder = items.some((item: any) => {
+        const customizations = item.customizations
+        return !!customizations?.voucherTemplateId
+      })
+
       let userId: string | undefined
 
       // Si se están usando puntos, validar
@@ -271,21 +276,15 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Verificar si algún producto es un bono (VOUCHER)
-      const productIds = items.map((item: any) => item.productId)
-      const products = await prisma.product.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, productType: true }
-      })
-
-      const isVoucherOrder = products.some(p => p.productType === 'VOUCHER')
       const orderNumber = generateOrderNumber(isVoucherOrder)
 
       // Usar una transacción para crear el pedido
       orderData = await prisma.$transaction(async (tx) => {
         const isPaidWithVouchers = useMeterVouchers && meterVouchersInfo
-        const orderStatus = isPaidWithVouchers ? 'CONFIRMED' : 'PENDING'
-        const paymentStatus = isPaidWithVouchers ? 'PAID' : 'PENDING'
+        // IMPORTANTE: Los pedidos con bonos se crean como PENDING para que el usuario pueda revisar
+        // Se confirmarán cuando el usuario haga clic en "Confirmar Pedido"
+        const orderStatus = 'PENDING'
+        const paymentStatus = 'PENDING'
 
         const newOrder = await tx.order.create({
           data: {
@@ -308,17 +307,25 @@ export async function POST(request: NextRequest) {
             pointsUsed: pointsUsed,
             pointsDiscount: parseFloat(pointsDiscount || 0),
             items: {
-              create: items.map((item: any) => ({
-                productId: item.productId,
-                productName: item.productName,
-                quantity: parseFloat(item.quantity),
-                unitPrice: parseFloat(item.unitPrice),
-                subtotal: parseFloat(item.subtotal),
-                fileUrl: item.fileUrl || null,
-                fileName: item.fileName || null,
-                fileMetadata: item.fileMetadata || null,
-                customizations: item.customizations || null,
-              }))
+              create: items.map((item: any) => {
+                // Si el item es un bono, usar el nombre del bono en lugar del producto
+                const isVoucher = item.customizations?.voucherTemplateId
+                const displayName = isVoucher
+                  ? (item.customizations?.voucherName || item.productName)
+                  : item.productName
+
+                return {
+                  productId: item.productId,
+                  productName: displayName,
+                  quantity: parseFloat(item.quantity),
+                  unitPrice: parseFloat(item.unitPrice),
+                  subtotal: parseFloat(item.subtotal),
+                  fileUrl: item.fileUrl || null,
+                  fileName: item.fileName || null,
+                  fileMetadata: item.fileMetadata || null,
+                  customizations: item.customizations || null,
+                }
+              })
             }
           },
           include: {
@@ -377,46 +384,21 @@ export async function POST(request: NextRequest) {
           })
         }
 
-        // Si se usaron bonos de metros, descontarlos usando FIFO
-        if (useMeterVouchers && meterVouchersInfo && userId) {
-          const { metersNeeded, voucherIds } = meterVouchersInfo
+        // NOTA: Los bonos de metros NO se descuentan aquí
+        // Se descuentan cuando el usuario confirma el pedido en /api/orders/confirm-free
+        // Esto permite al usuario revisar el pedido antes de confirmar
 
-          const vouchers = await tx.voucher.findMany({
-            where: {
-              id: { in: voucherIds },
-              userId: userId,
-              isActive: true,
-              type: 'METERS',
-              remainingMeters: { gt: 0 }
-            },
-            orderBy: {
-              createdAt: 'asc'
-            }
-          })
-
-          let metersRemaining = metersNeeded
-
-          for (const voucher of vouchers) {
-            if (metersRemaining <= 0) break
-
-            const currentRemaining = parseFloat(voucher.remainingMeters.toString())
-            const metersToDeduct = Math.min(metersRemaining, currentRemaining)
-            const newRemaining = currentRemaining - metersToDeduct
-
-            await tx.voucher.update({
-              where: { id: voucher.id },
+        // Guardar información del bono en el pedido para uso posterior
+        if (useMeterVouchers && meterVouchersInfo) {
+          // Asociar el primer bono al pedido para referencia
+          const firstVoucherId = meterVouchersInfo.voucherIds?.[0]
+          if (firstVoucherId) {
+            await tx.order.update({
+              where: { id: newOrder.id },
               data: {
-                remainingMeters: newRemaining,
-                usageCount: { increment: 1 },
-                isActive: newRemaining > 0
+                voucherId: firstVoucherId
               }
             })
-
-            metersRemaining -= metersToDeduct
-          }
-
-          if (metersRemaining > 0) {
-            throw new Error(`No hay suficientes metros en los bonos. Faltan ${metersRemaining} metros`)
           }
         }
 
@@ -425,31 +407,26 @@ export async function POST(request: NextRequest) {
 
       // Crear historial de estado
       const historyNotes = useMeterVouchers
-        ? `Pedido creado y pagado con bonos de metros (${meterVouchersInfo?.metersNeeded} metros)`
+        ? `Pedido creado. Pendiente de confirmación para usar bonos de metros (${meterVouchersInfo?.metersNeeded} metros)`
         : 'Pedido creado'
 
       await prisma.orderStatusHistory.create({
         data: {
           orderId: orderData.id,
-          status: useMeterVouchers ? 'CONFIRMED' : 'PENDING',
+          status: 'PENDING',
           notes: historyNotes,
         },
       })
     }
 
-    // Enviar email de confirmación al cliente (no esperar, hacer en background)
-    sendOrderConfirmationEmail(orderData).catch(err =>
-      console.error('Error sending confirmation email:', err)
-    )
-
-    // NOTA: El email al admin se envía cuando se confirma el pago en el webhook
-    // Solo se envía aquí si el pedido ya está pagado (con bonos)
-    const isPaid = orderData.paymentStatus === 'PAID'
-    if (isPaid) {
-      sendAdminOrderNotification(orderData).catch(err =>
-        console.error('Error sending admin notification:', err)
-      )
-    }
+    // IMPORTANTE: NO enviar emails aquí, se enviarán desde el webhook de Stripe
+    // cuando se confirme el pago exitoso. Esto evita:
+    // - Emails duplicados
+    // - Confusión al usuario (recibir "Pedido Confirmado" antes de pagar)
+    // - Emails a pedidos abandonados (si el usuario no completa el pago)
+    //
+    // Todos los emails (confirmación de pedido, activación de bonos, notificación admin)
+    // se envían desde /api/stripe/webhook después de checkout.session.completed
 
     return NextResponse.json(orderData, { status: 201 })
 

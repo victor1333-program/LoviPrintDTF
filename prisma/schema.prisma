@@ -665,6 +665,24 @@ model Shipment {
   packages          Int             @default(1) // Número de bultos
   notes             String?         @db.Text
   glsResponse       Json?           // Respuesta completa de GLS
+  // Campos adicionales para GLS
+  glsUid                  String?         // UID del envío en GLS
+  glsCodexp               String?         // Código de expedición GLS
+  glsServiceCode          String?         // Código de servicio GLS (96, 74, etc)
+  glsTimeFrame            String?         // Franja horaria GLS
+  labelBase64             String?         @db.Text // Etiqueta en base64
+  labelFormat             String?         // Formato de etiqueta (PDF, ZPL, etc)
+  recipientProvince       String?         // Provincia del destinatario
+  recipientMobile         String?         // Móvil internacional del destinatario
+  cashOnDelivery          Decimal?        @db.Decimal(10, 2) // Importe reembolso
+  insurance               Boolean         @default(false) // ¿Tiene seguro?
+  declaredValue           Decimal?        @db.Decimal(10, 2) // Valor declarado
+  incoterm                String?         // Incoterm para envíos internacionales
+  podImageUrl             String?         // URL imagen POD
+  deliverySignatureName   String?         // Nombre quien firma
+  deliveryDNI             String?         // DNI quien recibe
+  incidence               String?         // Descripción de incidencia
+  lastSyncAt              DateTime?       // Última sincronización con GLS
   trackingEvents    ShipmentTracking[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -686,6 +704,10 @@ model ShipmentTracking {
   description String   // Descripción del evento
   location    String?  // Ubicación del evento
   eventDate   DateTime // Fecha del evento
+  eventType   String?  // Tipo de evento GLS
+  eventCode   String?  // Código del evento
+  agencyCode  String?  // Código de agencia GLS
+  agencyName  String?  // Nombre de agencia GLS
   createdAt   DateTime @default(now())
 
   shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)

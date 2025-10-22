@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Badge } from "@/components/ui/Badge"
-import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText } from "lucide-react"
+import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
@@ -24,6 +24,16 @@ interface CartItem {
   customizations?: any
 }
 
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  estimatedDays: string | null
+  isActive: boolean
+  order: number
+}
+
 export default function CarritoPage() {
   const router = useRouter()
   const { data: session } = useSession()
@@ -38,19 +48,45 @@ export default function CarritoPage() {
   const [useMeterVouchers, setUseMeterVouchers] = useState(true)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+  const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('')
 
   useEffect(() => {
     loadCart()
+    loadShippingMethods()
     if (session?.user) {
       loadUserPoints()
     }
   }, [session])
+
+  const loadShippingMethods = async () => {
+    try {
+      console.log('🚚 Loading shipping methods...')
+      const res = await fetch('/api/shipping-methods')
+      if (res.ok) {
+        const data = await res.json()
+        console.log('🚚 Shipping methods loaded:', data)
+        setShippingMethods(data)
+        // Seleccionar el primer método por defecto si no hay uno ya seleccionado
+        if (data.length > 0 && !selectedShippingMethodId) {
+          console.log('🚚 Auto-selecting first method:', data[0].id)
+          setSelectedShippingMethodId(data[0].id)
+        }
+      } else {
+        console.error('❌ Failed to load shipping methods:', res.status)
+      }
+    } catch (error) {
+      console.error('❌ Error loading shipping methods:', error)
+    }
+  }
 
   const loadCart = async () => {
     try {
       const res = await fetch('/api/cart')
       const data = await res.json()
       setCart(data)
+      // Disparar evento para actualizar el botón del carrito
+      window.dispatchEvent(new Event('cartUpdated'))
     } catch (error) {
       console.error('Error loading cart:', error)
       toast.error('Error al cargar el carrito')
@@ -166,12 +202,16 @@ export default function CarritoPage() {
       // Verificar si se usarán bonos de metros
       const useMeterVouchers = cart.meterVouchers?.canUseVoucherMeters || false
 
+      // Si el total es 0€ (por bonos de metros o descuento 100%), crear pedido directo
+      const isFreeOrder = total === 0
+
       // Crear el pedido
       const orderPayload = {
         customerName: checkoutData.customerName,
         customerEmail: checkoutData.customerEmail,
         customerPhone: checkoutData.customerPhone,
         shippingAddress: checkoutData.shippingAddress,
+        shippingMethodId: checkoutData.shippingMethodId,
         items: cart.items.map((item: CartItem) => ({
           productId: item.product.id,
           productName: item.product.name,
@@ -220,8 +260,8 @@ export default function CarritoPage() {
       // Disparar evento para actualizar el botón del carrito
       window.dispatchEvent(new Event('cartUpdated'))
 
-      if (useMeterVouchers) {
-        toast.success('¡Pedido pagado con tus bonos de metros! ✨')
+      if (isFreeOrder) {
+        toast.success('¡Pedido confirmado! ✨')
         router.push(`/pedidos/${order.orderNumber}`)
       } else {
         toast.success('¡Pedido creado con éxito!')
@@ -260,7 +300,6 @@ export default function CarritoPage() {
   }
 
   const TAX_RATE = 0.21
-  const SHIPPING_COST = 5.00
   const FREE_SHIPPING_THRESHOLD = 100
 
   const subtotal = cart.subtotal || 0
@@ -271,11 +310,35 @@ export default function CarritoPage() {
 
   // Si usa bonos de metros y tiene envíos disponibles, o tiene código de envío gratis, envío gratis
   const hasVoucherShipment = cart.meterVouchers?.canUseVoucherShipment || false
-  const shipping = hasVoucherShipment || hasFreeShippingCode || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+
+  // Solo ocultar selección de envío si hay envío gratis por bono o código
+  // Si el envío es gratis por umbral, mostrar opciones para que puedan elegir envío urgente
+  const shouldHideShippingSelection = hasVoucherShipment || hasFreeShippingCode
+
+  // Calcular costo de envío
+  const selectedMethod = shippingMethods.find(m => m.id === selectedShippingMethodId)
+  const baseShippingCost = selectedMethod?.price || 0
+  const hasFreeShippingByThreshold = subtotal >= FREE_SHIPPING_THRESHOLD
+  const shipping = hasVoucherShipment || hasFreeShippingCode || hasFreeShippingByThreshold ? 0 : baseShippingCost
 
   const taxableAmount = subtotal - voucherDiscount - pointsDiscount
   const tax = taxableAmount * TAX_RATE
   const total = taxableAmount + tax + shipping
+
+  // Debug shipping en consola
+  if (typeof window !== 'undefined') {
+    console.log('💰 Shipping Debug:', {
+      shippingMethodsCount: shippingMethods.length,
+      selectedMethodId: selectedShippingMethodId,
+      selectedMethod,
+      baseShippingCost,
+      shouldHideShippingSelection,
+      hasVoucherShipment,
+      hasFreeShippingCode,
+      hasFreeShippingByThreshold,
+      finalShipping: shipping
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -285,12 +348,24 @@ export default function CarritoPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Items del carrito */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.items.map((item: CartItem) => (
+            {cart.items.map((item: CartItem) => {
+              // Detectar si es un bono
+              const isVoucher = item.customizations?.voucherTemplateId
+              const voucherName = item.customizations?.voucherName
+              const voucherMeters = item.customizations?.voucherMeters
+              const displayName = isVoucher ? voucherName : item.product.name
+              const displayUnit = isVoucher ? 'bono' : item.product.unit
+
+              return (
               <Card key={item.id}>
                 <CardContent className="p-6">
                   <div className="flex gap-6">
                     <div className="w-24 h-24 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {item.product.imageUrl ? (
+                      {isVoucher ? (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
+                          <Ticket className="h-12 w-12 text-white" />
+                        </div>
+                      ) : item.product.imageUrl ? (
                         <img
                           src={item.product.imageUrl}
                           alt={item.product.name}
@@ -306,10 +381,17 @@ export default function CarritoPage() {
                     <div className="flex-1">
                       <div className="flex justify-between mb-2">
                         <div>
-                          <h3 className="font-semibold text-lg">{item.product.name}</h3>
-                          <Badge variant="info" className="mt-1">
-                            {item.product.category?.name}
-                          </Badge>
+                          <h3 className="font-semibold text-lg">{displayName}</h3>
+                          {isVoucher ? (
+                            <Badge variant="success" className="mt-1">
+                              <Gift className="h-3 w-3 mr-1" />
+                              Bono Prepagado - {voucherMeters} metros
+                            </Badge>
+                          ) : (
+                            <Badge variant="info" className="mt-1">
+                              {item.product.category?.name}
+                            </Badge>
+                          )}
                         </div>
                         <button
                           onClick={() => removeItem(item.id)}
@@ -354,40 +436,55 @@ export default function CarritoPage() {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {/* Todos los productos usan incrementos de 1 */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.id, Math.max(1, Number(item.quantity) - 1))}
-                            className="w-8 h-8 p-0"
-                            disabled={Number(item.quantity) <= 1}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
+                        {isVoucher ? (
+                          // Los bonos no permiten cambiar cantidad
+                          <div className="flex items-center gap-3">
+                            <Badge variant="default" className="text-base px-4 py-2">
+                              1 {displayUnit}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            {/* Todos los productos usan incrementos de 1 */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, Math.max(1, Number(item.quantity) - 1))}
+                              className="w-8 h-8 p-0"
+                              disabled={Number(item.quantity) <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
 
-                          <span className="font-semibold min-w-[60px] text-center">
-                            {Number(item.quantity)} {item.product.unit}
-                          </span>
+                            <span className="font-semibold min-w-[60px] text-center">
+                              {Number(item.quantity)} {item.product.unit}
+                            </span>
 
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.id, Number(item.quantity) + 1)}
-                            className="w-8 h-8 p-0"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, Number(item.quantity) + 1)}
+                              className="w-8 h-8 p-0"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
 
                         <div className="text-right">
-                          <p className="text-sm text-gray-600">
-                            {formatCurrency(item.calculatedPrice?.unitPrice || 0)}/{item.product.unit}
-                          </p>
+                          {!isVoucher && (
+                            <p className="text-sm text-gray-600">
+                              {formatCurrency(item.calculatedPrice?.unitPrice || 0)}/{item.product.unit}
+                            </p>
+                          )}
                           <p className="text-xl font-bold text-primary-600">
                             {formatCurrency(item.calculatedPrice?.subtotal || 0)}
                           </p>
-                          {item.calculatedPrice?.discountPct > 0 && (
+                          {isVoucher ? (
+                            <Badge variant="success" className="mt-1">
+                              ¡Ahorra 33% comprando este bono!
+                            </Badge>
+                          ) : item.calculatedPrice?.discountPct > 0 && (
                             <Badge variant="success" className="mt-1">
                               -{item.calculatedPrice.discountPct.toFixed(0)}% descuento
                             </Badge>
@@ -398,7 +495,8 @@ export default function CarritoPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
 
           {/* Resumen del pedido */}
@@ -523,6 +621,82 @@ export default function CarritoPage() {
                   </div>
                 )}
 
+                {/* Selección de método de envío - SIEMPRE MOSTRAR */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Método de Envío
+                  </label>
+
+                  {/* Si hay envío gratis por bono o código, mostrar mensaje */}
+                  {shouldHideShippingSelection ? (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        ✓ Tu pedido tiene envío gratis
+                      </p>
+                    </div>
+                  ) : shippingMethods.length === 0 ? (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ Cargando métodos de envío...
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {hasFreeShippingByThreshold && (
+                        <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-sm text-green-800">
+                            ✓ Has alcanzado envío gratis estándar. Puedes elegir envío urgente con coste adicional si lo deseas.
+                          </p>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        {shippingMethods.map((method) => {
+                          const methodPrice = hasFreeShippingByThreshold && method.price <= 6 ? 0 : method.price
+                          return (
+                            <div
+                              key={method.id}
+                              className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                                selectedShippingMethodId === method.id
+                                  ? 'border-primary-500 bg-primary-50'
+                                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                              }`}
+                              onClick={() => setSelectedShippingMethodId(method.id)}
+                            >
+                              <input
+                                type="radio"
+                                name="shipping-method"
+                                value={method.id}
+                                checked={selectedShippingMethodId === method.id}
+                                onChange={() => setSelectedShippingMethodId(method.id)}
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-0.5"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="font-medium text-gray-900">{method.name}</div>
+                                  <div className="font-semibold text-primary-600 whitespace-nowrap">
+                                    {methodPrice === 0 ? 'GRATIS' : formatCurrency(methodPrice)}
+                                  </div>
+                                </div>
+                                {method.description && (
+                                  <div className="text-sm text-gray-600 mt-0.5">
+                                    {method.description}
+                                  </div>
+                                )}
+                                {method.estimatedDays && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Tiempo estimado: {method.estimatedDays}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal:</span>
@@ -577,9 +751,9 @@ export default function CarritoPage() {
                     )}
                   </div>
 
-                  {!hasVoucherShipment && subtotal < FREE_SHIPPING_THRESHOLD && (
+                  {!hasVoucherShipment && !hasFreeShippingCode && !hasFreeShippingByThreshold && baseShippingCost > 0 && (
                     <p className="text-xs text-gray-500">
-                      Añade {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} más para envío gratis
+                      Añade {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} más para envío gratis estándar
                     </p>
                   )}
 
@@ -614,7 +788,12 @@ export default function CarritoPage() {
                     size="lg"
                     className="w-full"
                   >
-                    {processingCheckout ? 'Procesando...' : 'Proceder al Pago'}
+                    {processingCheckout
+                      ? 'Procesando...'
+                      : total === 0
+                        ? 'Confirmar Pedido'
+                        : 'Proceder al Pago'
+                    }
                     <ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 )}
@@ -644,6 +823,8 @@ export default function CarritoPage() {
           shipping: shipping,
           total: total
         }}
+        hasFreeShipping={shouldHideShippingSelection}
+        initialShippingMethodId={selectedShippingMethodId}
       />
 
       {/* Auth Modal */}

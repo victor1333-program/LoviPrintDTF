@@ -75,13 +75,27 @@ export async function POST(request: NextRequest) {
           break
         }
 
-        // Actualizar el estado del pedido
+        // Si el pedido no tiene userId, buscar usuario por email y asociarlo
+        let userIdToUse = order.userId
+        if (!userIdToUse && order.customerEmail) {
+          const user = await prisma.user.findUnique({
+            where: { email: order.customerEmail }
+          })
+
+          if (user) {
+            userIdToUse = user.id
+            console.log(`Associating order ${order.orderNumber} to user ${user.id} (${user.email})`)
+          }
+        }
+
+        // Actualizar el estado del pedido (y asociar usuario si se encontró)
         const updatedOrder = await prisma.order.update({
           where: { id: orderId },
           data: {
             paymentStatus: 'PAID',
             status: 'CONFIRMED',
             stripePaymentId: session.id,
+            ...(userIdToUse && !order.userId ? { userId: userIdToUse } : {}),
           },
           include: {
             items: {
@@ -101,65 +115,159 @@ export async function POST(request: NextRequest) {
           },
         })
 
-        // Crear bonos si el pedido contiene productos de tipo VOUCHER
-        if (updatedOrder.userId) {
+        // Crear bonos si el pedido contiene items con voucherTemplateId en customizations
+        let createdVouchers: any[] = []
+        if (userIdToUse) {
           for (const item of updatedOrder.items) {
-            if (item.product.productType === 'VOUCHER') {
-              // Obtener la plantilla del voucher para conocer los metros
-              const voucherTemplate = await prisma.voucher.findFirst({
+            const customizations = item.customizations as any
+            const voucherTemplateId = customizations?.voucherTemplateId
+
+            if (voucherTemplateId) {
+              // Obtener la plantilla del voucher
+              const voucherTemplate = await prisma.voucher.findUnique({
                 where: {
-                  productId: item.product.id,
-                  isTemplate: true,
+                  id: voucherTemplateId,
                 },
               })
 
-              if (voucherTemplate) {
+              if (voucherTemplate && voucherTemplate.isTemplate) {
                 // Generar código único para el bono
                 const voucherCode = `BONO-${updatedOrder.orderNumber}-${Date.now().toString(36).toUpperCase()}`
 
                 // Crear el bono asignado al usuario
-                await prisma.voucher.create({
+                const newVoucher = await prisma.voucher.create({
                   data: {
                     code: voucherCode,
-                    name: item.product.name,
-                    slug: `${item.product.slug}-${Date.now()}`,
-                    description: item.product.description,
-                    imageUrl: item.product.imageUrl,
+                    name: voucherTemplate.name,
+                    slug: `${voucherTemplate.slug}-${Date.now()}`,
+                    description: voucherTemplate.description,
+                    imageUrl: voucherTemplate.imageUrl,
                     price: item.unitPrice,
-                    productId: item.product.id,
-                    userId: updatedOrder.userId,
+                    productId: voucherTemplate.productId, // El producto vinculado (Transfer DTF)
+                    userId: userIdToUse,
                     type: 'METERS',
                     initialMeters: voucherTemplate.initialMeters,
                     remainingMeters: voucherTemplate.initialMeters,
-                    initialShipments: voucherTemplate.initialShipments || 2,
-                    remainingShipments: voucherTemplate.remainingShipments || 2,
-                    expiresAt: voucherTemplate.expiresAt,
+                    initialShipments: voucherTemplate.initialShipments,
+                    remainingShipments: voucherTemplate.initialShipments,
+                    expiresAt: null, // Sin fecha de caducidad
                     isActive: true,
                     isTemplate: false, // Es un bono asignado, no una plantilla
                   },
                 })
 
-                console.log(`Created voucher ${voucherCode} for user ${updatedOrder.userId} from order ${updatedOrder.orderNumber}`)
+                createdVouchers.push(newVoucher)
+                console.log(`Created voucher ${voucherCode} for user ${userIdToUse} from order ${updatedOrder.orderNumber}`)
               } else {
-                console.error(`No voucher template found for product ${item.product.id}`)
+                console.error(`No voucher template found with id ${voucherTemplateId}`)
+              }
+            }
+          }
+        }
+
+        // Descontar bonos de metros si el pedido los usa (parcial o totalmente)
+        let voucherIdToAssociate: string | null = null
+        const isUsingMeterVouchers = updatedOrder.notes?.includes('bonos de metros')
+
+        if (isUsingMeterVouchers && userIdToUse) {
+          // Calcular metros necesarios desde los items
+          let metersNeeded = 0
+          for (const item of updatedOrder.items) {
+            if (item.product.productType === 'DTF_TEXTILE') {
+              metersNeeded += parseFloat(item.quantity.toString())
+            }
+          }
+
+          if (metersNeeded > 0) {
+            console.log(`Deducting ${metersNeeded} meters from user ${userIdToUse} vouchers for paid order`)
+
+            // Buscar bonos del usuario usando FIFO
+            const vouchers = await prisma.voucher.findMany({
+              where: {
+                userId: userIdToUse,
+                isActive: true,
+                type: 'METERS',
+                remainingMeters: { gt: 0 }
+              },
+              orderBy: {
+                createdAt: 'asc'
+              }
+            })
+
+            if (vouchers.length > 0) {
+              let metersRemaining = metersNeeded
+              let shipmentsNeeded = 1 // Cada pedido consume 1 envío
+
+              for (const voucher of vouchers) {
+                if (metersRemaining <= 0 && shipmentsNeeded <= 0) break
+
+                // Guardar el primer bono usado para asociarlo al pedido
+                if (!voucherIdToAssociate) {
+                  voucherIdToAssociate = voucher.id
+                }
+
+                const currentRemainingMeters = parseFloat(voucher.remainingMeters.toString())
+                const currentRemainingShipments = voucher.remainingShipments || 0
+
+                let metersToDeduct = 0
+                let shipmentsToDeduct = 0
+
+                // Descontar metros si quedan
+                if (metersRemaining > 0 && currentRemainingMeters > 0) {
+                  metersToDeduct = Math.min(metersRemaining, currentRemainingMeters)
+                  metersRemaining -= metersToDeduct
+                }
+
+                // Descontar envíos si quedan (IMPORTANTE: se descuenta incluso si se usa parcialmente)
+                if (shipmentsNeeded > 0 && currentRemainingShipments > 0) {
+                  shipmentsToDeduct = Math.min(shipmentsNeeded, currentRemainingShipments)
+                  shipmentsNeeded -= shipmentsToDeduct
+                }
+
+                // Actualizar bono
+                if (metersToDeduct > 0 || shipmentsToDeduct > 0) {
+                  const newRemainingMeters = currentRemainingMeters - metersToDeduct
+                  const newRemainingShipments = currentRemainingShipments - shipmentsToDeduct
+
+                  await prisma.voucher.update({
+                    where: { id: voucher.id },
+                    data: {
+                      remainingMeters: newRemainingMeters,
+                      remainingShipments: newRemainingShipments,
+                      usageCount: { increment: 1 },
+                      isActive: newRemainingMeters > 0 || newRemainingShipments > 0
+                    }
+                  })
+
+                  console.log(`Deducted ${metersToDeduct}m and ${shipmentsToDeduct} shipment(s) from voucher ${voucher.code}`)
+                }
+              }
+
+              // Asociar el primer bono usado al pedido
+              if (voucherIdToAssociate && !updatedOrder.voucherId) {
+                await prisma.order.update({
+                  where: { id: updatedOrder.id },
+                  data: { voucherId: voucherIdToAssociate }
+                })
               }
             }
           }
         }
 
         // Si el pedido tiene un userId, otorgar puntos de fidelidad
-        if (order.userId) {
+        if (userIdToUse) {
           const { awardLoyaltyPointsForOrder } = await import('@/lib/loyalty')
 
           // Detectar si es compra de bono para aplicar bonus del 25%
-          const isVoucherPurchase = order.items.some(
-            item => item.product.productType === 'VOUCHER'
-          )
+          const isVoucherPurchase = order.items.some(item => {
+            const customizations = item.customizations as any
+            return !!customizations?.voucherTemplateId
+          })
 
           // Otorgar puntos usando la función compartida
           const { pointsEarned } = await awardLoyaltyPointsForOrder(
             prisma,
-            order.userId,
+            userIdToUse,
             order.id,
             orderNumber || order.id,
             parseFloat(order.totalPrice.toString()),
@@ -178,17 +286,33 @@ export async function POST(request: NextRequest) {
           console.log(`Awarded ${pointsEarned} points to user for order ${orderNumber}${isVoucherPurchase ? ' (Voucher bonus +25% applied)' : ''}`)
         }
 
+        // Enviar email específico según el tipo de pedido
+        const { sendVoucherPurchaseEmail, sendAdminOrderNotification } = await import('@/lib/email')
+
+        if (createdVouchers.length > 0) {
+          // Es una compra de bono - enviar email especial de activación
+          for (const voucher of createdVouchers) {
+            sendVoucherPurchaseEmail(updatedOrder, voucher).catch(err =>
+              console.error('Error sending voucher purchase email:', err)
+            )
+          }
+        }
+
         // Enviar email de notificación al admin ahora que el pago está confirmado
-        const { sendAdminOrderNotification } = await import('@/lib/email')
         sendAdminOrderNotification(updatedOrder).catch(err =>
           console.error('Error sending admin notification:', err)
         )
 
-        // Generar factura automáticamente
-        const { createInvoiceForOrder } = await import('@/lib/invoice')
-        createInvoiceForOrder(updatedOrder.id).catch(err =>
-          console.error('Error generating invoice:', err)
-        )
+        // Generar factura automáticamente (solo si el total > 0€)
+        const orderTotal = parseFloat(updatedOrder.totalPrice.toString())
+        if (orderTotal > 0) {
+          const { createInvoiceForOrder } = await import('@/lib/invoice')
+          createInvoiceForOrder(updatedOrder.id).catch(err =>
+            console.error('Error generating invoice:', err)
+          )
+        } else {
+          console.log(`Skipping invoice generation for free order ${updatedOrder.orderNumber} (total: ${orderTotal}€)`)
+        }
 
         console.log(`Payment confirmed for order ${orderNumber}`)
         break

@@ -46,6 +46,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
+    console.log('Updating profile for user ID:', session.user.id)
+
     const body = await req.json()
     const { name, phone, isProfessional, company, taxId, billingStreet, billingCity, billingState, billingPostalCode } = body
 
@@ -66,6 +68,19 @@ export async function PATCH(req: NextRequest) {
       }
       // La dirección de facturación es opcional en el checkout
       // Se puede añadir más tarde desde el perfil completo
+    }
+
+    // Verificar que el usuario existe antes de actualizar
+    const existingUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    })
+
+    if (!existingUser) {
+      console.error('User not found in database. Session user ID:', session.user.id)
+      return NextResponse.json(
+        { error: 'Usuario no encontrado. Por favor, cierra sesión y vuelve a iniciar.' },
+        { status: 404 }
+      )
     }
 
     const user = await prisma.user.update({

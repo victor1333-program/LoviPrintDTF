@@ -288,7 +288,7 @@ export default function PedidoDetailPage() {
                 <div>
                   <p className="text-sm text-gray-600">Dirección de envío</p>
                   <p className="font-semibold">
-                    {order.shippingAddress.address}<br />
+                    {order.shippingAddress.street}<br />
                     {order.shippingAddress.postalCode} {order.shippingAddress.city}
                   </p>
                 </div>

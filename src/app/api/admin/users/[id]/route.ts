@@ -83,16 +83,65 @@ export async function PATCH(
       updateData.password = await bcrypt.hash(validatedData.password, 10)
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      include: {
-        _count: {
-          select: {
-            orders: true,
+    // Actualizar usuario y dirección en una transacción
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      // Actualizar datos del usuario
+      const user = await tx.user.update({
+        where: { id },
+        data: updateData,
+        include: {
+          _count: {
+            select: {
+              orders: true,
+            },
           },
         },
-      },
+      })
+
+      // Si se proporciona una dirección de envío, actualizarla o crearla en la tabla Address
+      if (validatedData.shippingAddress && typeof validatedData.shippingAddress === 'object') {
+        const { street, city, state, postalCode, country } = validatedData.shippingAddress
+
+        // Solo actualizar/crear si hay al menos calle o ciudad
+        if (street || city) {
+          // Buscar dirección predeterminada existente
+          const existingAddress = await tx.address.findFirst({
+            where: {
+              userId: id,
+              isDefault: true
+            }
+          })
+
+          if (existingAddress) {
+            // Actualizar dirección existente
+            await tx.address.update({
+              where: { id: existingAddress.id },
+              data: {
+                street: street || existingAddress.street,
+                city: city || existingAddress.city,
+                state: state || existingAddress.state || '',
+                postalCode: postalCode || existingAddress.postalCode,
+                country: country || existingAddress.country || 'España',
+              }
+            })
+          } else {
+            // Crear nueva dirección como predeterminada
+            await tx.address.create({
+              data: {
+                userId: id,
+                street: street || '',
+                city: city || '',
+                state: state || '',
+                postalCode: postalCode || '',
+                country: country || 'España',
+                isDefault: true
+              }
+            })
+          }
+        }
+      }
+
+      return user
     })
 
     return NextResponse.json(updatedUser)

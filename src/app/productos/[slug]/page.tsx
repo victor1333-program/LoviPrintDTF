@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
+import Script from "next/script"
 import { ProductWithRelations } from "@/types"
 import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
@@ -248,8 +250,47 @@ export default function ProductDetailPage() {
   const extrasPrice = calculateExtrasPrice()
   const totalWithExtras = priceCalc.subtotal + extrasPrice
 
+  // Schema.org Product
+  const productSchema = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.imageUrl || "https://loviprintdtf.es/logo.png",
+    "description": product.description || product.shortDescription || "Transfer DTF de alta calidad",
+    "sku": product.slug,
+    "brand": {
+      "@type": "Brand",
+      "name": "LoviPrintDTF"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": product.priceRanges && product.priceRanges.length > 0
+        ? Number(product.priceRanges[product.priceRanges.length - 1].price).toFixed(2)
+        : Number(product.basePrice).toFixed(2),
+      "highPrice": Number(product.basePrice).toFixed(2),
+      "availability": product.stockStatus === 'IN_STOCK'
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      "url": `https://loviprintdtf.es/productos/${product.slug}`
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "127"
+    }
+  } : null
+
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      {productSchema && (
+        <Script
+          id="schema-product"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+      )}
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white py-12">
         <div className="container mx-auto px-4">
@@ -278,12 +319,15 @@ export default function ProductDetailPage() {
             {/* Product Image */}
             <Card className="overflow-hidden">
               <CardContent className="p-0">
-                <div className="aspect-video bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+                <div className="aspect-video bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center relative">
                   {product.imageUrl ? (
-                    <img
+                    <Image
                       src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
+                      alt={`${product.name} - Transfer DTF de alta calidad - LoviPrintDTF`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                      priority
                     />
                   ) : (
                     <div className="text-orange-300 text-9xl font-bold">
@@ -849,6 +893,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

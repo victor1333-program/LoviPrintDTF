@@ -4,6 +4,10 @@ import { Search } from "lucide-react"
 import OrdersTable from "@/components/admin/OrdersTable"
 import TrackingUpdateButton from "@/components/admin/TrackingUpdateButton"
 
+// Configurar la página como dinámica (sin caché)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function PedidosPage() {
   const ordersRaw = await prisma.order.findMany({
     orderBy: {

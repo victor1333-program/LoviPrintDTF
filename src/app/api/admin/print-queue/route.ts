@@ -36,8 +36,17 @@ export async function GET() {
       }
     })
 
+    // IMPORTANTE: Filtrar pedidos de bonos (no deben aparecer en cola de impresión)
+    const printableOrders = orders.filter(order => {
+      // Excluir pedidos que sean compra de bonos (voucherTemplateId en customizations)
+      const isVoucherOrder = order.items.some(
+        item => item.customizations && (item.customizations as any).voucherTemplateId
+      )
+      return !isVoucherOrder
+    })
+
     // Determinar si cada pedido está priorizado
-    const ordersWithPriority = orders.map(order => {
+    const ordersWithPriority = printableOrders.map(order => {
       const isPrioritized = order.items.some(
         item => item.customizations &&
         (item.customizations as any).extras?.prioritize?.selected === true

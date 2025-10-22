@@ -55,3 +55,18 @@ next
 # Logs del servidor
 server.log
 *.log
+
+# Logs y archivos de prueba
+server.log
+test-webhook-local.js
+verificar-webhook.js
+send-gls-error.js
+send-gls-error-with-config.ts
+GLS-REQUEST-RESPONSE-ERROR.txt
+
+# Backups y archivos temporales de desarrollo
+*-OLD-BACKUP.ts
+CORRECCION-*.md
+AUDITORIA-*.md
+ESTADO-*.md
+SISTEMA-*.md

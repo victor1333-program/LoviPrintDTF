@@ -71,11 +71,13 @@ export async function GET(request: NextRequest) {
     let totalMetersNeeded = 0
     const itemsWithPrices = cart.items.map((item) => {
       const qty = Number(item.quantity)
-      const isDTFProduct = item.product.productType === 'DTF_TEXTILE' || item.product.productType === 'DTF_UV'
+      const customizations = item.customizations as any
+      const isVoucherPurchase = !!customizations?.voucherTemplateId
+      const isDTFProduct = !isVoucherPurchase && (item.product.productType === 'DTF_TEXTILE' || item.product.productType === 'DTF_UV')
 
-      // Para productos sin rangos de precio (como VOUCHER), usar el precio unitario del item
+      // Para bonos o productos sin rangos de precio, usar el precio unitario del item
       let priceCalc
-      if (!item.product.priceRanges || item.product.priceRanges.length === 0) {
+      if (isVoucherPurchase || !item.product.priceRanges || item.product.priceRanges.length === 0) {
         const unitPrice = Number(item.unitPrice)
         priceCalc = {
           unitPrice,
@@ -88,9 +90,9 @@ export async function GET(request: NextRequest) {
       }
 
       // IMPORTANTE: Sumar extras al subtotal del item (excepto priorización que es global)
+      // Los bonos no tienen extras
       let extrasTotal = 0
-      const customizations = item.customizations as any
-      if (customizations?.extras) {
+      if (!isVoucherPurchase && customizations?.extras) {
         // Maquetación y Corte se suman por item
         if (customizations.extras.layout) {
           extrasTotal += Number(customizations.extras.layout.price || 0)
@@ -115,6 +117,7 @@ export async function GET(request: NextRequest) {
         ...item,
         calculatedPrice: priceCalc,
         isDTFProduct,
+        isVoucherPurchase,
       }
     })
 
@@ -161,7 +164,10 @@ export async function GET(request: NextRequest) {
       ? 0
       : (canUseVoucherMetersPartially ? totalMetersNeeded - totalMetersAvailable : totalMetersNeeded)
 
-    const canUseVoucherShipment = canUseVoucherMeters && totalShipmentsAvailable > 0
+    // IMPORTANTE: Si usa bonos (total o parcialmente) Y tiene envíos disponibles, aplicar envío gratis
+    // Esto permite que un cliente que compra más metros de los que tiene en su bono
+    // aún pueda usar sus envíos gratis incluidos en el bono
+    const canUseVoucherShipment = (canUseVoucherMeters || canUseVoucherMetersPartially) && totalShipmentsAvailable > 0
 
     // Calcular el subtotal ajustado
     let finalSubtotal = subtotal

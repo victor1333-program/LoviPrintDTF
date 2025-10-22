@@ -4,6 +4,55 @@ import { uploadToCloudinary } from './cloudinary'
 import path from 'path'
 import fs from 'fs'
 
+/**
+ * Formatea el nombre del cliente para que se muestre correctamente
+ * Si el nombre es un email, extrae la parte antes del @ y la capitaliza
+ * Si el nombre ya es un nombre propio, lo devuelve tal cual
+ */
+function formatCustomerName(name: string): string {
+  if (!name) return 'Cliente'
+
+  // Verificar si es un email (contiene @)
+  if (name.includes('@')) {
+    // Extraer la parte antes del @
+    const username = name.split('@')[0]
+
+    // Separar por puntos, guiones o guiones bajos
+    const parts = username.split(/[._-]/)
+
+    // Capitalizar cada parte
+    const formatted = parts
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ')
+
+    return formatted
+  }
+
+  // Si no es un email, devolverlo tal cual (ya es un nombre)
+  return name
+}
+
+// Configurar rutas de fuentes de PDFKit para Next.js
+// PDFKit necesita acceso a sus archivos de fuentes (.afm)
+// Usamos require.resolve para encontrar la ruta correcta de pdfkit
+try {
+  const pdkitPath = require.resolve('pdfkit')
+  const fontDataPath = path.join(path.dirname(pdkitPath), 'js', 'data')
+
+  if (fs.existsSync(fontDataPath)) {
+    // Configurar variable de entorno que PDFKit puede usar
+    process.env.PDFKIT_FONT_PATH = fontDataPath
+  } else {
+    // Fallback a node_modules directo
+    const fallbackPath = path.join(process.cwd(), 'node_modules', 'pdfkit', 'js', 'data')
+    if (fs.existsSync(fallbackPath)) {
+      process.env.PDFKIT_FONT_PATH = fallbackPath
+    }
+  }
+} catch (err) {
+  console.error('Error configurando rutas de fuentes de PDFKit:', err)
+}
+
 interface InvoiceData {
   orderId: string
   orderNumber: string
@@ -129,7 +178,7 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
     doc.fontSize(12).font('Helvetica-Bold')
     doc.text('CLIENTE', 50, clientY)
     doc.fontSize(10).font('Helvetica')
-    doc.text(invoice.customerName, 50, clientY + 20)
+    doc.text(formatCustomerName(invoice.customerName), 50, clientY + 20)
     if (invoice.customerTaxId) {
       doc.text(`NIF/CIF: ${invoice.customerTaxId}`, 50, clientY + 35)
     }

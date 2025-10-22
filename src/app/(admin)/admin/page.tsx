@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
 import { ShoppingCart, DollarSign, Package, TrendingUp } from "lucide-react"
 
+// Configurar la página como dinámica (sin caché)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getStats() {
   const now = new Date()
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

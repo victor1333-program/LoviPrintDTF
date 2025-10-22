@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { GLSService } from '@/lib/services/gls-service'
+import {
+  normalizeCountryCode,
+  getProvinceName,
+  formatInternationalMobile,
+} from '@/lib/utils/spanish-provinces'
+import { sendEmail } from '@/lib/email'
 
 /**
  * POST /api/admin/print-queue/[id]/printed
@@ -59,23 +65,32 @@ export async function POST(
       const glsService = new GLSService(glsConfig)
 
       try {
-        // Crear envío en GLS
+        const recipientCountryCode = normalizeCountryCode(shippingAddr.country)
+        const recipientProvince = getProvinceName(shippingAddr.postalCode || '')
+
+        // Crear envío en GLS con estructura correcta
         const glsResponse = await glsService.createShipment({
           orderId: order.orderNumber,
           recipientName: order.customerName,
-          recipientAddress: shippingAddr.address || '',
+          recipientAddress: shippingAddr.street || '',
           recipientCity: shippingAddr.city || '',
           recipientPostal: shippingAddr.postalCode || '',
-          recipientCountry: shippingAddr.country || 'ES',
+          recipientCountry: recipientCountryCode,
+          recipientProvince,
           recipientPhone: order.customerPhone || undefined,
+          recipientMobile: order.customerPhone
+            ? formatInternationalMobile(order.customerPhone, recipientCountryCode)
+            : undefined,
           recipientEmail: order.customerEmail,
-          weight: 0.5, // Peso por defecto
+          weight: 0.5,
           packages: 1,
-          notes: `Pedido ${order.orderNumber}`
+          notes: `Pedido ${order.orderNumber}`,
+          labelFormat: 'PDF', // Solicitar etiqueta PDF directamente
         })
 
-        // Obtener etiqueta PDF
-        const labelBase64 = await glsService.getLabel(glsResponse.reference)
+        if (!glsResponse.success) {
+          throw new Error(glsResponse.error || 'Error creando envío en GLS')
+        }
 
         // Crear registro de envío en la base de datos
         shipmentData = await prisma.shipment.create({
@@ -83,20 +98,47 @@ export async function POST(
             orderId: order.id,
             glsReference: glsResponse.reference,
             trackingNumber: glsResponse.trackingNumber,
-            labelUrl: `data:application/pdf;base64,${labelBase64}`,
+            glsUid: glsResponse.uid,
+            glsCodexp: glsResponse.codexp,
+            labelBase64: glsResponse.labelBase64,
+            labelFormat: 'PDF',
             status: 'CREATED',
+            carrier: 'GLS',
+            serviceName: 'GLS BusinessParcel',
             recipientName: order.customerName,
-            recipientAddress: shippingAddr.address || '',
+            recipientAddress: shippingAddr.street || '',
             recipientCity: shippingAddr.city || '',
             recipientPostal: shippingAddr.postalCode || '',
-            recipientCountry: shippingAddr.country || 'ES',
+            recipientCountry: recipientCountryCode,
+            recipientProvince,
             recipientPhone: order.customerPhone || undefined,
             recipientEmail: order.customerEmail,
             weight: 0.5,
             packages: 1,
-            glsResponse: glsResponse as any
+            glsResponse: glsResponse as any,
+            lastSyncAt: new Date(),
           }
         })
+
+        // Enviar email al cliente notificando que su pedido ha sido enviado
+        try {
+          await sendEmail({
+            to: order.customerEmail,
+            subject: `Tu pedido ${order.orderNumber} ha sido enviado`,
+            text: `Hola ${order.customerName},\n\nTu pedido ${order.orderNumber} ha sido enviado con GLS.\n\nNúmero de seguimiento: ${glsResponse.trackingNumber}\n\nPuedes seguir tu pedido desde tu panel de cliente.\n\nGracias por tu compra.`,
+            html: `
+              <h2>¡Tu pedido ha sido enviado!</h2>
+              <p>Hola ${order.customerName},</p>
+              <p>Tu pedido <strong>${order.orderNumber}</strong> ha sido enviado con GLS.</p>
+              <p><strong>Número de seguimiento:</strong> ${glsResponse.trackingNumber}</p>
+              <p>Puedes seguir tu pedido en tiempo real desde tu panel de cliente.</p>
+              <p>Gracias por tu compra.</p>
+            `,
+          })
+        } catch (emailError) {
+          console.error('Error enviando email de envío:', emailError)
+          // No fallar si el email falla
+        }
       } catch (error: any) {
         console.error('Error creating GLS shipment:', error)
         return NextResponse.json(

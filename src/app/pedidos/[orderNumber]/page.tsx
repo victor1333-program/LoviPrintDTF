@@ -215,18 +215,17 @@ export default function OrderPage() {
     setProcessingPayment(true)
 
     try {
-      const res = await fetch(`/api/orders/${order.id}`, {
-        method: 'PATCH',
+      const res = await fetch('/api/orders/confirm-free', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentStatus: 'PAID',
-          paymentMethod: 'FREE',
-          status: 'CONFIRMED',
+          orderId: order.id,
         }),
       })
 
       if (!res.ok) {
-        throw new Error('Error al confirmar el pedido')
+        const data = await res.json()
+        throw new Error(data.error || 'Error al confirmar el pedido')
       }
 
       toast.success('¡Pedido confirmado correctamente!')
@@ -340,16 +339,16 @@ export default function OrderPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-lg mb-1">
-                      {order.totalPrice === 0 ? 'Confirma tu Pedido' : 'Pago Pendiente'}
+                      {parseFloat(order.totalPrice.toString()) === 0 ? 'Confirma tu Pedido' : 'Pago Pendiente'}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {order.totalPrice === 0
+                      {parseFloat(order.totalPrice.toString()) === 0
                         ? 'Tu pedido es gratuito. Haz clic en el botón para confirmar'
                         : 'Haz clic en el botón para completar el pago de forma segura con Stripe'}
                     </p>
                   </div>
                   <Button
-                    onClick={order.totalPrice === 0 ? confirmFreeOrder : handlePayment}
+                    onClick={parseFloat(order.totalPrice.toString()) === 0 ? confirmFreeOrder : handlePayment}
                     disabled={processingPayment}
                     size="lg"
                     className="ml-4"
@@ -357,11 +356,11 @@ export default function OrderPage() {
                     {processingPayment ? (
                       <>
                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        {order.totalPrice === 0 ? 'Confirmando...' : 'Procesando...'}
+                        {parseFloat(order.totalPrice.toString()) === 0 ? 'Confirmando...' : 'Procesando...'}
                       </>
                     ) : (
                       <>
-                        {order.totalPrice === 0 ? (
+                        {parseFloat(order.totalPrice.toString()) === 0 ? (
                           <>
                             <CheckCircle2 className="h-5 w-5 mr-2" />
                             Confirmar Pedido

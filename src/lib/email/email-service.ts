@@ -3,6 +3,34 @@ import { prisma } from '@/lib/prisma'
 import { renderEmailTemplate } from './template-service'
 import { EmailTemplateType } from '@prisma/client'
 
+/**
+ * Formatea el nombre del cliente para que se muestre correctamente
+ * Si el nombre es un email, extrae la parte antes del @ y la capitaliza
+ * Si el nombre ya es un nombre propio, lo devuelve tal cual
+ */
+function formatCustomerName(name: string): string {
+  if (!name) return 'Cliente'
+
+  // Verificar si es un email (contiene @)
+  if (name.includes('@')) {
+    // Extraer la parte antes del @
+    const username = name.split('@')[0]
+
+    // Separar por puntos, guiones o guiones bajos
+    const parts = username.split(/[._-]/)
+
+    // Capitalizar cada parte
+    const formatted = parts
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ')
+
+    return formatted
+  }
+
+  // Si no es un email, devolverlo tal cual (ya es un nombre)
+  return name
+}
+
 // Cache para configuraciones
 let settingsCache: Record<string, string> = {}
 let cacheTime = 0
@@ -189,7 +217,7 @@ export async function sendOrderCreatedEmail(
             <h1>¡Pedido Confirmado! 🎉</h1>
           </div>
           <div class="content">
-            <p>Hola <strong>${orderData.customerName}</strong>,</p>
+            <p>Hola <strong>${formatCustomerName(orderData.customerName)}</strong>,</p>
             <p>Hemos recibido tu pedido correctamente. Aquí están los detalles:</p>
 
             <div class="order-info">
@@ -296,7 +324,7 @@ export async function sendOrderStatusEmail(
             <h1>Actualización de Pedido ${statusEmoji[orderData.status]}</h1>
           </div>
           <div class="content">
-            <p>Hola <strong>${orderData.customerName}</strong>,</p>
+            <p>Hola <strong>${formatCustomerName(orderData.customerName)}</strong>,</p>
             <p>Tu pedido <strong>${orderData.orderNumber}</strong> ha cambiado de estado:</p>
 
             <div class="status-box">
@@ -360,53 +388,116 @@ export async function sendOrderShippedEmail(
     })
   }
 
-  // Fallback a plantilla hardcoded
+  // Fallback a plantilla hardcoded con diseño moderno
   const html = `
     <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-          .tracking-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
-          .tracking-button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 10px 0; }
-          .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 0.9em; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>¡Tu pedido está en camino! 🚚</h1>
-          </div>
-          <div class="content">
-            <p>Hola <strong>${orderData.customerName}</strong>,</p>
-            <p>Buenas noticias! Tu pedido <strong>${orderData.orderNumber}</strong> ha sido enviado.</p>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Pedido Enviado - LoviPrintDTF</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 64px; margin-bottom: 10px;">🚚</div>
+                  <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">¡Tu Pedido Está en Camino!</h1>
+                  <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Pedido #${orderData.orderNumber}</p>
+                </td>
+              </tr>
 
-            <div class="tracking-box">
-              ${orderData.trackingNumber ? `
-                <p><strong>Número de seguimiento:</strong></p>
-                <p style="font-size: 1.2em; color: #667eea; font-weight: bold;">${orderData.trackingNumber}</p>
-              ` : ''}
+              <!-- Contenido Principal -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <p style="margin: 0 0 20px; color: #111827; font-size: 16px; line-height: 1.5;">
+                    Hola <strong>${formatCustomerName(orderData.customerName)}</strong>,
+                  </p>
+                  <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.7;">
+                    ¡Buenas noticias! Tu pedido ha sido enviado y está en camino hacia ti. ${orderData.carrier ? `Lo enviaremos a través de <strong>${orderData.carrier}</strong>.` : ''}
+                  </p>
 
-              ${orderData.trackingUrl ? `
-                <a href="${orderData.trackingUrl}" class="tracking-button">Rastrear mi pedido</a>
-              ` : ''}
+                  ${orderData.trackingNumber ? `
+                  <!-- Seguimiento -->
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
+                    <tr>
+                      <td align="center" style="padding: 35px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <p style="margin: 0 0 10px; color: #d1fae5; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+                          📍 Número de Seguimiento
+                        </p>
+                        <h2 style="margin: 0 0 15px; color: #ffffff; font-size: 24px; font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace;">
+                          ${orderData.trackingNumber}
+                        </h2>
+                        ${orderData.trackingUrl ? `
+                        <a href="${orderData.trackingUrl}"
+                           style="display: inline-block; padding: 12px 30px; background-color: #ffffff; color: #059669; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                          🔍 Seguir mi Pedido
+                        </a>
+                        ` : ''}
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ''}
 
-              ${orderData.estimatedDelivery ? `
-                <p style="margin-top: 20px;"><strong>Entrega estimada:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              ` : ''}
-            </div>
+                  ${orderData.estimatedDelivery ? `
+                  <!-- Info de entrega -->
+                  <div style="margin: 25px 0; padding: 20px; background: linear-gradient(to right, #dbeafe, #bfdbfe); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.7;">
+                      <strong>📅 Entrega estimada:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                  ` : ''}
 
-            <p>Gracias por tu compra! 🎉</p>
-          </div>
-          <div class="footer">
-            <p>DTF Print Services - Impresión profesional de calidad</p>
-          </div>
-        </div>
-      </body>
+                  ${orderData.trackingUrl ? `
+                  <div style="margin: 25px 0; padding: 20px; background-color: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.7;">
+                      <strong>💡 Seguimiento en Tiempo Real:</strong> Haz clic en el botón de arriba para ver el estado actualizado de tu envío.
+                    </p>
+                  </div>
+                  ` : ''}
+
+                  <!-- Tips de recepción -->
+                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 12px; border-left: 5px solid #f59e0b;">
+                    <h3 style="margin: 0 0 15px; color: #92400e; font-size: 16px; font-weight: 700;">
+                      📦 Consejos para la Recepción
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px; line-height: 1.8;">
+                      <li>Asegúrate de que haya alguien disponible para recibir el paquete</li>
+                      <li>Ten a mano un documento de identidad para la entrega</li>
+                      <li>Verifica el paquete antes de firmar la recepción</li>
+                      <li>Si hay algún problema con el envío, contáctanos inmediatamente</li>
+                    </ul>
+                  </div>
+
+                  <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+                    ¿Tienes alguna pregunta sobre tu envío?<br>
+                    <a href="mailto:info@loviprintdtf.es" style="color: #10b981; text-decoration: none; font-weight: 600;">Contáctanos</a> y te ayudaremos encantados.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
+                  </p>
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    <a href="https://www.loviprintdtf.es" style="color: #10b981; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
+                    •
+                    <a href="mailto:info@loviprintdtf.es" style="color: #10b981; text-decoration: none;">info@loviprintdtf.es</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
     </html>
   `
 
@@ -473,7 +564,7 @@ export async function sendOrderDeliveredEmail(
           </div>
           <div class="content">
             <div class="success-icon">🎉</div>
-            <p>Hola <strong>${orderData.customerName}</strong>,</p>
+            <p>Hola <strong>${formatCustomerName(orderData.customerName)}</strong>,</p>
             <p>Tu pedido <strong>${orderData.orderNumber}</strong> ha sido entregado correctamente.</p>
             <p>Esperamos que disfrutes de tu compra!</p>
             <p>Si tienes alguna pregunta o problema, no dudes en contactarnos.</p>
@@ -556,7 +647,7 @@ export async function sendVoucherExpirationEmail(
             <h1>⚠️ Tu bono está a punto de caducar</h1>
           </div>
           <div class="content">
-            <p>Hola <strong>${voucherData.customerName}</strong>,</p>
+            <p>Hola <strong>${formatCustomerName(voucherData.customerName)}</strong>,</p>
 
             <div class="warning-box">
               <p><strong>¡Atención!</strong> Tu bono <strong>${voucherData.voucherName}</strong> caduca en <strong>${daysRemaining} días</strong>.</p>

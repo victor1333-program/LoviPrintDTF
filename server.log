@@ -156,3 +156,700 @@
  GET /contacto 200 in 469ms
  GET /productos/transfer-dtf 200 in 513ms
  GET /admin/login 200 in 455ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1558ms (913 modules)
+ GET /cgi-bin/luci/;stok=/locale 404 in 2090ms
+ GET / 200 in 763ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1284ms (683 modules)
+ GET /api/auth/session 200 in 1757ms
+ GET /api/auth/session 200 in 83ms
+ GET / 200 in 1006ms
+ ✓ Compiled in 1645ms (393 modules)
+ ✓ Compiled in 299ms (393 modules)
+ GET / 200 in 605ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1472ms (913 modules)
+ GET /grid.svg 404 in 2004ms
+ GET /robots.txt 404 in 162ms
+ GET / 200 in 515ms
+ GET /.git/config 404 in 217ms
+ GET / 200 in 563ms
+ GET / 200 in 524ms
+ GET / 200 in 515ms
+ GET /grid.svg 404 in 167ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1825ms (685 modules)
+ ✓ Compiled (689 modules)
+ GET /api/auth/session 200 in 3427ms
+ GET /api/settings?key=whatsapp_enabled 200 in 3542ms
+ GET /api/cart 200 in 3548ms
+ GET /api/settings?key=whatsapp_number 200 in 3554ms
+ GET /api/settings?key=whatsapp_greeting 200 in 3547ms
+ GET /api/settings?key=whatsapp_message 200 in 3565ms
+ GET /api/auth/session 200 in 89ms
+ GET /robots.txt 404 in 396ms
+ ○ Compiling /bonos ...
+ ✓ Compiled /bonos in 1577ms (696 modules)
+ GET /bonos 200 in 2100ms
+ GET /grid.svg 404 in 139ms
+ GET /api/cart 200 in 202ms
+ GET /api/settings?key=whatsapp_enabled 200 in 268ms
+ GET /api/settings?key=whatsapp_number 200 in 264ms
+ GET /api/settings?key=whatsapp_message 200 in 258ms
+ GET /api/settings?key=whatsapp_greeting 200 in 245ms
+ GET /api/auth/session 200 in 297ms
+ GET /api/auth/session 200 in 95ms
+ ○ Compiling /faq ...
+ ✓ Compiled /faq in 2s (1090 modules)
+ GET /faq 200 in 2409ms
+ GET /api/cart 200 in 229ms
+ GET /api/settings?key=whatsapp_enabled 200 in 351ms
+ GET /api/settings?key=whatsapp_number 200 in 345ms
+ GET /api/settings?key=whatsapp_message 200 in 348ms
+ GET /api/settings?key=whatsapp_greeting 200 in 321ms
+ GET /api/auth/session 200 in 331ms
+ GET /api/auth/session 200 in 92ms
+ GET /contacto 200 in 296ms
+ ○ Compiling /carrito ...
+ ✓ Compiled /carrito in 3.4s (1077 modules)
+ GET /carrito 200 in 3876ms
+ GET /api/cart 200 in 264ms
+ GET /api/settings?key=whatsapp_enabled 200 in 296ms
+ GET /api/settings?key=whatsapp_number 200 in 396ms
+ GET /api/settings?key=whatsapp_message 200 in 395ms
+ GET /api/settings?key=whatsapp_greeting 200 in 390ms
+ GET /api/auth/session 200 in 451ms
+ GET /api/cart 200 in 163ms
+ GET /api/auth/session 200 in 89ms
+ GET /api/cart 200 in 99ms
+ ○ Compiling /api/payments/webhook ...
+ ✓ Compiled / in 5.5s (1509 modules)
+ GET /api/payments/webhook 405 in 3518ms
+ GET /api/payments/webhook 405 in 737ms
+ GET /api/payments/webhook 405 in 5807ms
+ GET / 200 in 5853ms
+ GET / 200 in 441ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 582ms (1514 modules)
+ GET /.git/config 404 in 1007ms
+ ✓ Compiled /api/auth/[...nextauth] in 384ms (1247 modules)
+ GET /api/auth/session 200 in 761ms
+ GET /api/auth/session 200 in 120ms
+ GET /api/auth/session 200 in 485ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/auth/session 200 in 153ms
+ GET /api/auth/session 200 in 113ms
+ GET /api/auth/providers 200 in 134ms
+ GET /api/auth/csrf 200 in 96ms
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at Module.callback (webpack-internal:///(rsc)/./node_modules/next-auth/node_modules/@auth/core/lib/actions/callback/index.js:246:23)
+    at async AuthInternal (webpack-internal:///(rsc)/./node_modules/next-auth/node_modules/@auth/core/lib/index.js:70:24)
+    at async Auth (webpack-internal:///(rsc)/./node_modules/next-auth/node_modules/@auth/core/index.js:130:34)
+    at async AppRouteRouteModule.do (/root/loviprintDTF/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/root/loviprintDTF/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&page=%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute.ts&appDir=%2Froot%2FloviprintDTF%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Froot%2FloviprintDTF&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/root/loviprintDTF/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&page=%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute.ts&appDir=%2Froot%2FloviprintDTF%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Froot%2FloviprintDTF&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&page=%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2F%5B...nextauth%5D%2Froute.ts&appDir=%2Froot%2FloviprintDTF%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Froot%2FloviprintDTF&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/root/loviprintDTF/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/root/loviprintDTF/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/root/loviprintDTF/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/root/loviprintDTF/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/root/loviprintDTF/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/root/loviprintDTF/node_modules/next/dist/server/base-server.js:916:17)
+    at async /root/loviprintDTF/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/root/loviprintDTF/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/root/loviprintDTF/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async NextCustomServer.requestHandlerImpl (/root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.<anonymous> (/root/loviprintDTF/server.js:40:7)
+ POST /api/auth/callback/credentials? 200 in 88ms
+ GET /api/auth/session 200 in 68ms
+ GET /api/auth/providers 200 in 171ms
+ GET /api/auth/csrf 200 in 149ms
+ POST /api/auth/callback/credentials? 200 in 235ms
+ GET /api/auth/session 200 in 64ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 2.1s (1068 modules)
+ GET /admin 200 in 2740ms
+ ○ Compiling /api/settings ...
+ ✓ Compiled /api/settings in 1189ms (672 modules)
+ GET /api/auth/session 200 in 2294ms
+ GET /api/settings?key=whatsapp_enabled 200 in 2367ms
+ GET /api/settings?key=whatsapp_number 200 in 2361ms
+ GET /api/settings?key=whatsapp_message 200 in 2350ms
+ GET /api/settings?key=whatsapp_greeting 200 in 2319ms
+ GET /api/auth/session 200 in 68ms
+ ○ Compiling /admin/pedidos ...
+ ✓ Compiled /admin/pedidos in 5.6s (1092 modules)
+ GET /admin/pedidos 200 in 6581ms
+ ○ Compiling /admin/configuracion ...
+ ✓ Compiled /admin/configuracion in 9.7s (1114 modules)
+ GET /api/auth/session 200 in 10350ms
+ GET /admin/configuracion 200 in 10018ms
+ GET /admin/cola-impresion 200 in 10377ms
+ GET /api/auth/session 200 in 85ms
+ GET /api/settings 200 in 291ms
+ ○ Compiling /api/admin/shipping-methods ...
+ ✓ Compiled /api/admin/shipping-methods in 2.4s (1116 modules)
+ GET /api/admin/shipping-methods 200 in 2661ms
+ GET /api/settings 200 in 2282ms
+ GET /api/admin/shipping-methods 200 in 75ms
+ GET /api/auth/session 200 in 153ms
+ GET /api/auth/session 200 in 83ms
+ PUT /api/settings 200 in 251ms
+ GET /api/settings 200 in 114ms
+ ○ Compiling /api/payments/test-stripe ...
+ ✓ Compiled /api/payments/test-stripe in 3.8s (1276 modules)
+ POST /api/payments/test-stripe 400 in 4128ms
+ POST /api/payments/test-stripe 400 in 116ms
+ PUT /api/settings 200 in 120ms
+ GET /api/settings 200 in 141ms
+ POST /api/payments/test-stripe 200 in 531ms
+ ✓ Compiled in 3s (419 modules)
+ ⨯ Error: Cannot find module './4586.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/app/api/payments/test-stripe/route.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:195:28)
+    at <unknown> (.next/server/webpack-runtime.js:108:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:107:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:159:22)
+    at <unknown> (.next/server/app/(admin)/admin/configuracion/page.js:2:12433)
+    at Object.<anonymous> (.next/server/app/(admin)/admin/configuracion/page.js:2:12490)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/admin/configuracion'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 6.1s (1261 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/server/next-font-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/server/next-font-manifest.json'
+}
+Error: Cannot find module './4586.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/app/api/payments/test-stripe/route.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:195:28)
+    at <unknown> (.next/server/webpack-runtime.js:108:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:107:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:159:22)
+    at <unknown> (.next/server/app/(admin)/admin/configuracion/page.js:2:12433)
+    at Object.<anonymous> (.next/server/app/(admin)/admin/configuracion/page.js:2:12490)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/routes-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/routes-manifest.json'
+}
+ GET /admin/configuracion 500 in 18584ms
+ GET /admin/configuracion 500 in 1189ms
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/routes-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/routes-manifest.json'
+}
+ GET /admin/configuracion 500 in 966ms
+ GET /admin/configuracion 500 in 253ms
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/routes-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/routes-manifest.json'
+}
+ GET /admin/configuracion 500 in 877ms
+ GET /admin/configuracion 500 in 239ms
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json',
+  page: '/admin/configuracion'
+}
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/build-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/build-manifest.json'
+}
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/routes-manifest.json'
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/routes-manifest.json'
+}
+ GET /admin/configuracion 500 in 794ms
+ GET /admin/configuracion 500 in 240ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.7s (635 modules)
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3007276652'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '748009196'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '748009196'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '748009196'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3007276652'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3007276652'
+}
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (.next/server/webpack-runtime.js:25:42) {
+  digest: '1268268080'
+}
+ ⨯ Error: Could not find the module "/root/loviprintDTF/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3007276652'
+}
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (.next/server/webpack-runtime.js:25:42)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (.next/server/webpack-runtime.js:25:42)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (.next/server/webpack-runtime.js:25:42) {
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1110ms (1283 modules)
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/pages/_document.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET / 500 in 4588ms
+ GET / 200 in 1033ms
+ GET / 200 in 627ms
+ GET / 200 in 900ms
+ GET / 200 in 1198ms
+ GET / 200 in 1553ms
+ HEAD / 200 in 330ms
+ GET / 200 in 765ms
+ HEAD / 200 in 315ms
+ GET / 200 in 900ms
+ GET / 200 in 476ms
+ ○ Compiling /_not-found ...
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled /_not-found in 2.1s (1288 modules)
+ GET /robots.txt 404 in 3015ms
+ GET /robots.txt 404 in 3660ms
+ GET /en/sitemap_index.xml 404 in 925ms
+ GET /xmlsitemap.php 404 in 782ms
+ GET /sitemap_index.xml 404 in 754ms
+ GET /en/sitemap.xml 404 in 743ms
+ GET /sitemap.xml 404 in 761ms
+ GET / 200 in 2908ms
+ GET /en/news-sitemap.xml 404 in 714ms
+ GET /news-sitemap.xml 404 in 636ms
+ GET / 200 in 3246ms
+ GET /robots.txt 404 in 161ms
+ GET / 200 in 501ms
+ GET / 200 in 558ms
+ GET /.env 404 in 208ms
+ GET /.git/config 404 in 182ms
+ GET / 200 in 568ms
+ GET / 200 in 434ms
+ ✓ Compiled in 4.2s (1520 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 2.8s (1266 modules)
+ GET /ab2g 404 in 1599ms
+ GET /ab2h 404 in 151ms
+ ✓ Compiled / in 448ms (728 modules)
+ GET / 200 in 2361ms
+ ✓ Compiled in 1129ms (1302 modules)
+ ⨯ ./src/app/faq/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/root/loviprintDTF/src/app/faq/page.tsx[0m:357:1]
+ [2m354[0m |       </section>
+ [2m355[0m |     </div>
+ [2m356[0m |   )
+ [2m357[0m | }
+     : [35;1m^[0m
+     `----
+  [31mx[0m Unexpected eof
+     ,-[[36;1;4m/root/loviprintDTF/src/app/faq/page.tsx[0m:357:3]
+ [2m355[0m |     </div>
+ [2m356[0m |   )
+ [2m357[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/faq/page.tsx
+ ✓ Compiled in 3.3s (1302 modules)
+ ⨯ ./src/app/productos/[slug]/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/root/loviprintDTF/src/app/productos/[slug]/page.tsx[0m:892:1]
+ [2m889[0m |       </div>
+ [2m890[0m |     </div>
+ [2m891[0m |   )
+ [2m892[0m | }
+     : [35;1m^[0m
+     `----
+  [31mx[0m Unexpected eof
+     ,-[[36;1;4m/root/loviprintDTF/src/app/productos/[slug]/page.tsx[0m:892:3]
+ [2m890[0m |     </div>
+ [2m891[0m |   )
+ [2m892[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/productos/[slug]/page.tsx
+ ✓ Compiled in 1873ms (570 modules)
+ ✓ Compiled in 695ms (570 modules)
+ ✓ Compiled in 404ms (570 modules)
+ ✓ Compiled in 449ms (570 modules)
+ ✓ Compiled in 2s (1275 modules)
+ ✓ Compiled in 3s (570 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.6s (1266 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/server/vendor-chunks/next.js'
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/app/_not-found/page.js:425:47)
+    at Object.<anonymous> (.next/server/app/_not-found/page.js:428:3)
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/server/vendor-chunks/next.js'
+}
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ⨯ TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/app/_not-found/page.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ⨯ TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 2.5s (713 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/server/vendor-chunks/next.js'
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/app/admin/login/page.js:478:47)
+    at Object.<anonymous> (.next/server/app/admin/login/page.js:481:3)
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/server/vendor-chunks/next.js',
+  page: '/admin/login'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/app/admin/login/page.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ⨯ TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+Error: ENOENT: no such file or directory, open '/root/loviprintDTF/.next/server/vendor-chunks/next.js'
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/app/admin/login/page.js:478:47)
+    at Object.<anonymous> (.next/server/app/admin/login/page.js:481:3)
+    at async Server.<anonymous> (server.js:40:7) {
+  errno: -2,
+  syscall: 'open',
+  code: 'ENOENT',
+  path: '/root/loviprintDTF/.next/server/vendor-chunks/next.js',
+  page: '/admin/login'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /root/loviprintDTF/.next/server/webpack-runtime.js
+- /root/loviprintDTF/.next/server/app/admin/login/page.js
+- /root/loviprintDTF/node_modules/next/dist/server/require.js
+- /root/loviprintDTF/node_modules/next/dist/server/load-components.js
+- /root/loviprintDTF/node_modules/next/dist/build/utils.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/options.js
+- /root/loviprintDTF/node_modules/next/dist/build/swc/index.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/parse-module.js
+- /root/loviprintDTF/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/router-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/lib/start-server.js
+- /root/loviprintDTF/node_modules/next/dist/server/next.js
+- /root/loviprintDTF/server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:190:28)
+    at <unknown> (.next/server/webpack-runtime.js:103:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:102:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:154:22)
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374)
+    at async Server.<anonymous> (server.js:40:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ ⨯ TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+TypeError: Cannot read properties of undefined (reading '/_app')
+    at new Promise (<anonymous>)
+ GET /admin/login 500 in 2626ms
+ GET /admin/login 500 in 28ms
+ ○ Compiling /api/payments/webhook ...
+ ✓ Compiled /api/payments/webhook in 5.1s (1299 modules)
+Webhook signature verification failed: No stripe-signature header value was provided.
+ POST /api/payments/webhook 400 in 5523ms
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 1268ms (712 modules)
+ GET /admin/login 200 in 1851ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.5s (734 modules)
+ GET / 200 in 3362ms
+ GET /admin/login 200 in 308ms
+ GET /admin/login? 200 in 230ms
+ ✓ Compiled in 3.8s (1282 modules)
+ ✓ Compiled in 2.4s (1289 modules)
+ ✓ Compiled / in 435ms (739 modules)
+ GET / 200 in 2099ms
+ ✓ Compiled in 3.1s (1311 modules)
+ ✓ Compiled in 1453ms (1313 modules)
+ ✓ Compiled in 2.1s (573 modules)
+ ✓ Compiled in 472ms (573 modules)
+Terminated
