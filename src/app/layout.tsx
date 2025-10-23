@@ -17,8 +17,8 @@ export const metadata: Metadata = {
     default: 'LoviPrintDTF - Impresión DTF Profesional en Hellín, Albacete',
     template: '%s | LoviPrintDTF'
   },
-  description: 'Transferencias DTF de alta calidad para textil. Desde Hellín, Albacete. Precios por volumen, entrega en 24-48h, bonos prepagados sin caducidad. Envío gratis en pedidos +100€.',
-  keywords: ['impresión DTF', 'transfer DTF', 'DTF Albacete', 'DTF Hellín', 'transfer textil', 'personalización textil', 'impresión profesional', 'bonos DTF', 'DTF España', 'impresión DTF profesional'],
+  description: 'DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Desde Hellín, Albacete. Precios por volumen, bonos prepagados sin caducidad. Envío gratis en pedidos +100€.',
+  keywords: ['impresión DTF', 'DTF rápido', 'DTF Albacete', 'DTF Hellín', 'transfer DTF', 'transfer textil', 'personalización textil', 'impresión profesional', 'bonos DTF', 'DTF España', 'impresión DTF profesional', 'DTF 24h'],
   authors: [{ name: 'LoviPrintDTF' }],
   creator: 'LoviPrintDTF',
   publisher: 'LoviPrintDTF',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     locale: 'es_ES',
     url: 'https://loviprintdtf.es',
     title: 'LoviPrintDTF - Impresión DTF Profesional',
-    description: 'Transferencias DTF de alta calidad. Precios por volumen, entrega 24-48h. Desde Hellín, Albacete',
+    description: 'DTF de máxima calidad. DTF Rápido con entrega en 24-48h. Precios por volumen. Desde Hellín, Albacete',
     siteName: 'LoviPrintDTF',
     images: [{
       url: '/logo.png',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'LoviPrintDTF - Impresión DTF Profesional',
-    description: 'Transferencias DTF de alta calidad. Precios por volumen, entrega 24-48h',
+    description: 'DTF de máxima calidad. DTF Rápido con entrega en 24-48h. Precios por volumen',
     images: ['/logo.png'],
   },
   icons: {
@@ -89,7 +89,7 @@ export default function RootLayout({
               "@type": "LocalBusiness",
               "name": "LoviPrintDTF",
               "image": "https://loviprintdtf.es/logo.png",
-              "description": "Impresión DTF profesional de alta calidad para textil. Entrega en 24-48h. Bonos prepagados sin caducidad.",
+              "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Bonos prepagados sin caducidad.",
               "@id": "https://loviprintdtf.es",
               "url": "https://loviprintdtf.es",
               "telephone": "Por confirmar",
