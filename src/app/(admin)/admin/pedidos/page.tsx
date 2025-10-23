@@ -51,10 +51,10 @@ export default async function PedidosPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Pedidos</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
             Gestiona todos los pedidos de film DTF
           </p>
         </div>
@@ -64,7 +64,7 @@ export default async function PedidosPage() {
       {/* Filtros - TODO: Implementar filtros funcionales */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -73,7 +73,7 @@ export default async function PedidosPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 sm:w-auto">
               <option value="">Todos los estados</option>
               <option value="PENDING">Pendiente</option>
               <option value="CONFIRMED">Confirmado</option>

@@ -50,7 +50,7 @@ export default async function HomePage() {
                 <Sparkles className="h-3 w-3 mr-1" />
                 LoviPrintDTF - Tecnología de Vanguardia
               </Badge>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                 Impresión DTF
                 <span className="block text-primary-200">Profesional</span>
               </h1>
@@ -170,7 +170,7 @@ export default async function HomePage() {
       </section>
 
       {/* Pricing Tiers */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
+      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500 rounded-full blur-3xl"></div>
@@ -183,7 +183,7 @@ export default async function HomePage() {
               <Sparkles className="h-3 w-3 mr-1" />
               Ofertas por Volumen
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
               Precios por <span className="text-primary-400">Volumen</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -233,7 +233,7 @@ export default async function HomePage() {
 
                   <Link
                     href="/productos/transfer-dtf"
-                    className={`flex flex-col h-full rounded-2xl p-8 relative overflow-hidden transition-all duration-300 hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-2xl group ${
+                    className={`flex flex-col h-full rounded-2xl p-8 relative overflow-hidden transition-all duration-300 md:hover:scale-105 md:hover:-translate-y-2 cursor-pointer shadow-2xl group ${
                       isLast
                         ? 'bg-gradient-to-br from-yellow-400 via-orange-400 to-red-500 border-4 border-yellow-300 shadow-yellow-500/50'
                         : 'bg-white backdrop-blur-xl border-2 border-white/30 hover:border-white/60 hover:shadow-white/30'
@@ -298,7 +298,7 @@ export default async function HomePage() {
             <Link href="/productos/transfer-dtf">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-2xl hover:shadow-primary-500/50 transform hover:scale-110 transition-all duration-300 hover:-translate-y-1 font-bold text-lg px-8 py-6"
+                className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-2xl hover:shadow-primary-500/50 transform md:hover:scale-105 transition-all duration-300 md:hover:-translate-y-1 font-bold text-lg px-8 py-6"
               >
                 <Sparkles className="h-6 w-6 mr-2 animate-pulse" />
                 Ver Precios Completos
@@ -309,14 +309,14 @@ export default async function HomePage() {
       </section>
 
       {/* Bonos Section - Dinámica */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge variant="warning" className="mb-4">
               <Sparkles className="h-3 w-3 mr-1" />
               Bonos Prepagados
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Ahorra con nuestros <span className="text-primary-600">Bonos</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -336,9 +336,9 @@ export default async function HomePage() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
-                  <span className="text-4xl font-bold text-primary-600">190€</span>
+                  <span className="text-3xl sm:text-4xl font-bold text-primary-600">190€</span>
                   <span className="text-xs text-gray-500 ml-1">+ IVA</span>
                 </div>
                 <p className="text-gray-600 mb-4">25 metros incluidos</p>
@@ -380,9 +380,9 @@ export default async function HomePage() {
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Star className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Bono DTF</h3>
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">Bono DTF</h3>
                 <div className="mb-2">
-                  <span className="text-4xl font-bold">375€</span>
+                  <span className="text-3xl sm:text-4xl font-bold">375€</span>
                   <span className="text-xs text-white/70 ml-1">+ IVA</span>
                 </div>
                 <p className="text-primary-100 mb-4">50 metros incluidos</p>
@@ -421,9 +421,9 @@ export default async function HomePage() {
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="w-8 h-8 text-purple-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
-                  <span className="text-4xl font-bold text-primary-600">725€</span>
+                  <span className="text-3xl sm:text-4xl font-bold text-primary-600">725€</span>
                   <span className="text-xs text-gray-500 ml-1">+ IVA</span>
                 </div>
                 <p className="text-gray-600 mb-4">100 metros incluidos</p>
@@ -461,7 +461,7 @@ export default async function HomePage() {
           <div className="mt-12 text-center">
             <Card className="max-w-2xl mx-auto bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300">
               <CardContent className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                   ¿Necesitas más metros?
                 </h3>
                 <p className="text-gray-700 mb-6">

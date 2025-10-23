@@ -432,10 +432,10 @@ export default function CheckoutPage() {
                 Volver
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 mt-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4">
               Finalizar Pedido
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-sm sm:text-base text-gray-600 mt-2">
               Completa tus datos y sube tu diseño
             </p>
           </div>
@@ -560,7 +560,7 @@ export default function CheckoutPage() {
                       required
                       placeholder="Juan Pérez García"
                     />
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label="Email"
                         type="email"
@@ -660,7 +660,7 @@ export default function CheckoutPage() {
                         required
                         placeholder="Calle Principal 123, Piso 2A"
                       />
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input
                           label="Código Postal"
                           name="postalCode"
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
                           placeholder="Madrid"
                         />
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input
                           label="Provincia/Estado"
                           name="state"

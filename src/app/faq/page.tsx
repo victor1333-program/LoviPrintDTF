@@ -211,10 +211,10 @@ export default function FAQPage() {
               <HelpCircle className="h-3 w-3 mr-1" />
               Centro de Ayuda
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
               Preguntas Frecuentes
             </h1>
-            <p className="text-xl text-orange-100 mb-8">
+            <p className="text-lg sm:text-xl text-orange-100 mb-8">
               Encuentra respuestas rápidas a las preguntas más comunes sobre impresión DTF
             </p>
 
@@ -327,10 +327,10 @@ export default function FAQPage() {
           <Card className="max-w-3xl mx-auto bg-gradient-to-br from-orange-600 to-orange-700 border-none text-white">
             <CardContent className="p-12 text-center">
               <MessageCircle className="w-16 h-16 mx-auto mb-6 opacity-90" />
-              <h2 className="text-3xl font-bold mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
                 ¿No encuentras lo que buscas?
               </h2>
-              <p className="text-xl text-orange-100 mb-8">
+              <p className="text-lg sm:text-xl text-orange-100 mb-8">
                 Nuestro equipo está listo para ayudarte con cualquier duda que tengas
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

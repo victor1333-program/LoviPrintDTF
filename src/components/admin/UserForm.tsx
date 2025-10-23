@@ -188,7 +188,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       {/* Información Básica */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Información Básica</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nombre Completo *
@@ -266,7 +266,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           </div>
 
           {formData.isProfessional && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pl-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
                 <Input
@@ -308,7 +308,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       {/* Dirección de Envío */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Dirección de Envío</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Calle</label>
             <Input
@@ -379,7 +379,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         </div>
 
         {!formData.sameAsShipping && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Calle</label>
               <Input

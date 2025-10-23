@@ -501,7 +501,7 @@ export default function CarritoPage() {
 
           {/* Resumen del pedido */}
           <div>
-            <Card className="sticky top-24">
+            <Card className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold mb-6">Resumen del Pedido</h2>
 

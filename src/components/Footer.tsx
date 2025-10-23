@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Sobre Nosotros */}
           <div>
-            <div className="mb-4 relative h-16 w-48">
+            <div className="mb-4 relative h-14 sm:h-16 w-40 sm:w-48">
               <Image
                 src="/logo.png"
                 alt="LoviPrintDTF - Impresión DTF"

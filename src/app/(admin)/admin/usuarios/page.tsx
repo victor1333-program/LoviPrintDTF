@@ -146,10 +146,10 @@ export default function UsuariosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Usuarios</h1>
-          <p className="text-gray-600 mt-2">Lista de usuarios registrados en la plataforma</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Usuarios</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Lista de usuarios registrados en la plataforma</p>
         </div>
         <Button
           onClick={() => {
@@ -165,7 +165,7 @@ export default function UsuariosPage() {
       {/* Filtros */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -179,7 +179,7 @@ export default function UsuariosPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 sm:w-auto"
             >
               <option value="">Todos los roles</option>
               <option value="CUSTOMER">Clientes</option>
@@ -188,7 +188,7 @@ export default function UsuariosPage() {
             <select
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 sm:w-auto"
             >
               <option value="">Todos los tiers</option>
               <option value="BRONZE">🥉 Bronce</option>

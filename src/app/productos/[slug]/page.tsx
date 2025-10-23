@@ -306,8 +306,8 @@ export default function ProductDetailPage() {
               </Badge>
             )}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{product.name}</h1>
-          <p className="text-xl text-orange-100 max-w-3xl">{product.shortDescription}</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">{product.name}</h1>
+          <p className="text-lg sm:text-xl text-orange-100 max-w-3xl">{product.shortDescription}</p>
         </div>
       </section>
 
@@ -341,7 +341,7 @@ export default function ProductDetailPage() {
             {/* Características Principales */}
             <Card>
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
                   <Award className="h-6 w-6 text-orange-600" />
                   Características Principales
                 </h2>
@@ -389,7 +389,7 @@ export default function ProductDetailPage() {
             {/* Descripción Detallada */}
             <Card>
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
                   <FileText className="h-6 w-6 text-orange-600" />
                   Descripción del Producto
                 </h2>
@@ -421,7 +421,7 @@ export default function ProductDetailPage() {
             {/* Especificaciones Técnicas */}
             <Card>
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
                   <Info className="h-6 w-6 text-orange-600" />
                   Especificaciones Técnicas
                 </h2>
@@ -474,7 +474,7 @@ export default function ProductDetailPage() {
             {/* Instrucciones de Aplicación */}
             <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-orange-900">
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-orange-900">
                   <CheckCircle2 className="h-6 w-6 text-orange-600" />
                   Instrucciones de Aplicación
                 </h2>
@@ -538,34 +538,36 @@ export default function ProductDetailPage() {
                   {product.priceRanges && product.priceRanges.length > 0 && (
                     <div className="mb-6">
                       <h3 className="font-semibold mb-3 text-sm">Descuentos por volumen</h3>
-                      <div className="space-y-2">
-                        {product.priceRanges.map((range) => {
-                          const isActive = quantity >= Number(range.fromQty) && (!range.toQty || quantity <= Number(range.toQty))
-                          return (
-                            <div
-                              key={range.id}
-                              className={`flex justify-between items-center text-sm p-2 rounded ${
-                                isActive ? 'bg-orange-100 border border-orange-300' : 'bg-gray-50'
-                              }`}
-                            >
-                              <span className={isActive ? 'font-semibold text-orange-900' : 'text-gray-600'}>
-                                {Number(range.fromQty)}
-                                {range.toQty ? ` - ${Number(range.toQty)}` : '+'}
-                                {' '}{product.unit}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className={`font-semibold ${isActive ? 'text-orange-600' : ''}`}>
-                                  {formatCurrency(Number(range.price))}
+                      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="space-y-2 min-w-[300px]">
+                          {product.priceRanges.map((range) => {
+                            const isActive = quantity >= Number(range.fromQty) && (!range.toQty || quantity <= Number(range.toQty))
+                            return (
+                              <div
+                                key={range.id}
+                                className={`flex justify-between items-center text-sm p-2 rounded ${
+                                  isActive ? 'bg-orange-100 border border-orange-300' : 'bg-gray-50'
+                                }`}
+                              >
+                                <span className={isActive ? 'font-semibold text-orange-900' : 'text-gray-600'}>
+                                  {Number(range.fromQty)}
+                                  {range.toQty ? ` - ${Number(range.toQty)}` : '+'}
+                                  {' '}{product.unit}
                                 </span>
-                                {range.discountPct && Number(range.discountPct) > 0 && (
-                                  <Badge className="bg-green-100 text-green-800 text-xs">
-                                    -{Number(range.discountPct).toFixed(0)}%
-                                  </Badge>
-                                )}
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-semibold ${isActive ? 'text-orange-600' : ''}`}>
+                                    {formatCurrency(Number(range.price))}
+                                  </span>
+                                  {range.discountPct && Number(range.discountPct) > 0 && (
+                                    <Badge className="bg-green-100 text-green-800 text-xs whitespace-nowrap">
+                                      -{Number(range.discountPct).toFixed(0)}%
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -592,7 +594,7 @@ export default function ProductDetailPage() {
                         step={1}
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="text-center text-xl font-bold h-10 flex-1"
+                        className="text-center text-xl font-bold h-10 flex-1 max-w-24"
                       />
 
                       <Button

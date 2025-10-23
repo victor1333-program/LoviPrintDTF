@@ -4,11 +4,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered } from "lucide-react"
+import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X } from "lucide-react"
 import { Button } from "../ui/Button"
+import { useState } from "react"
 
 export default function AdminSidebar() {
   const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const links = [
     {
@@ -73,8 +75,8 @@ export default function AdminSidebar() {
     },
   ]
 
-  return (
-    <aside className="w-64 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 h-screen flex flex-col fixed left-0 top-0 shadow-2xl">
+  const SidebarContent = () => (
+    <>
       {/* Header */}
       <div className="p-6 border-b border-white/20">
         <div className="flex flex-col items-center gap-2">
@@ -100,6 +102,7 @@ export default function AdminSidebar() {
             <Link
               key={link.href}
               href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group",
                 isActive
@@ -124,7 +127,7 @@ export default function AdminSidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-white/20">
-        <Link href="/" className="block mb-3">
+        <Link href="/" className="block mb-3" onClick={() => setMobileMenuOpen(false)}>
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/90 hover:bg-white/10 hover:text-white transition-all duration-200">
             <Home className="h-5 w-5" />
             <span className="font-medium">Ver Sitio Web</span>
@@ -133,6 +136,7 @@ export default function AdminSidebar() {
         <button
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/90 hover:bg-red-500/20 hover:text-white transition-all duration-200"
           onClick={() => {
+            setMobileMenuOpen(false)
             window.location.href = '/api/auth/signout'
           }}
         >
@@ -140,6 +144,41 @@ export default function AdminSidebar() {
           <span className="font-medium">Cerrar Sesión</span>
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Botón Hamburguesa (Solo Móvil) */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-lg shadow-lg text-white"
+      >
+        {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+
+      {/* Overlay (Solo Móvil) */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Mobile (Sheet) */}
+      <aside
+        className={cn(
+          "w-64 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 h-screen flex flex-col fixed left-0 top-0 shadow-2xl z-40 transition-transform duration-300 lg:hidden",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar Desktop */}
+      <aside className="hidden lg:flex w-64 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 h-screen flex-col fixed left-0 top-0 shadow-2xl z-40">
+        <SidebarContent />
+      </aside>
+    </>
   )
 }

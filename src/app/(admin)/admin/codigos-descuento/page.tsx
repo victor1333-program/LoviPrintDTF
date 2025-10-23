@@ -170,12 +170,12 @@ export default function AdminDiscountCodesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Códigos de Descuento</h1>
-          <p className="text-gray-600">Gestiona los códigos de descuento para tus clientes</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Códigos de Descuento</h1>
+          <p className="text-sm sm:text-base text-gray-600">Gestiona los códigos de descuento para tus clientes</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button onClick={exportCodes} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Exportar

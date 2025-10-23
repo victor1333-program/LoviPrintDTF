@@ -89,10 +89,10 @@ export default function AdminProductosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Productos</h1>
-          <p className="text-gray-600">Gestiona el catálogo de productos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Productos</h1>
+          <p className="text-sm sm:text-base text-gray-600">Gestiona el catálogo de productos</p>
         </div>
         <Button onClick={() => {
           setEditingProduct(null)

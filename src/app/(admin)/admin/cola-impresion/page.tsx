@@ -136,8 +136,8 @@ export default function ColaImpresionPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cola de Impresión</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Cola de Impresión</h1>
+        <p className="text-sm sm:text-base text-gray-600">
           Gestiona los pedidos pendientes de producción en orden de prioridad
         </p>
       </div>

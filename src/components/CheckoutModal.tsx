@@ -322,7 +322,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {step === 'profile' ? 'Confirma tus Datos' : 'Dirección de Envío'}
@@ -473,7 +473,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <Label htmlFor="billingPostalCode">Código Postal *</Label>
                             <Input
@@ -614,7 +614,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="city">Ciudad *</Label>
                         <Input
@@ -636,7 +636,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="state">Provincia</Label>
                         <Input

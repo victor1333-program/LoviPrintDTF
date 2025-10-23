@@ -467,8 +467,8 @@ export default function CuentaPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b">
-          <nav className="flex space-x-8">
+        <div className="mb-6 border-b overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <nav className="flex space-x-4 sm:space-x-8 min-w-max sm:min-w-0">
             {[
               { id: 'overview', label: 'Resumen', icon: TrendingUp },
               { id: 'orders', label: 'Mis Pedidos', icon: Package },
@@ -479,7 +479,7 @@ export default function CuentaPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition ${
+                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

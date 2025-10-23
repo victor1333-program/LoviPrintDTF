@@ -188,7 +188,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       <div className="space-y-4">
         <h3 className="font-semibold text-lg">Información Básica</h3>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nombre del Producto *
@@ -272,7 +272,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       <div className="space-y-4">
         <h3 className="font-semibold text-lg">Precios y Cantidades</h3>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Precio Base *
@@ -319,7 +319,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cantidad Mínima
@@ -362,7 +362,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           <div className="space-y-3">
             {priceRanges.map((range, index) => (
               <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1 grid grid-cols-4 gap-3">
+                <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Desde (qty)

@@ -46,10 +46,10 @@ export default function AdminDisenosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Diseños de Clientes</h1>
-          <p className="text-gray-600">Archivos subidos en los pedidos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Diseños de Clientes</h1>
+          <p className="text-sm sm:text-base text-gray-600">Archivos subidos en los pedidos</p>
         </div>
       </div>
 
