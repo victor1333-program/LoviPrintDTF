@@ -92,7 +92,7 @@ export default function RootLayout({
               "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Bonos prepagados sin caducidad.",
               "@id": "https://loviprintdtf.es",
               "url": "https://loviprintdtf.es",
-              "telephone": "Por confirmar",
+              "telephone": "+34614040296",
               "email": "info@loviprintdtf.es",
               "address": {
                 "@type": "PostalAddress",
@@ -102,9 +102,71 @@ export default function RootLayout({
                 "postalCode": "02400",
                 "addressCountry": "ES"
               },
+              "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": "38.5084873",
+                "longitude": "-1.7808199"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                  "opens": "09:00",
+                  "closes": "13:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                  "opens": "17:00",
+                  "closes": "20:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.youtube.com/@loviprintdtf",
+                "https://www.instagram.com/loviprintdtf",
+                "https://www.tiktok.com/@loviprintdtf"
+              ],
               "priceRange": "€€",
               "paymentAccepted": "Cash, Credit Card, PayPal",
               "currenciesAccepted": "EUR",
+              "areaServed": {
+                "@type": "Country",
+                "name": "España"
+              }
+            })
+          }}
+        />
+        <Script
+          id="schema-organization"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "LoviPrintDTF",
+              "url": "https://loviprintdtf.es",
+              "logo": "https://loviprintdtf.es/logo.png",
+              "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Especialistas en impresión DTF profesional desde Hellín, Albacete.",
+              "email": "info@loviprintdtf.es",
+              "telephone": "+34614040296",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Calle Antonio López del Oro 7",
+                "addressLocality": "Hellín",
+                "addressRegion": "Albacete",
+                "postalCode": "02400",
+                "addressCountry": "ES"
+              },
+              "sameAs": [
+                "https://www.youtube.com/@loviprintdtf",
+                "https://www.instagram.com/loviprintdtf",
+                "https://www.tiktok.com/@loviprintdtf"
+              ],
+              "founder": {
+                "@type": "Person",
+                "name": "LoviPrintDTF"
+              },
+              "foundingDate": "2024",
               "areaServed": {
                 "@type": "Country",
                 "name": "España"

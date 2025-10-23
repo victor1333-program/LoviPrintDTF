@@ -281,6 +281,32 @@ export default function ProductDetailPage() {
     }
   } : null
 
+  // Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inicio",
+        "item": "https://loviprintdtf.es"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Productos",
+        "item": "https://loviprintdtf.es/productos"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.name,
+        "item": `https://loviprintdtf.es/productos/${product.slug}`
+      }
+    ]
+  }
+
   return (
     <>
       {productSchema && (
@@ -290,6 +316,11 @@ export default function ProductDetailPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
         />
       )}
+      <Script
+        id="schema-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white py-12">

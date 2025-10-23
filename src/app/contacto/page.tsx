@@ -82,7 +82,7 @@ export default function ContactoPage() {
     {
       icon: <Clock className="w-6 h-6" />,
       title: 'Horario',
-      value: 'Lun-Vie: 9:00-18:00',
+      value: 'Lun-Vie: 9:00-13:00 y 17:00-20:00',
       link: null,
       color: 'from-purple-500 to-purple-600'
     }
@@ -294,7 +294,7 @@ export default function ContactoPage() {
                   </p>
                   <Button
                     className="bg-green-500 hover:bg-green-600"
-                    onClick={() => window.open('https://wa.me/TUNUMERO', '_blank')}
+                    onClick={() => window.open('https://wa.me/34614040296', '_blank')}
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
                     Abrir WhatsApp
