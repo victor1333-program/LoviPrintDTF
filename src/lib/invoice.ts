@@ -32,26 +32,8 @@ function formatCustomerName(name: string): string {
   return name
 }
 
-// Configurar rutas de fuentes de PDFKit para Next.js
-// PDFKit necesita acceso a sus archivos de fuentes (.afm)
-// Usamos require.resolve para encontrar la ruta correcta de pdfkit
-try {
-  const pdkitPath = require.resolve('pdfkit')
-  const fontDataPath = path.join(path.dirname(pdkitPath), 'js', 'data')
-
-  if (fs.existsSync(fontDataPath)) {
-    // Configurar variable de entorno que PDFKit puede usar
-    process.env.PDFKIT_FONT_PATH = fontDataPath
-  } else {
-    // Fallback a node_modules directo
-    const fallbackPath = path.join(process.cwd(), 'node_modules', 'pdfkit', 'js', 'data')
-    if (fs.existsSync(fallbackPath)) {
-      process.env.PDFKIT_FONT_PATH = fallbackPath
-    }
-  }
-} catch (err) {
-  console.error('Error configurando rutas de fuentes de PDFKit:', err)
-}
+// PDFKit viene con fuentes incorporadas y funciona correctamente en Next.js
+// sin necesidad de configuración adicional de rutas
 
 interface InvoiceData {
   orderId: string
