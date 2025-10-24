@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary'
 import { prisma } from './prisma'
+import { uploadLogger } from './logger'
 
 interface CloudinaryConfig {
   cloudName: string
@@ -37,7 +38,7 @@ async function getCloudinaryConfig(): Promise<CloudinaryConfig | null> {
 
     // Verificar que tenemos toda la configuración necesaria
     if (!config.cloudinary_cloud_name || !config.cloudinary_api_key || !config.cloudinary_api_secret) {
-      console.warn('Cloudinary configuration incomplete')
+      uploadLogger.warn('Cloudinary configuration incomplete')
       return null
     }
 
@@ -50,7 +51,7 @@ async function getCloudinaryConfig(): Promise<CloudinaryConfig | null> {
     configLastFetched = now
     return cachedConfig
   } catch (error) {
-    console.error('Error fetching Cloudinary config:', error)
+    uploadLogger.error('Error fetching Cloudinary config', error)
     return null
   }
 }
@@ -144,7 +145,7 @@ export async function uploadToCloudinary(
       }
     }
   } catch (error) {
-    console.error('Error uploading to Cloudinary:', error)
+    uploadLogger.error('Error uploading to Cloudinary', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error desconocido al subir archivo'
@@ -160,14 +161,14 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
     const isConfigured = await configureCloudinary()
 
     if (!isConfigured) {
-      console.warn('Cloudinary not configured, skipping delete')
+      uploadLogger.warn('Cloudinary not configured, skipping delete')
       return false
     }
 
     await cloudinary.uploader.destroy(publicId)
     return true
   } catch (error) {
-    console.error('Error deleting from Cloudinary:', error)
+    uploadLogger.error('Error deleting from Cloudinary', error)
     return false
   }
 }
@@ -186,7 +187,7 @@ export async function getCloudinaryResource(publicId: string) {
     const result = await cloudinary.api.resource(publicId)
     return result
   } catch (error) {
-    console.error('Error getting Cloudinary resource:', error)
+    uploadLogger.error('Error getting Cloudinary resource', error)
     return null
   }
 }

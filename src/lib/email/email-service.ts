@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/prisma'
 import { renderEmailTemplate } from './template-service'
 import { EmailTemplateType } from '@prisma/client'
+import { emailLogger } from '@/lib/logger'
 
 /**
  * Formatea el nombre del cliente para que se muestre correctamente
@@ -63,7 +64,7 @@ async function getEmailConfig() {
       return config
     }
   } catch (error) {
-    console.log('No se pudo cargar configuración de email desde DB, usando .env')
+    emailLogger.info('No se pudo cargar configuración de email desde DB, usando .env')
   }
 
   // Fallback a variables de entorno
@@ -86,7 +87,7 @@ async function createTransporter() {
 
   if (isDevelopment && !config.smtp_host) {
     // Usar configuración de prueba para desarrollo
-    console.log('⚠️  Usando modo de desarrollo para emails. Los emails no se enviarán realmente.')
+    emailLogger.warn('Usando modo de desarrollo para emails. Los emails no se enviarán realmente.')
     return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
@@ -133,16 +134,16 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       text: options.text || options.html.replace(/<[^>]*>/g, ''), // Fallback a texto plano
     })
 
-    console.log('✅ Email enviado:', info.messageId)
+    emailLogger.info(`Email enviado: ${info.messageId}`)
 
     // En desarrollo con Ethereal, mostrar preview URL
     if (process.env.NODE_ENV === 'development' && !config.smtp_host) {
-      console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info))
+      emailLogger.info(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`)
     }
 
     return true
   } catch (error) {
-    console.error('❌ Error al enviar email:', error)
+    emailLogger.error('Error al enviar email', error)
     return false
   }
 }

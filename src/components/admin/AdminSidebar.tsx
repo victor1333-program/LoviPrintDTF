@@ -6,11 +6,34 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X } from "lucide-react"
 import { Button } from "../ui/Button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function AdminSidebar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [confirmedOrdersCount, setConfirmedOrdersCount] = useState(0)
+
+  // Obtener el count de pedidos confirmados
+  useEffect(() => {
+    const fetchConfirmedCount = async () => {
+      try {
+        const response = await fetch('/api/admin/orders/count')
+        if (response.ok) {
+          const data = await response.json()
+          setConfirmedOrdersCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error al obtener count de pedidos:', error)
+      }
+    }
+
+    fetchConfirmedCount()
+
+    // Actualizar cada 30 segundos para mantener el badge actualizado
+    const interval = setInterval(fetchConfirmedCount, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const links = [
     {
@@ -23,7 +46,7 @@ export default function AdminSidebar() {
       href: "/admin/pedidos",
       label: "Pedidos",
       icon: Package2,
-      badge: null
+      badge: confirmedOrdersCount > 0 ? confirmedOrdersCount : null
     },
     {
       href: "/admin/cola-impresion",
@@ -116,7 +139,12 @@ export default function AdminSidebar() {
               )} />
               <span className="font-semibold">{link.label}</span>
               {link.badge && (
-                <span className="ml-auto bg-white/20 text-white text-xs px-2 py-1 rounded-full font-medium">
+                <span className={cn(
+                  "ml-auto text-xs px-2 py-1 rounded-full font-bold",
+                  link.href === "/admin/pedidos"
+                    ? "bg-red-500 text-white shadow-lg shadow-red-500/50"
+                    : "bg-white/20 text-white"
+                )}>
                   {link.badge}
                 </span>
               )}

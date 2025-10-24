@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email'
+import { paymentLogger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
           }
 
           if (metersNeeded > 0) {
-            console.log(`Deducting ${metersNeeded} meters from user ${order.userId} vouchers for Stripe paid order`)
+            paymentLogger.info(`Deducting ${metersNeeded} meters from user ${order.userId} vouchers for Stripe paid order`)
 
             // Buscar bonos del usuario usando FIFO
             const vouchers = await prisma.voucher.findMany({
@@ -191,7 +192,7 @@ export async function POST(req: NextRequest) {
                     }
                   })
 
-                  console.log(`Deducted ${metersToDeduct}m and ${shipmentsToDeduct} shipment(s) from voucher ${voucher.code}`)
+                  paymentLogger.info(`Deducted ${metersToDeduct}m and ${shipmentsToDeduct} shipment(s) from voucher ${voucher.code}`)
                 }
               }
 
@@ -212,19 +213,19 @@ export async function POST(req: NextRequest) {
             const { sendVoucherPurchaseEmail } = await import('@/lib/email')
             for (const voucher of createdVouchers) {
               await sendVoucherPurchaseEmail(order, voucher).catch(err =>
-                console.error('Error sending voucher purchase email:', err)
+                paymentLogger.error('Error sending voucher purchase email', err)
               )
             }
           } else {
             // Es un pedido normal - enviar email de confirmación estándar
             await sendOrderConfirmationEmail(order).catch(err =>
-              console.error('Error sending order confirmation email:', err)
+              paymentLogger.error('Error sending order confirmation email', err)
             )
           }
 
           // Notificar al admin de todos los pedidos pagados
           await sendAdminOrderNotification(order).catch(err =>
-            console.error('Error sending admin notification email:', err)
+            paymentLogger.error('Error sending admin notification email', err)
           )
         }
         break
@@ -295,7 +296,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error('Error in webhook route:', error)
+    paymentLogger.error('Error in webhook route', error)
     return NextResponse.json(
       { error: 'Webhook error' },
       { status: 500 }

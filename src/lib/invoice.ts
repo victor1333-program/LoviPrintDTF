@@ -3,6 +3,7 @@ import { prisma } from './prisma'
 import { uploadToCloudinary } from './cloudinary'
 import path from 'path'
 import fs from 'fs'
+import { logger } from './logger'
 
 /**
  * Formatea el nombre del cliente para que se muestre correctamente
@@ -113,7 +114,7 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
         logoLoaded = true
       }
     } catch (err) {
-      console.error('Error loading logo:', err)
+      logger.error('Error loading invoice logo', err)
       logoLoaded = false
     }
 
@@ -122,7 +123,7 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
       try {
         doc.image(logoBuffer, 50, 40, { width: 100, height: 100, fit: [100, 100] })
       } catch (err) {
-        console.error('Error adding logo to PDF:', err)
+        logger.error('Error adding logo to PDF', err)
         logoLoaded = false
         // Si falla el logo, mostramos el nombre de la empresa
         doc.fontSize(20).font('Helvetica-Bold').text(companyName, 50, 50)

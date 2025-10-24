@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { calculateUnitPrice } from '@/lib/pricing'
+import { validateRequest } from '@/lib/validations/validate'
+import { addToCartSchema } from '@/lib/validations/schemas'
+import { logger } from '@/lib/logger'
 
 // GET - Obtener carrito
 export async function GET(request: NextRequest) {
@@ -227,7 +230,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching cart:', error)
+    logger.error('Error fetching cart', error)
     return NextResponse.json(
       { error: 'Error al cargar carrito' },
       { status: 500 }
@@ -245,8 +248,13 @@ export async function POST(request: NextRequest) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
 
-    const body = await request.json()
-    const { productId, quantity, fileUrl, fileName, fileSize, fileMetadata, customizations } = body
+    // Validar request body
+    const validation = await validateRequest(request, addToCartSchema)
+    if (validation.error) {
+      return validation.error
+    }
+
+    const { productId, quantity, fileUrl, fileName, fileSize, fileMetadata, customizations } = validation.data
 
     // Verificar que el producto existe
     const product = await prisma.product.findUnique({
@@ -360,7 +368,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Error adding to cart:', error)
+    logger.error('Error adding to cart', error)
     return NextResponse.json(
       { error: 'Error al agregar al carrito' },
       { status: 500 }
@@ -392,7 +400,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error clearing cart:', error)
+    logger.error('Error clearing cart', error)
     return NextResponse.json(
       { error: 'Error al limpiar carrito' },
       { status: 500 }

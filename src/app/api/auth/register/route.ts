@@ -4,6 +4,9 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
+import { validateRequest } from '@/lib/validations/validate'
+import { registerSchema } from '@/lib/validations/schemas'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   // Aplicar rate limiting para prevenir ataques de fuerza bruta
@@ -18,33 +21,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json()
-    const { email, password } = body
-
-    // Validar campos requeridos
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email y contraseña son requeridos' },
-        { status: 400 }
-      )
+    // Validar request body
+    const validation = await validateRequest(req, registerSchema)
+    if (validation.error) {
+      return validation.error
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Email inválido' },
-        { status: 400 }
-      )
-    }
-
-    // Validar longitud de contraseña
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'La contraseña debe tener al menos 6 caracteres' },
-        { status: 400 }
-      )
-    }
+    const { email, password } = validation.data
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -99,9 +82,9 @@ export async function POST(req: NextRequest) {
     })
 
     if (!emailResult.success) {
-      console.error('Error sending verification email:', emailResult.error)
+      logger.error('Error sending verification email', emailResult.error)
       // No fallar el registro si el email no se envía, pero advertir
-      console.warn('User created but verification email failed to send')
+      logger.warn('User created but verification email failed to send')
     }
 
     return NextResponse.json(
@@ -112,7 +95,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating user:', error)
+    logger.error('Error creating user', error)
     return NextResponse.json(
       { error: 'Error al crear el usuario' },
       { status: 500 }

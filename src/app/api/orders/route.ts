@@ -4,14 +4,62 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { generateOrderNumber } from '@/lib/utils'
 import { validatePointsUsage } from '@/lib/loyalty'
+import { logger } from '@/lib/logger'
+import { createCheckoutOrderSchema, createRegularOrderSchema } from '@/lib/validations/schemas'
+import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    const body = await request.json()
+
+    // Parsear body para detectar formato
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'JSON inválido' },
+        { status: 400 }
+      )
+    }
 
     // Detectar formato del pedido (nuevo formato desde checkout o antiguo formato)
     const isCheckoutFormat = body.metersOrdered !== undefined
+
+    // Validar según formato
+    if (isCheckoutFormat) {
+      const validation = createCheckoutOrderSchema.safeParse(body)
+      if (!validation.success) {
+        const errors = validation.error.errors.map(err => ({
+          path: err.path.join('.'),
+          message: err.message,
+        }))
+        logger.warn('Checkout order validation error', { context: { errors } })
+        return NextResponse.json(
+          {
+            error: 'Datos inválidos',
+            details: errors,
+          },
+          { status: 400 }
+        )
+      }
+    } else {
+      const validation = createRegularOrderSchema.safeParse(body)
+      if (!validation.success) {
+        const errors = validation.error.errors.map(err => ({
+          path: err.path.join('.'),
+          message: err.message,
+        }))
+        logger.warn('Regular order validation error', { context: { errors } })
+        return NextResponse.json(
+          {
+            error: 'Datos inválidos',
+            details: errors,
+          },
+          { status: 400 }
+        )
+      }
+    }
 
     let orderData
 
@@ -431,7 +479,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(orderData, { status: 201 })
 
   } catch (error) {
-    console.error('Error al crear pedido:', error)
+    logger.error('Error creating order', error)
     return NextResponse.json(
       { error: 'Error al crear el pedido' },
       { status: 500 }
@@ -534,7 +582,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(orders)
 
   } catch (error) {
-    console.error('Error al obtener pedidos:', error)
+    logger.error('Error fetching orders', error)
     return NextResponse.json(
       { error: 'Error al obtener pedidos' },
       { status: 500 }

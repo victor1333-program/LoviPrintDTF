@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
+import { validateRequest } from '@/lib/validations/validate'
+import { createCheckoutSchema } from '@/lib/validations/schemas'
+import { paymentLogger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +17,14 @@ export async function POST(request: NextRequest) {
     const isTestMode = testModeSettings?.value === 'true'
     const stripeSecretKey = isTestMode ? secretKeyTest?.value : secretKeyLive?.value
 
-    console.log('[Stripe Debug] Test mode:', isTestMode)
-    console.log('[Stripe Debug] Secret key test exists:', !!secretKeyTest?.value)
-    console.log('[Stripe Debug] Secret key live exists:', !!secretKeyLive?.value)
-    console.log('[Stripe Debug] Using key:', stripeSecretKey ? `${stripeSecretKey.substring(0, 10)}...` : 'NONE')
+    paymentLogger.info('Stripe configuration loaded', {
+      context: {
+        testMode: isTestMode,
+        hasTestKey: !!secretKeyTest?.value,
+        hasLiveKey: !!secretKeyLive?.value,
+        keyPrefix: stripeSecretKey ? `${stripeSecretKey.substring(0, 10)}...` : 'NONE'
+      }
+    })
 
     // Verificar que Stripe esté configurado
     if (!stripeSecretKey) {
@@ -31,15 +38,13 @@ export async function POST(request: NextRequest) {
       apiVersion: '2025-09-30.clover',
     })
 
-    const body = await request.json()
-    const { orderId, orderNumber } = body
-
-    if (!orderId || !orderNumber) {
-      return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
-        { status: 400 }
-      )
+    // Validar request body
+    const validation = await validateRequest(request, createCheckoutSchema)
+    if (validation.error) {
+      return validation.error
     }
+
+    const { orderId, orderNumber } = validation.data
 
     // Obtener el pedido de la base de datos
     const order = await prisma.order.findUnique({
@@ -134,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    paymentLogger.error('Error creating checkout session', error)
     return NextResponse.json(
       { error: 'Error al crear la sesión de pago' },
       { status: 500 }
