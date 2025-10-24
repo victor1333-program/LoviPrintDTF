@@ -7,6 +7,7 @@ import { validatePointsUsage } from '@/lib/loyalty'
 import { logger } from '@/lib/logger'
 import { createCheckoutOrderSchema, createRegularOrderSchema } from '@/lib/validations/schemas'
 import { z } from 'zod'
+import { sanitizeFileName } from '@/lib/file-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     if (isCheckoutFormat) {
       // Nuevo formato desde checkout (DTF)
-      const {
+      let {
         name,
         email,
         phone,
@@ -89,6 +90,19 @@ export async function POST(request: NextRequest) {
         saveProfile,
         saveAddress,
       } = body
+
+      // Sanitizar nombre de archivo si existe
+      if (designFileName) {
+        try {
+          designFileName = sanitizeFileName(designFileName)
+        } catch (error) {
+          logger.error('File name sanitization failed in order (checkout format)', error)
+          return NextResponse.json(
+            { error: 'Nombre de archivo inválido' },
+            { status: 400 }
+          )
+        }
+      }
 
       // Validaciones básicas
       if (!name || !email || !phone || !metersOrdered || !designFileUrl) {
@@ -251,7 +265,7 @@ export async function POST(request: NextRequest) {
 
     } else {
       // Formato antiguo (productos regulares)
-      const {
+      let {
         customerName,
         customerEmail,
         customerPhone,
@@ -270,6 +284,24 @@ export async function POST(request: NextRequest) {
         useMeterVouchers = false,
         meterVouchersInfo = null
       } = body
+
+      // Sanitizar nombres de archivo en los items
+      if (items && Array.isArray(items)) {
+        items = items.map((item: any) => {
+          if (item.fileName) {
+            try {
+              item.fileName = sanitizeFileName(item.fileName)
+            } catch (error) {
+              logger.error('File name sanitization failed in order item (regular format)', {
+                context: { originalFileName: item.fileName, error }
+              })
+              // Usar nombre genérico si falla la sanitización
+              item.fileName = 'file'
+            }
+          }
+          return item
+        })
+      }
 
       // Validaciones básicas
       if (!customerName || !customerEmail || !items || items.length === 0) {

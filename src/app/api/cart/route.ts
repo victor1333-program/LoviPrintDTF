@@ -5,6 +5,7 @@ import { calculateUnitPrice } from '@/lib/pricing'
 import { validateRequest } from '@/lib/validations/validate'
 import { addToCartSchema } from '@/lib/validations/schemas'
 import { logger } from '@/lib/logger'
+import { sanitizeFileName } from '@/lib/file-utils'
 
 // GET - Obtener carrito
 export async function GET(request: NextRequest) {
@@ -254,7 +255,20 @@ export async function POST(request: NextRequest) {
       return validation.error
     }
 
-    const { productId, quantity, fileUrl, fileName, fileSize, fileMetadata, customizations } = validation.data
+    let { productId, quantity, fileUrl, fileName, fileSize, fileMetadata, customizations } = validation.data
+
+    // Sanitizar nombre de archivo si existe
+    if (fileName) {
+      try {
+        fileName = sanitizeFileName(fileName)
+      } catch (error) {
+        logger.error('File name sanitization failed in cart', error)
+        return NextResponse.json(
+          { error: 'Nombre de archivo inválido' },
+          { status: 400 }
+        )
+      }
+    }
 
     // Verificar que el producto existe
     const product = await prisma.product.findUnique({

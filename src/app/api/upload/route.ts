@@ -5,6 +5,8 @@ import { existsSync } from 'fs'
 import path from 'path'
 import { prisma } from '@/lib/prisma'
 import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
+import { sanitizeFileName, generateUniqueFileName, isAllowedExtension, validateMimeTypeMatch } from '@/lib/file-utils'
+import { uploadLogger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   // Aplicar rate limiting para uploads
@@ -52,11 +54,24 @@ export async function POST(request: NextRequest) {
 
     // 2. Validar extensión del archivo (protección adicional contra cambio de MIME)
     const allowedExtensions = ['.png', '.jpg', '.jpeg', '.pdf', '.psd', '.ai', '.svg']
-    const fileExt = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
 
-    if (!allowedExtensions.includes(fileExt)) {
+    if (!isAllowedExtension(file.name, allowedExtensions)) {
       return NextResponse.json(
         { error: 'Extensión de archivo no permitida' },
+        { status: 400 }
+      )
+    }
+
+    // 2b. Validar que el MIME type coincida con la extensión
+    if (!validateMimeTypeMatch(file.name, file.type)) {
+      uploadLogger.warn('MIME type mismatch detected', {
+        context: {
+          fileName: file.name,
+          reportedMimeType: file.type
+        }
+      })
+      return NextResponse.json(
+        { error: 'El tipo de archivo no coincide con su extensión' },
         { status: 400 }
       )
     }
@@ -70,8 +85,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 4. Validar nombre del archivo (prevenir path traversal)
-    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+    // 4. Sanitizar nombre del archivo (prevenir path traversal y otros ataques)
+    let sanitizedFileName: string
+    try {
+      sanitizedFileName = sanitizeFileName(file.name)
+    } catch (error) {
+      uploadLogger.error('File name sanitization failed', error)
       return NextResponse.json(
         { error: 'Nombre de archivo inválido' },
         { status: 400 }
@@ -98,14 +117,16 @@ export async function POST(request: NextRequest) {
 
       if (!result.success) {
         // Fallback a almacenamiento local si Cloudinary falla
-        console.warn('Cloudinary upload failed, falling back to local storage:', result.error)
-        return await uploadToLocal(file, buffer)
+        uploadLogger.warn('Cloudinary upload failed, falling back to local storage', {
+          context: { error: result.error }
+        })
+        return await uploadToLocal(sanitizedFileName, buffer, file.size)
       }
 
       return NextResponse.json({
         success: true,
         fileUrl: result.url,
-        fileName: file.name,
+        fileName: sanitizedFileName,
         fileSize: file.size,
         metadata: result.metadata,
         publicId: result.publicId,
@@ -113,10 +134,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Almacenamiento local (fallback o por defecto)
-    return await uploadToLocal(file, buffer)
+    return await uploadToLocal(sanitizedFileName, buffer, file.size)
 
   } catch (error) {
-    console.error('Error al subir archivo:', error)
+    uploadLogger.error('Error uploading file', error)
     return NextResponse.json(
       { error: 'Error al procesar el archivo' },
       { status: 500 }
@@ -124,7 +145,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function uploadToLocal(file: File, buffer: Buffer) {
+async function uploadToLocal(sanitizedFileName: string, buffer: Buffer, fileSize: number) {
   // Las validaciones ya se realizaron en el POST handler principal
 
   // Crear directorio si no existe
@@ -133,23 +154,28 @@ async function uploadToLocal(file: File, buffer: Buffer) {
     await mkdir(uploadDir, { recursive: true })
   }
 
-  // Generar nombre único
-  const timestamp = Date.now()
-  const randomStr = Math.random().toString(36).substring(2, 15)
-  const ext = file.name.split('.').pop()
-  const fileName = `${timestamp}-${randomStr}.${ext}`
-  const filePath = path.join(uploadDir, fileName)
+  // Generar nombre único usando el nombre sanitizado
+  const uniqueFileName = generateUniqueFileName(sanitizedFileName)
+  const filePath = path.join(uploadDir, uniqueFileName)
 
   // Guardar archivo
   await writeFile(filePath, buffer)
 
   // URL pública del archivo
-  const fileUrl = `/uploads/designs/${fileName}`
+  const fileUrl = `/uploads/designs/${uniqueFileName}`
+
+  uploadLogger.info('File uploaded to local storage', {
+    context: {
+      fileName: sanitizedFileName,
+      uniqueFileName,
+      size: fileSize
+    }
+  })
 
   return NextResponse.json({
     success: true,
     fileUrl,
-    fileName: file.name,
-    fileSize: file.size,
+    fileName: sanitizedFileName,
+    fileSize,
   })
 }
