@@ -10,7 +10,10 @@ module.exports = {
     max_memory_restart: '2G',
     env: {
       NODE_ENV: 'production',
-      NODE_OPTIONS: '--max-old-space-size=2048'
+      NODE_OPTIONS: '--max-old-space-size=2048',
+      DATABASE_URL: 'postgresql://dtf_user:fe06b83ec2c4a7e62c05e514d53277d9@localhost:5433/dtf_print_services?schema=public',
+      AUTH_SECRET: 'JjC4lLs18JO36d5+W8u/dX7k9QApVQtEZaBQ5Cw6fFQ=',
+      NEXTAUTH_SECRET: 'M1LOS64HCOMu/bIkAif+ANgNL1rPO2Z4S20ixjia6kw='
     },
     error_file: '/var/log/loviprintdtf-error.log',
     out_file: '/var/log/loviprintdtf-out.log',
