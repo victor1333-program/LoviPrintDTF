@@ -4,9 +4,21 @@ import Stripe from 'stripe'
 import { validateRequest } from '@/lib/validations/validate'
 import { createCheckoutSchema } from '@/lib/validations/schemas'
 import { paymentLogger } from '@/lib/logger'
+import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Aplicar rate limiting estricto para pagos
+    const identifier = getRateLimitIdentifier(request)
+    const rateLimit = applyRateLimit(identifier, RATE_LIMIT_CONFIGS.payment)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos de pago. Por favor, espera un momento.' },
+        { status: 429, headers: rateLimit.headers }
+      )
+    }
+
     // Leer configuración de Stripe desde la base de datos
     const [testModeSettings, secretKeyTest, secretKeyLive] = await Promise.all([
       prisma.setting.findUnique({ where: { key: 'stripe_test_mode' } }),

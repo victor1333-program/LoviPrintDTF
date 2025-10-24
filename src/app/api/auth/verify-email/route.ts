@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 
 export async function GET(req: NextRequest) {
   try {
+    // Aplicar rate limiting para verificación de email
+    const identifier = getRateLimitIdentifier(req)
+    const rateLimit = applyRateLimit(identifier, RATE_LIMIT_CONFIGS.auth)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos de verificación. Por favor, espera un momento.' },
+        { status: 429, headers: rateLimit.headers }
+      )
+    }
+
     const searchParams = req.nextUrl.searchParams
     const token = searchParams.get('token')
 

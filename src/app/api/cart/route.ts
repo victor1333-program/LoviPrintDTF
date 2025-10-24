@@ -6,6 +6,7 @@ import { validateRequest } from '@/lib/validations/validate'
 import { addToCartSchema } from '@/lib/validations/schemas'
 import { logger } from '@/lib/logger'
 import { sanitizeFileName } from '@/lib/file-utils'
+import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 
 // GET - Obtener carrito
 export async function GET(request: NextRequest) {
@@ -244,6 +245,17 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     let sessionId = request.cookies.get('cart_session')?.value
+
+    // Aplicar rate limiting para agregar al carrito
+    const identifier = getRateLimitIdentifier(request, session?.user?.id)
+    const rateLimit = applyRateLimit(identifier, RATE_LIMIT_CONFIGS.public)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Por favor, espera un momento.' },
+        { status: 429, headers: rateLimit.headers }
+      )
+    }
 
     if (!session?.user && !sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

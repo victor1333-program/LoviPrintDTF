@@ -8,10 +8,22 @@ import { logger } from '@/lib/logger'
 import { createCheckoutOrderSchema, createRegularOrderSchema } from '@/lib/validations/schemas'
 import { z } from 'zod'
 import { sanitizeFileName } from '@/lib/file-utils'
+import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
+
+    // Aplicar rate limiting para creación de pedidos
+    const identifier = getRateLimitIdentifier(request, session?.user?.id)
+    const rateLimit = applyRateLimit(identifier, RATE_LIMIT_CONFIGS.public)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Demasiados pedidos. Por favor, espera un momento.' },
+        { status: 429, headers: rateLimit.headers }
+      )
+    }
 
     // Parsear body para detectar formato
     let body
