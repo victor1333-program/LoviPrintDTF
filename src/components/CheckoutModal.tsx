@@ -309,7 +309,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
         customerEmail: email,
         customerPhone: phone,
         shippingAddress,
-        shippingMethodId: selectedShippingMethodId || undefined
+        shippingMethodId: selectedShippingMethodId && selectedShippingMethodId.trim() !== '' ? selectedShippingMethodId : undefined
       })
 
     } catch (error: any) {

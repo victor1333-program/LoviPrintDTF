@@ -205,17 +205,19 @@ export default function CarritoPage() {
       // Si el total es 0€ (por bonos de metros o descuento 100%), crear pedido directo
       const isFreeOrder = total === 0
 
+      // Determinar shippingMethodId válido
+      const validShippingMethodId = checkoutData.shippingMethodId || selectedShippingMethodId
+
       // Crear el pedido
-      const orderPayload = {
+      const orderPayload: any = {
         customerName: checkoutData.customerName,
         customerEmail: checkoutData.customerEmail,
         customerPhone: checkoutData.customerPhone,
         shippingAddress: checkoutData.shippingAddress,
-        shippingMethodId: checkoutData.shippingMethodId,
         items: cart.items.map((item: CartItem) => ({
           productId: item.product.id,
           productName: item.product.name,
-          quantity: item.quantity,
+          quantity: Number(item.quantity), // Asegurar que sea número
           unitPrice: item.calculatedPrice?.unitPrice || 0,
           subtotal: item.calculatedPrice?.subtotal || 0,
           fileUrl: item.fileUrl || undefined,
@@ -236,6 +238,11 @@ export default function CarritoPage() {
           metersNeeded: cart.meterVouchers.totalMetersNeeded,
           voucherIds: cart.meterVouchers.vouchers.map((v: any) => v.id),
         } : null,
+      }
+
+      // Solo incluir shippingMethodId si es un valor válido (no vacío)
+      if (validShippingMethodId && validShippingMethodId.trim() !== '') {
+        orderPayload.shippingMethodId = validShippingMethodId
       }
 
       const res = await fetch('/api/orders', {
