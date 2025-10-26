@@ -730,49 +730,60 @@ export default function CheckoutPage() {
                     {orderData.shipping === 0 && (
                       <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-sm text-green-800 font-medium">
-                          ✓ Tu pedido tiene envío gratis
+                          ✓ Tu pedido tiene envío estándar gratis
+                        </p>
+                        <p className="text-xs text-green-700 mt-1">
+                          Puedes elegir envío urgente con coste adicional
                         </p>
                       </div>
                     )}
                     {shippingMethods.length > 0 ? (
-                      shippingMethods.map((method) => (
-                        <div
-                          key={method.id}
-                          onClick={() => handleShippingMethodChange(method)}
-                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                            selectedShippingMethod?.id === method.id
-                              ? 'border-primary-600 bg-primary-50'
-                              : 'border-gray-200 hover:border-primary-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  checked={selectedShippingMethod?.id === method.id}
-                                  onChange={() => handleShippingMethodChange(method)}
-                                  className="w-4 h-4 text-primary-600"
-                                />
-                                <h4 className="font-semibold text-gray-900">{method.name}</h4>
+                      shippingMethods.map((method) => {
+                        // El envío gratis solo aplica a métodos estándar (precio <= 6€)
+                        const isStandardShipping = method.price <= 6
+                        const hasFreeShipping = orderData.shipping === 0
+                        const isFreeForThisMethod = hasFreeShipping && isStandardShipping
+                        const displayPrice = isFreeForThisMethod ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : `${method.price.toFixed(2)}€`)
+
+                        return (
+                          <div
+                            key={method.id}
+                            onClick={() => handleShippingMethodChange(method)}
+                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                              selectedShippingMethod?.id === method.id
+                                ? 'border-primary-600 bg-primary-50'
+                                : 'border-gray-200 hover:border-primary-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    checked={selectedShippingMethod?.id === method.id}
+                                    onChange={() => handleShippingMethodChange(method)}
+                                    className="w-4 h-4 text-primary-600"
+                                  />
+                                  <h4 className="font-semibold text-gray-900">{method.name}</h4>
+                                </div>
+                                {method.description && (
+                                  <p className="text-sm text-gray-600 mt-1 ml-6">{method.description}</p>
+                                )}
+                                {method.estimatedDays && (
+                                  <p className="text-xs text-gray-500 mt-1 ml-6">
+                                    Entrega estimada: {method.estimatedDays}
+                                  </p>
+                                )}
                               </div>
-                              {method.description && (
-                                <p className="text-sm text-gray-600 mt-1 ml-6">{method.description}</p>
-                              )}
-                              {method.estimatedDays && (
-                                <p className="text-xs text-gray-500 mt-1 ml-6">
-                                  Entrega estimada: {method.estimatedDays}
+                              <div className="ml-4">
+                                <p className={`text-lg font-bold ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
+                                  {displayPrice}
                                 </p>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <p className={`text-lg font-bold ${orderData.shipping === 0 ? 'text-green-600' : 'text-primary-600'}`}>
-                                {orderData.shipping === 0 ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : `${method.price.toFixed(2)}€`)}
-                              </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      })
                     ) : (
                       <div className="text-center py-4 text-gray-500">
                         No hay métodos de envío disponibles

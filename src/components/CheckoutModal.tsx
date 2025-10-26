@@ -670,49 +670,59 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                     {hasFreeShipping && (
                       <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-sm text-green-800 font-medium">
-                          ✓ Tu pedido tiene envío gratis
+                          ✓ Tu pedido tiene envío estándar gratis
+                        </p>
+                        <p className="text-xs text-green-700 mt-1">
+                          Puedes elegir envío urgente con coste adicional
                         </p>
                       </div>
                     )}
                     <div className="space-y-2">
-                      {shippingMethods.map((method) => (
-                        <div
-                          key={method.id}
-                          className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                            selectedShippingMethodId === method.id
-                              ? 'border-primary-500 bg-primary-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => setSelectedShippingMethodId(method.id)}
-                        >
-                          <input
-                            type="radio"
-                            name="shipping-method"
-                            value={method.id}
-                            checked={selectedShippingMethodId === method.id}
-                            onChange={() => setSelectedShippingMethodId(method.id)}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-1"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <div className="font-medium">{method.name}</div>
-                              <div className={`font-semibold ${hasFreeShipping ? 'text-green-600' : 'text-primary-600'}`}>
-                                {hasFreeShipping ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : formatCurrency(method.price))}
+                      {shippingMethods.map((method) => {
+                        // El envío gratis solo aplica a métodos estándar (precio <= 6€)
+                        const isStandardShipping = method.price <= 6
+                        const isFreeForThisMethod = hasFreeShipping && isStandardShipping
+                        const displayPrice = isFreeForThisMethod ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : formatCurrency(method.price))
+
+                        return (
+                          <div
+                            key={method.id}
+                            className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                              selectedShippingMethodId === method.id
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedShippingMethodId(method.id)}
+                          >
+                            <input
+                              type="radio"
+                              name="shipping-method"
+                              value={method.id}
+                              checked={selectedShippingMethodId === method.id}
+                              onChange={() => setSelectedShippingMethodId(method.id)}
+                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">{method.name}</div>
+                                <div className={`font-semibold ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
+                                  {displayPrice}
+                                </div>
                               </div>
+                              {method.description && (
+                                <div className="text-sm text-gray-600 mt-0.5">
+                                  {method.description}
+                                </div>
+                              )}
+                              {method.estimatedDays && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Tiempo estimado: {method.estimatedDays}
+                                </div>
+                              )}
                             </div>
-                            {method.description && (
-                              <div className="text-sm text-gray-600 mt-0.5">
-                                {method.description}
-                              </div>
-                            )}
-                            {method.estimatedDays && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Tiempo estimado: {method.estimatedDays}
-                              </div>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}

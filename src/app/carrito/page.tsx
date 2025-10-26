@@ -644,14 +644,22 @@ export default function CarritoPage() {
                     <>
                       {hasFreeShippingByThreshold && (
                         <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm text-green-800">
-                            ✓ Has alcanzado envío gratis estándar. Puedes elegir envío urgente con coste adicional si lo deseas.
+                          <p className="text-sm text-green-800 font-medium">
+                            ✓ Tu pedido tiene envío estándar gratis
+                          </p>
+                          <p className="text-xs text-green-700 mt-1">
+                            Puedes elegir envío urgente con coste adicional
                           </p>
                         </div>
                       )}
                       <div className="space-y-2">
                         {shippingMethods.map((method) => {
-                          const methodPrice = hasFreeShippingByThreshold && method.price <= 6 ? 0 : method.price
+                          // El envío gratis solo aplica a métodos estándar (precio <= 6€)
+                          const isStandardShipping = method.price <= 6
+                          const hasFreeShipping = shipping === 0
+                          const isFreeForThisMethod = hasFreeShipping && isStandardShipping
+                          const methodPrice = isFreeForThisMethod ? 0 : method.price
+
                           return (
                             <div
                               key={method.id}
@@ -673,7 +681,7 @@ export default function CarritoPage() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="font-medium text-gray-900">{method.name}</div>
-                                  <div className="font-semibold text-primary-600 whitespace-nowrap">
+                                  <div className={`font-semibold whitespace-nowrap ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
                                     {methodPrice === 0 ? 'GRATIS' : formatCurrency(methodPrice)}
                                   </div>
                                 </div>
