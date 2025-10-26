@@ -451,6 +451,7 @@ export class GLSService {
         method: 'POST',
         headers: {
           'Content-Type': 'text/xml; charset=utf-8',
+          SOAPAction: 'http://www.asmred.com/EtiquetaEnvioV2',
         },
         body: soapEnvelope,
         signal: AbortSignal.timeout(30000),
