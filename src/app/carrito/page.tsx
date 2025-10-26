@@ -823,7 +823,7 @@ export default function CarritoPage() {
           shipping: shipping,
           total: total
         }}
-        hasFreeShipping={shouldHideShippingSelection}
+        hasFreeShipping={shipping === 0}
         initialShippingMethodId={selectedShippingMethodId}
       />
 
