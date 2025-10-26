@@ -726,6 +726,14 @@ export default function CheckoutPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {/* Indicador de envío gratis */}
+                    {orderData.shipping === 0 && (
+                      <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800 font-medium">
+                          ✓ Tu pedido tiene envío gratis
+                        </p>
+                      </div>
+                    )}
                     {shippingMethods.length > 0 ? (
                       shippingMethods.map((method) => (
                         <div
@@ -758,8 +766,8 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div className="ml-4">
-                              <p className="text-lg font-bold text-primary-600">
-                                {method.price === 0 ? 'GRATIS' : `${method.price.toFixed(2)}€`}
+                              <p className={`text-lg font-bold ${orderData.shipping === 0 ? 'text-green-600' : 'text-primary-600'}`}>
+                                {orderData.shipping === 0 ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : `${method.price.toFixed(2)}€`)}
                               </p>
                             </div>
                           </div>
