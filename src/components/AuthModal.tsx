@@ -6,13 +6,18 @@ import { signIn, useSession } from "next-auth/react"
 import { Modal } from "./ui/Modal"
 import { Input } from "./ui/Input"
 import { Button } from "./ui/Button"
-import { Mail, Lock, User, Phone, Building, MapPin, Home } from "lucide-react"
+import { Mail, Lock, User, Phone, Building, MapPin, Home, Check, X } from "lucide-react"
 import toast from "react-hot-toast"
 
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+}
+
+interface PasswordRequirement {
+  label: string
+  test: (password: string) => boolean
 }
 
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
@@ -24,6 +29,31 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     confirmEmail: "",
     password: "",
   })
+
+  // Definir requisitos de contraseña
+  const passwordRequirements: PasswordRequirement[] = [
+    {
+      label: "Mínimo 8 caracteres",
+      test: (password) => password.length >= 8,
+    },
+    {
+      label: "Al menos una mayúscula (A-Z)",
+      test: (password) => /[A-Z]/.test(password),
+    },
+    {
+      label: "Al menos una minúscula (a-z)",
+      test: (password) => /[a-z]/.test(password),
+    },
+    {
+      label: "Al menos un número (0-9)",
+      test: (password) => /[0-9]/.test(password),
+    },
+  ]
+
+  // Validar si la contraseña cumple todos los requisitos
+  const isPasswordValid = (password: string) => {
+    return passwordRequirements.every((req) => req.test(password))
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,7 +116,14 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       const data = await res.json()
 
       if (!res.ok) {
-        toast.error(data.error || "Error al registrarse")
+        // Si hay errores de validación múltiples, mostrarlos todos
+        if (data.errors && Array.isArray(data.errors)) {
+          data.errors.forEach((error: { message: string }) => {
+            toast.error(error.message)
+          })
+        } else {
+          toast.error(data.error || "Error al registrarse")
+        }
         return
       }
 
@@ -202,13 +239,32 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               placeholder="••••••••"
               className="pl-10"
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
           {mode === "register" && (
-            <p className="text-xs text-gray-500 mt-1">
-              Mínimo 6 caracteres
-            </p>
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs font-medium text-gray-700 mb-2">
+                La contraseña debe cumplir con:
+              </p>
+              <ul className="space-y-1.5">
+                {passwordRequirements.map((requirement, index) => {
+                  const isMet = formData.password ? requirement.test(formData.password) : false
+                  return (
+                    <li key={index} className="flex items-center gap-2 text-xs">
+                      {isMet ? (
+                        <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      )}
+                      <span className={isMet ? "text-green-700" : "text-gray-600"}>
+                        {requirement.label}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
           )}
         </div>
 
