@@ -54,7 +54,14 @@ export const addToCartSchema = z.object({
     }).optional(),
     voucherTemplateId: z.string().optional(),
   }).optional(),
-  fileUrl: z.string().url('URL de archivo inválida').optional(),
+  // Aceptar URLs absolutas (Cloudinary) o rutas relativas (almacenamiento local)
+  fileUrl: z.string().refine(
+    (val) => {
+      // Permitir URLs absolutas (http/https) o rutas que empiecen con /
+      return /^https?:\/\/.+/.test(val) || /^\/[^/].*/.test(val)
+    },
+    { message: 'URL de archivo inválida' }
+  ).optional(),
   fileName: z.string().max(255, 'Nombre de archivo muy largo').optional(),
   fileSize: nonNegativeNumberSchema.optional(),
   fileMetadata: z.any().optional(),
@@ -90,7 +97,13 @@ export const createCheckoutOrderSchema = z.object({
   taxAmount: nonNegativeNumberSchema,
   shippingCost: nonNegativeNumberSchema,
   totalPrice: nonNegativeNumberSchema,
-  designFileUrl: z.string().url('URL de archivo inválida'),
+  // Aceptar URLs absolutas (Cloudinary) o rutas relativas (almacenamiento local)
+  designFileUrl: z.string().refine(
+    (val) => {
+      return /^https?:\/\/.+/.test(val) || /^\/[^/].*/.test(val)
+    },
+    { message: 'URL de archivo inválida' }
+  ),
   designFileName: z.string().max(255, 'Nombre de archivo muy largo'),
   voucherCode: z.string().max(50, 'Código muy largo').optional(),
   discountCodeId: idSchema.optional(),
@@ -112,7 +125,13 @@ export const createRegularOrderSchema = z.object({
     quantity: positiveNumberSchema,
     unitPrice: positiveNumberSchema,
     subtotal: nonNegativeNumberSchema,
-    fileUrl: z.string().url('URL de archivo inválida').optional(),
+    // Aceptar URLs absolutas (Cloudinary) o rutas relativas (almacenamiento local)
+    fileUrl: z.string().refine(
+      (val) => {
+        return /^https?:\/\/.+/.test(val) || /^\/[^/].*/.test(val)
+      },
+      { message: 'URL de archivo inválida' }
+    ).optional(),
     fileName: z.string().max(255, 'Nombre de archivo muy largo').optional(),
     fileMetadata: z.any().optional(),
     customizations: z.any().optional(),
@@ -218,7 +237,13 @@ export const createProductSchema = z.object({
   isActive: z.boolean().default(true),
   minQuantity: nonNegativeNumberSchema.default(0),
   maxQuantity: positiveNumberSchema.optional(),
-  imageUrl: z.string().url('URL de imagen inválida').optional(),
+  // Aceptar URLs absolutas (Cloudinary) o rutas relativas (almacenamiento local)
+  imageUrl: z.string().refine(
+    (val) => {
+      return /^https?:\/\/.+/.test(val) || /^\/[^/].*/.test(val)
+    },
+    { message: 'URL de imagen inválida' }
+  ).optional(),
   requiresFile: z.boolean().default(false),
 })
 
