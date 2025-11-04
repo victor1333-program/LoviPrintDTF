@@ -13,19 +13,19 @@ const nextConfig = {
               "default-src 'self'",
 
               // Scripts: propio dominio + Google Tag Manager + inline necesario para GTM y Next.js
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://*.google-analytics.com",
 
               // Estilos: propio dominio + inline (Next.js usa inline styles) + Google Fonts
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 
               // Imágenes: propio dominio + data URIs + Cloudinary + Unsplash + GTM
-              "img-src 'self' data: blob: https: https://res.cloudinary.com https://images.unsplash.com https://www.googletagmanager.com https://www.google-analytics.com",
+              "img-src 'self' data: blob: https: https://res.cloudinary.com https://images.unsplash.com https://www.googletagmanager.com https://*.google-analytics.com",
 
               // Fuentes: propio dominio + Google Fonts + data URIs
               "font-src 'self' data: https://fonts.gstatic.com",
 
-              // Conexiones: API del propio dominio + analytics
-              "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://*.stripe.com",
+              // Conexiones: API del propio dominio + analytics (todas las regiones)
+              "connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com https://*.stripe.com",
 
               // Frames/iframes: GTM + WhatsApp + propio dominio
               "frame-src 'self' https://www.googletagmanager.com https://wa.me",
