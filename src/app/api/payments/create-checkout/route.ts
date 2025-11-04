@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${baseUrl}/pedidos/${orderNumber}?payment=success`,
-      cancel_url: `${baseUrl}/pedidos/${orderNumber}?payment=cancelled`,
+      success_url: `${baseUrl}/pedidos/gracias?order=${orderNumber}&payment=success`,
+      cancel_url: `${baseUrl}/pedido/${orderNumber}?payment=cancelled`,
       customer_email: order.customerEmail,
       metadata: {
         orderId: order.id,

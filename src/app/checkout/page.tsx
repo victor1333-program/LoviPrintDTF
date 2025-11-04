@@ -404,9 +404,9 @@ export default function CheckoutPage() {
       // Limpiar localStorage
       localStorage.removeItem('dtf_order')
 
-      // Mostrar éxito y redirigir
+      // Mostrar éxito y redirigir a página de agradecimiento
       toast.success('¡Pedido creado con éxito!')
-      router.push(`/pedido/${order.orderNumber}`)
+      router.push(`/pedidos/gracias?order=${order.orderNumber}`)
 
     } catch (error: any) {
       console.error('Error:', error)

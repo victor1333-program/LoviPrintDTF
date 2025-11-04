@@ -269,10 +269,10 @@ export default function CarritoPage() {
 
       if (isFreeOrder) {
         toast.success('¡Pedido confirmado! ✨')
-        router.push(`/pedidos/${order.orderNumber}`)
+        router.push(`/pedidos/gracias?order=${order.orderNumber}`)
       } else {
         toast.success('¡Pedido creado con éxito!')
-        router.push(`/pedidos/${order.orderNumber}`)
+        router.push(`/pedidos/gracias?order=${order.orderNumber}`)
       }
     } catch (error: any) {
       console.error('Error creating order:', error)
