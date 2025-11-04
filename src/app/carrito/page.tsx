@@ -202,28 +202,34 @@ export default function CarritoPage() {
       // Verificar si se usarán bonos de metros
       const useMeterVouchers = cart.meterVouchers?.canUseVoucherMeters || false
 
-      // Si el total es 0€ (por bonos de metros o descuento 100%), crear pedido directo
-      const isFreeOrder = total === 0
-
       // Determinar shippingMethodId válido
       const validShippingMethodId = checkoutData.shippingMethodId || selectedShippingMethodId
 
-      // Crear el pedido
-      const orderPayload: any = {
+      // Preparar datos completos del pedido para la página de confirmación
+      const orderConfirmData = {
+        // Datos del cliente
         customerName: checkoutData.customerName,
         customerEmail: checkoutData.customerEmail,
         customerPhone: checkoutData.customerPhone,
+
+        // Dirección de envío
         shippingAddress: checkoutData.shippingAddress,
+
+        // Items del carrito
         items: cart.items.map((item: CartItem) => ({
           productId: item.product.id,
           productName: item.product.name,
-          quantity: Number(item.quantity), // Asegurar que sea número
+          productImageUrl: item.product.imageUrl,
+          productUnit: item.product.unit,
+          quantity: Number(item.quantity),
           unitPrice: item.calculatedPrice?.unitPrice || 0,
           subtotal: item.calculatedPrice?.subtotal || 0,
           fileUrl: item.fileUrl || undefined,
           fileName: item.fileName || undefined,
           customizations: item.customizations || undefined,
         })),
+
+        // Totales
         subtotal: subtotal,
         discountAmount: voucherDiscount,
         taxAmount: tax,
@@ -231,52 +237,33 @@ export default function CarritoPage() {
         totalPrice: total,
         pointsUsed: pointsToUse,
         pointsDiscount: pointsDiscount,
+
+        // Códigos y bonos
         voucherId: appliedVoucher?.voucher?.code,
         discountCodeId: appliedVoucher?.discountCode?.code,
-        useMeterVouchers, // Indicar si se usan bonos de metros
+        useMeterVouchers,
         meterVouchersInfo: useMeterVouchers ? {
           metersNeeded: cart.meterVouchers.totalMetersNeeded,
           voucherIds: cart.meterVouchers.vouchers.map((v: any) => v.id),
         } : null,
+
+        // Método de envío
+        shippingMethodId: validShippingMethodId || null,
       }
 
-      // Solo incluir shippingMethodId si es un valor válido (no vacío)
-      if (validShippingMethodId && validShippingMethodId.trim() !== '') {
-        orderPayload.shippingMethodId = validShippingMethodId
-      }
-
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload),
-      })
-
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || 'Error al crear el pedido')
-      }
-
-      const order = await res.json()
+      // Guardar en sessionStorage para la página de confirmación
+      sessionStorage.setItem('cart_order_confirm', JSON.stringify(orderConfirmData))
 
       // Cerrar modal
       setShowCheckoutModal(false)
 
-      // Limpiar carrito
-      await fetch('/api/cart', { method: 'DELETE' })
+      // Redirigir a página de confirmación
+      toast.success('Datos guardados. Revisa tu pedido.')
+      router.push('/carrito/confirmar')
 
-      // Disparar evento para actualizar el botón del carrito
-      window.dispatchEvent(new Event('cartUpdated'))
-
-      if (isFreeOrder) {
-        toast.success('¡Pedido confirmado! ✨')
-        router.push(`/pedidos/gracias?order=${order.orderNumber}`)
-      } else {
-        toast.success('¡Pedido creado con éxito!')
-        router.push(`/pedidos/gracias?order=${order.orderNumber}`)
-      }
     } catch (error: any) {
-      console.error('Error creating order:', error)
-      toast.error(error.message || 'Error al procesar el pedido')
+      console.error('Error:', error)
+      toast.error(error.message || 'Error al procesar los datos')
       setProcessingCheckout(false)
     }
   }

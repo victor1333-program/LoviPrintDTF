@@ -22,6 +22,9 @@ export const passwordSchema = z.string()
 
 export const idSchema = z.string().cuid('ID inválido')
 
+// Schema más flexible para productId que acepta CUIDs o IDs personalizados de productos (como voucher_prod_*)
+export const productIdSchema = z.string().min(1, 'Product ID requerido')
+
 export const positiveNumberSchema = z.number().positive('Debe ser un número positivo')
 
 export const nonNegativeNumberSchema = z.number().nonnegative('No puede ser negativo')
@@ -42,7 +45,7 @@ export const addressSchema = z.object({
 // ==================== CART SCHEMAS ====================
 
 export const addToCartSchema = z.object({
-  productId: idSchema,
+  productId: productIdSchema, // Usar productIdSchema para soportar IDs de productos de bonos
   quantity: positiveNumberSchema,
   customizations: z.object({
     width: positiveNumberSchema.optional(),
@@ -120,7 +123,7 @@ export const createRegularOrderSchema = z.object({
   customerEmail: emailSchema,
   customerPhone: phoneSchema.optional(),
   items: z.array(z.object({
-    productId: idSchema,
+    productId: productIdSchema, // Usar productIdSchema en lugar de idSchema para soportar IDs de productos de bonos
     productName: z.string().min(1, 'Nombre de producto requerido'),
     quantity: positiveNumberSchema,
     unitPrice: positiveNumberSchema,

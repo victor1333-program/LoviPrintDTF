@@ -355,62 +355,59 @@ export default function CheckoutPage() {
         throw new Error('Error: archivo no subido correctamente')
       }
 
-      // Crear el pedido (el endpoint guardará perfil y dirección si es necesario)
-      const orderPayload = {
+      // Preparar datos completos del pedido para la página de confirmación
+      const orderConfirmData = {
+        // Datos del pedido
+        meters: orderData.meters,
+        pricePerMeter: orderData.pricePerMeter,
+        subtotal: orderData.subtotal,
+        discount: orderData.discount || 0,
+        tax: orderData.tax,
+        shipping: orderData.shipping,
+        total: orderData.total,
+        usingVoucher: orderData.usingVoucher,
+        voucherId: orderData.voucherId,
+        discountCodeId: orderData.discountCodeId,
+        shippingMethodId: orderData.shippingMethodId,
+
+        // Datos del cliente
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        company: formData.company || null,
-        taxId: formData.taxId || null,
+        company: formData.company || '',
+        taxId: formData.taxId || '',
         isProfessional: formData.isProfessional,
-        metersOrdered: orderData.meters,
-        pricePerMeter: orderData.pricePerMeter,
-        subtotal: orderData.subtotal,
-        discountAmount: orderData.discount || 0,
-        taxAmount: orderData.tax,
-        shippingCost: orderData.shipping,
-        totalPrice: orderData.total,
-        designFileUrl: fileUrl,
-        designFileName: fileName,
-        voucherCode: selectedVoucher,
-        discountCodeId: orderData.discountCodeId,
+
+        // Dirección de envío
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+        country: formData.country,
+
+        // Archivo y notas
+        designFile: {
+          url: fileUrl,
+          name: fileName,
+          size: designFile.size,
+          publicId: designFile.publicId
+        },
         notes: formData.notes,
-        shippingAddress: {
-          street: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.postalCode,
-          country: formData.country,
-        },
-        saveProfile: session?.user ? true : false,
-        saveAddress: session?.user && formData.saveAddress && useNewAddress ? true : false,
+        selectedVoucher: selectedVoucher,
+        saveAddress: formData.saveAddress,
+        useNewAddress: useNewAddress,
       }
 
-      const orderRes = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderPayload),
-      })
+      // Guardar en sessionStorage para la página de confirmación
+      sessionStorage.setItem('dtf_order_confirm', JSON.stringify(orderConfirmData))
 
-      if (!orderRes.ok) {
-        const errorData = await orderRes.json()
-        throw new Error(errorData.error || 'Error al crear el pedido')
-      }
-
-      const order = await orderRes.json()
-
-      // Limpiar localStorage
-      localStorage.removeItem('dtf_order')
-
-      // Mostrar éxito y redirigir a página de agradecimiento
-      toast.success('¡Pedido creado con éxito!')
-      router.push(`/pedidos/gracias?order=${order.orderNumber}`)
+      // Redirigir a página de confirmación
+      toast.success('Datos guardados. Revisa tu pedido.')
+      router.push('/checkout/confirmar')
 
     } catch (error: any) {
       console.error('Error:', error)
-      toast.error(error.message || 'Error al procesar el pedido. Inténtalo de nuevo.')
+      toast.error(error.message || 'Error al procesar los datos. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -951,11 +948,11 @@ export default function CheckoutPage() {
                         disabled={loading || !designFile}
                       >
                         <CreditCard className="h-5 w-5 mr-2" />
-                        {loading ? 'Procesando...' : 'Realizar Pedido'}
+                        {loading ? 'Procesando...' : 'Continuar al Pago'}
                       </Button>
 
                       <p className="text-xs text-gray-500 text-center">
-                        Al hacer clic en "Realizar Pedido", aceptas nuestros términos y condiciones
+                        Revisarás tu pedido antes de confirmar el pago
                       </p>
                     </CardContent>
                   </Card>

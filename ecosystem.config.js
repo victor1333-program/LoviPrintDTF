@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'loviprintdtf',
     script: 'server.js',
-    cwd: '/root/loviprintDTF',
+    cwd: '/root/projects/loviprintdtf',
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,
