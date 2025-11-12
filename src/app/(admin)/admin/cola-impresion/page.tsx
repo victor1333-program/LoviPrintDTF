@@ -89,12 +89,8 @@ export default function ColaImpresionPage() {
 
   const downloadFile = async (fileUrl: string, fileName: string) => {
     try {
-      // Para archivos de Cloudinary, modificar la URL para forzar descarga
-      let downloadUrl = fileUrl
-      if (fileUrl.includes('cloudinary.com')) {
-        // Agregar fl_attachment para forzar descarga en Cloudinary
-        downloadUrl = fileUrl.replace('/upload/', '/upload/fl_attachment/')
-      }
+      // Usar el endpoint API para descargar el archivo de manera segura
+      const downloadUrl = `/api/admin/download-attachment?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(fileName)}`
 
       // Descargar el archivo
       const response = await fetch(downloadUrl)

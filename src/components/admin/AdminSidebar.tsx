@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X } from "lucide-react"
+import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X, FileText } from "lucide-react"
 import { Button } from "../ui/Button"
 import { useState, useEffect } from "react"
 
@@ -52,6 +52,12 @@ export default function AdminSidebar() {
       href: "/admin/cola-impresion",
       label: "Cola de Impresión",
       icon: ListOrdered,
+      badge: null
+    },
+    {
+      href: "/admin/presupuestos",
+      label: "Presupuestos",
+      icon: FileText,
       badge: null
     },
     {

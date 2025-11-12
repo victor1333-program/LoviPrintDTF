@@ -113,6 +113,9 @@ export async function uploadToCloudinary(
     const uploadOptions: any = {
       folder: options.folder || 'customer-designs',
       resource_type: options.resourceType || 'auto',
+      // Hacer que los archivos 'raw' (como PDFs) sean públicos
+      type: 'upload',
+      access_mode: 'public'
     }
 
     if (options.publicId) {

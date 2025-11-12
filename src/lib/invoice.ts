@@ -88,7 +88,14 @@ export async function generateInvoiceNumber(): Promise<string> {
  */
 export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 })
+    // Configurar PDFDocument para que no intente cargar fuentes del sistema de archivos
+    // Esto evita el error ENOENT en producción con Next.js
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 50,
+      bufferPages: true,
+      autoFirstPage: true
+    })
     const chunks: Buffer[] = []
 
     doc.on('data', (chunk) => chunks.push(chunk))

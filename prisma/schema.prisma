@@ -48,39 +48,40 @@ model VerificationToken {
 
 // Usuario
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  phone         String?
-  role          Role      @default(CUSTOMER)
-  company       String?
-  taxId         String?   // CIF/NIF para profesionales
-  isProfessional Boolean  @default(false)
-  professionalDiscount Decimal? @db.Decimal(5, 2) // % de descuento
-  shippingAddress Json?   // Dirección de envío por defecto
+  id                   String      @id @default(cuid())
+  name                 String?
+  email                String      @unique
+  emailVerified        DateTime?
+  password             String?
+  phone                String?
+  role                 Role        @default(CUSTOMER)
+  company              String?
+  taxId                String? // CIF/NIF para profesionales
+  isProfessional       Boolean     @default(false)
+  professionalDiscount Decimal?    @db.Decimal(5, 2) // % de descuento
+  shippingAddress      Json? // Dirección de envío por defecto
   // Dirección fiscal para profesionales
-  billingStreet String?   // Dirección fiscal
-  billingCity   String?   // Ciudad de facturación
-  billingState  String?   // Provincia de facturación
-  billingPostalCode String? // Código postal de facturación
-  loyaltyPoints Int       @default(0) // Puntos de fidelidad disponibles
-  totalSpent    Decimal   @db.Decimal(10, 2) @default(0) // Total histórico gastado
-  loyaltyTier   LoyaltyTier @default(BRONZE) // Tier de fidelidad
-  verificationToken String? // Token de verificación de email
-  verificationExpires DateTime? // Fecha de expiración del token
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  billingStreet        String? // Dirección fiscal
+  billingCity          String? // Ciudad de facturación
+  billingState         String? // Provincia de facturación
+  billingPostalCode    String? // Código postal de facturación
+  loyaltyPoints        Int         @default(0) // Puntos de fidelidad disponibles
+  totalSpent           Decimal     @default(0) @db.Decimal(10, 2) // Total histórico gastado
+  loyaltyTier          LoyaltyTier @default(BRONZE) // Tier de fidelidad
+  verificationToken    String? // Token de verificación de email
+  verificationExpires  DateTime? // Fecha de expiración del token
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  orders        Order[]
-  cart          Cart?
-  vouchers      Voucher[]
+  accounts             Account[]
+  sessions             Session[]
+  orders               Order[]
+  cart                 Cart?
+  vouchers             Voucher[]
   loyaltyPointsHistory LoyaltyPoints?
-  discountUsage DiscountCodeUsage[]
-  addresses     Address[]
+  discountUsage        DiscountCodeUsage[]
+  addresses            Address[]
+  quotes               Quote[]
 
   @@index([email])
   @@index([role])
@@ -91,18 +92,18 @@ model User {
 
 // Direcciones de envío
 model Address {
-  id          String   @id @default(cuid())
-  userId      String
-  street      String
-  city        String
-  state       String
-  postalCode  String
-  country     String   @default("España")
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("España")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("addresses")
@@ -110,50 +111,50 @@ model Address {
 
 // Categorías de productos
 model Category {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  slug        String    @unique
-  description String?   @db.Text
+  slug        String   @unique
+  description String?  @db.Text
   imageUrl    String?
-  order       Int       @default(0)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  products    Product[]
+  products Product[]
 
   @@map("categories")
 }
 
 // Productos (DTF, UV DTF, Consumibles, etc.)
 model Product {
-  id              String        @id @default(cuid())
-  name            String
-  slug            String        @unique
-  description     String?       @db.Text
+  id               String      @id @default(cuid())
+  name             String
+  slug             String      @unique
+  description      String?     @db.Text
   shortDescription String?
-  categoryId      String
-  productType     ProductType
-  basePrice       Decimal       @db.Decimal(10, 2)
-  unit            String        @default("metros") // metros, unidades, packs
-  minQuantity     Decimal       @db.Decimal(10, 2) @default(0.5)
-  maxQuantity     Decimal       @db.Decimal(10, 2) @default(100)
-  imageUrl        String?
-  images          Json?         // Array de URLs de imágenes
-  specifications  Json?         // Especificaciones técnicas
-  isActive        Boolean       @default(true)
-  isFeatured      Boolean       @default(false)
-  stockStatus     StockStatus   @default(IN_STOCK)
-  metadata        Json?         // Datos adicionales flexibles
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  categoryId       String
+  productType      ProductType
+  basePrice        Decimal     @db.Decimal(10, 2)
+  unit             String      @default("metros") // metros, unidades, packs
+  minQuantity      Decimal     @default(0.5) @db.Decimal(10, 2)
+  maxQuantity      Decimal     @default(100) @db.Decimal(10, 2)
+  imageUrl         String?
+  images           Json? // Array de URLs de imágenes
+  specifications   Json? // Especificaciones técnicas
+  isActive         Boolean     @default(true)
+  isFeatured       Boolean     @default(false)
+  stockStatus      StockStatus @default(IN_STOCK)
+  metadata         Json? // Datos adicionales flexibles
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  category        Category      @relation(fields: [categoryId], references: [id])
-  priceRanges     PriceRange[]
-  cartItems       CartItem[]
-  orderItems      OrderItem[]
-  vouchers        Voucher[]
-  discountCodes   DiscountCode[]
+  category      Category       @relation(fields: [categoryId], references: [id])
+  priceRanges   PriceRange[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  vouchers      Voucher[]
+  discountCodes DiscountCode[]
 
   @@index([slug])
   @@index([categoryId])
@@ -173,7 +174,7 @@ model PriceRange {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@map("price_ranges")
@@ -188,7 +189,7 @@ model Cart {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([sessionId])
@@ -197,21 +198,21 @@ model Cart {
 
 // Items del carrito
 model CartItem {
-  id         String   @id @default(cuid())
-  cartId     String
-  productId  String
-  quantity   Decimal  @db.Decimal(10, 2)
-  unitPrice  Decimal  @db.Decimal(10, 2)
-  fileUrl    String?
-  fileName   String?
-  fileSize   Int?
-  fileMetadata Json?
+  id             String   @id @default(cuid())
+  cartId         String
+  productId      String
+  quantity       Decimal  @db.Decimal(10, 2)
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  fileUrl        String?
+  fileName       String?
+  fileSize       Int?
+  fileMetadata   Json?
   customizations Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product    Product  @relation(fields: [productId], references: [id])
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([cartId])
   @@index([productId])
@@ -220,35 +221,35 @@ model CartItem {
 
 // Bonos prepagados
 model Voucher {
-  id                  String        @id @default(cuid())
-  code                String        @unique
-  name                String
-  slug                String        @unique
-  description         String?       @db.Text
-  imageUrl            String?
-  price               Decimal       @db.Decimal(10, 2)
-  productId           String?       // Producto asociado al bono
-  userId              String?       // Usuario al que está asignado (null = no asignado)
-  type                VoucherType   @default(METERS)
-  initialMeters       Decimal       @db.Decimal(10, 2)
-  remainingMeters     Decimal       @db.Decimal(10, 2)
-  initialShipments    Int           @default(0)
-  remainingShipments  Int           @default(0)
-  discountAmount      Decimal?      @db.Decimal(10, 2) // Descuento fijo (para tipo DISCOUNT_AMOUNT)
-  discountPct         Decimal?      @db.Decimal(5, 2)  // Descuento porcentual (para tipo DISCOUNT_PERCENT)
-  minPurchase         Decimal?      @db.Decimal(10, 2) // Compra mínima requerida
-  maxDiscount         Decimal?      @db.Decimal(10, 2) // Descuento máximo aplicable
-  maxUsage            Int?          // Límite de usos (para validación)
-  expiresAt           DateTime?
-  isActive            Boolean       @default(true)
-  isTemplate          Boolean       @default(false) // true = plantilla para vender, false = bono asignado
-  usageCount          Int           @default(0)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id                 String      @id @default(cuid())
+  code               String      @unique
+  name               String
+  slug               String      @unique
+  description        String?     @db.Text
+  imageUrl           String?
+  price              Decimal     @db.Decimal(10, 2)
+  productId          String? // Producto asociado al bono
+  userId             String? // Usuario al que está asignado (null = no asignado)
+  type               VoucherType @default(METERS)
+  initialMeters      Decimal     @db.Decimal(10, 2)
+  remainingMeters    Decimal     @db.Decimal(10, 2)
+  initialShipments   Int         @default(0)
+  remainingShipments Int         @default(0)
+  discountAmount     Decimal?    @db.Decimal(10, 2) // Descuento fijo (para tipo DISCOUNT_AMOUNT)
+  discountPct        Decimal?    @db.Decimal(5, 2) // Descuento porcentual (para tipo DISCOUNT_PERCENT)
+  minPurchase        Decimal?    @db.Decimal(10, 2) // Compra mínima requerida
+  maxDiscount        Decimal?    @db.Decimal(10, 2) // Descuento máximo aplicable
+  maxUsage           Int? // Límite de usos (para validación)
+  expiresAt          DateTime?
+  isActive           Boolean     @default(true)
+  isTemplate         Boolean     @default(false) // true = plantilla para vender, false = bono asignado
+  usageCount         Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
-  user                User?         @relation(fields: [userId], references: [id])
-  product             Product?      @relation(fields: [productId], references: [id])
-  orders              Order[]
+  user    User?    @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  orders  Order[]
 
   @@index([code])
   @@index([slug])
@@ -261,17 +262,17 @@ model Voucher {
 
 // Historial de puntos de fidelidad (mantener para auditoría)
 model LoyaltyPoints {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  totalPoints   Int      @default(0)
-  availablePoints Int    @default(0)
-  lifetimePoints Int     @default(0)
-  tier          LoyaltyTier @default(BRONZE)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  totalPoints     Int         @default(0)
+  availablePoints Int         @default(0)
+  lifetimePoints  Int         @default(0)
+  tier            LoyaltyTier @default(BRONZE)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions  PointTransaction[]
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PointTransaction[]
 
   @@index([userId])
   @@map("loyalty_points")
@@ -282,7 +283,7 @@ model PointTransaction {
   id          String   @id @default(cuid())
   pointsId    String
   points      Int
-  type        String   // earned, redeemed, expired
+  type        String // earned, redeemed, expired
   description String?
   orderId     String?
   createdAt   DateTime @default(now())
@@ -296,22 +297,22 @@ model PointTransaction {
 
 // Plantillas de diseño
 model Template {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?  @db.Text
-  category    String
-  imageUrl    String
-  fileUrl     String
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?  @db.Text
+  category     String
+  imageUrl     String
+  fileUrl      String
   thumbnailUrl String?
-  tags        Json?
-  dimensions  Json?    // {width, height, dpi}
-  isPremium   Boolean  @default(false)
-  price       Decimal? @db.Decimal(10, 2)
-  downloads   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  tags         Json?
+  dimensions   Json? // {width, height, dpi}
+  isPremium    Boolean  @default(false)
+  price        Decimal? @db.Decimal(10, 2)
+  downloads    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([slug])
   @@index([category])
@@ -321,66 +322,75 @@ model Template {
 
 // Métodos de envío
 model ShippingMethod {
-  id              String   @id @default(cuid())
-  name            String   // ej: "Estándar 24/48h", "Urgente 24h"
-  description     String?  @db.Text
-  price           Decimal  @db.Decimal(10, 2)
-  estimatedDays   String?  // ej: "24-48h", "24h"
-  isActive        Boolean  @default(true)
-  order           Int      @default(0) // Para ordenar en el frontend
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String  @id @default(cuid())
+  name          String // ej: "Estándar 24/48h", "Urgente 24h"
+  description   String? @db.Text
+  price         Decimal @db.Decimal(10, 2)
+  estimatedDays String? // ej: "24-48h", "24h"
+  isActive      Boolean @default(true)
+  order         Int     @default(0) // Para ordenar en el frontend
 
-  orders          Order[]
+  // Campos de integración GLS
+  glsServiceCode   String? // Código de servicio GLS (96, 1, etc)
+  glsTimeFrame     String? // Franja horaria GLS (18, 3, etc)
+  isInternational  Boolean @default(false) // ¿Es envío internacional?
+  requiresIncoterm Boolean @default(false) // ¿Requiere incoterm?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+  quotes Quote[]
 
   @@map("shipping_methods")
 }
 
 // Pedidos actualizados
 model Order {
-  id              String       @id @default(cuid())
-  orderNumber     String       @unique
-  userId          String?
-  customerName    String
-  customerEmail   String
-  customerPhone   String?
-  voucherId       String?
-  discountCodeId  String?
-  shippingMethodId String?     // Método de envío seleccionado
-  subtotal        Decimal      @db.Decimal(10, 2)
-  discountAmount  Decimal      @db.Decimal(10, 2) @default(0)
-  taxAmount       Decimal      @db.Decimal(10, 2)
-  shippingCost    Decimal      @db.Decimal(10, 2)
-  totalPrice      Decimal      @db.Decimal(10, 2)
-  metersOrdered   Decimal?     @db.Decimal(10, 2) // Metros ordenados
-  pricePerMeter   Decimal?     @db.Decimal(10, 2) // Precio por metro
-  designFileUrl   String?      // URL del archivo de diseño
-  designFileName  String?      // Nombre del archivo de diseño
-  pointsEarned    Int          @default(0) // Puntos ganados en este pedido
-  pointsUsed      Int          @default(0) // Puntos canjeados en este pedido
-  pointsDiscount  Decimal      @db.Decimal(10, 2) @default(0) // Descuento en € por puntos
-  isVoucherPurchase Boolean    @default(false) // true si es compra de bono
-  status          OrderStatus  @default(PENDING)
-  paymentStatus   PaymentStatus @default(PENDING)
-  paymentMethod   String?
-  stripePaymentId String?
-  notes           String?      @db.Text
-  adminNotes      String?      @db.Text
-  shippingAddress Json?
-  trackingNumber  String?
-  trackingUrl     String?
+  id                String        @id @default(cuid())
+  orderNumber       String        @unique
+  userId            String?
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
+  voucherId         String?
+  discountCodeId    String?
+  shippingMethodId  String? // Método de envío seleccionado
+  subtotal          Decimal       @db.Decimal(10, 2)
+  discountAmount    Decimal       @default(0) @db.Decimal(10, 2)
+  taxAmount         Decimal       @db.Decimal(10, 2)
+  shippingCost      Decimal       @db.Decimal(10, 2)
+  totalPrice        Decimal       @db.Decimal(10, 2)
+  metersOrdered     Decimal?      @db.Decimal(10, 2) // Metros ordenados
+  pricePerMeter     Decimal?      @db.Decimal(10, 2) // Precio por metro
+  designFileUrl     String? // URL del archivo de diseño
+  designFileName    String? // Nombre del archivo de diseño
+  pointsEarned      Int           @default(0) // Puntos ganados en este pedido
+  pointsUsed        Int           @default(0) // Puntos canjeados en este pedido
+  pointsDiscount    Decimal       @default(0) @db.Decimal(10, 2) // Descuento en € por puntos
+  isVoucherPurchase Boolean       @default(false) // true si es compra de bono
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  stripePaymentId   String?
+  notes             String?       @db.Text
+  adminNotes        String?       @db.Text
+  shippingAddress   Json?
+  trackingNumber    String?
+  trackingUrl       String?
   estimatedDelivery DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  user            User?        @relation(fields: [userId], references: [id])
-  voucher         Voucher?     @relation(fields: [voucherId], references: [id])
-  discountCode    DiscountCode? @relation(fields: [discountCodeId], references: [id])
-  shippingMethod  ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
-  items           OrderItem[]
-  statusHistory   OrderStatusHistory[]
-  shipment        Shipment?
-  invoice         Invoice?
+  user           User?                @relation(fields: [userId], references: [id])
+  voucher        Voucher?             @relation(fields: [voucherId], references: [id])
+  discountCode   DiscountCode?        @relation(fields: [discountCodeId], references: [id])
+  shippingMethod ShippingMethod?      @relation(fields: [shippingMethodId], references: [id])
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  shipment       Shipment?
+  invoice        Invoice?
+  quote          Quote? // Presupuesto que originó este pedido
 
   @@index([orderNumber])
   @@index([userId])
@@ -393,21 +403,21 @@ model Order {
 
 // Items de pedido
 model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String
-  productId   String
-  productName String
-  quantity    Decimal  @db.Decimal(10, 2)
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  subtotal    Decimal  @db.Decimal(10, 2)
-  fileUrl     String?
-  fileName    String?
-  fileMetadata Json?
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String
+  productName    String
+  quantity       Decimal  @db.Decimal(10, 2)
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  subtotal       Decimal  @db.Decimal(10, 2)
+  fileUrl        String?
+  fileName       String?
+  fileMetadata   Json?
   customizations Json?
-  createdAt   DateTime @default(now())
+  createdAt      DateTime @default(now())
 
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
@@ -423,53 +433,130 @@ model OrderStatusHistory {
   createdBy String?
   createdAt DateTime    @default(now())
 
-  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("order_status_history")
 }
 
+// Presupuestos (solicitudes de cotización)
+model Quote {
+  id          String @id @default(cuid())
+  quoteNumber String @unique // PRES-2025-001
+
+  // Cliente (puede NO estar registrado)
+  userId        String?
+  customerName  String
+  customerEmail String
+  customerPhone String?
+
+  // Diseño subido por el cliente
+  designFileUrl  String // URL del archivo de diseño
+  designFileName String // Nombre original del archivo
+  fileMetadata   Json? // Metadata del archivo (tamaño, tipo, etc)
+
+  // Medición y cotización (admin completa después)
+  estimatedMeters Decimal? @db.Decimal(10, 2) // Metros calculados por admin
+  pricePerMeter   Decimal? @db.Decimal(10, 2) // Precio por metro según rango
+
+  // Extras opcionales
+  needsCutting  Boolean  @default(false) // ¿Necesita corte?
+  cuttingPrice  Decimal? @db.Decimal(10, 2) // Precio del corte
+  needsLayout   Boolean  @default(false) // ¿Necesita maquetación?
+  layoutPrice   Decimal? @db.Decimal(10, 2) // Precio de la maquetación
+  isPriority    Boolean  @default(false) // ¿Es prioritario?
+  priorityPrice Decimal? @db.Decimal(10, 2) // Precio de priorización
+
+  // Método de envío
+  shippingMethodId String?
+  shippingCost     Decimal? @db.Decimal(10, 2)
+
+  // Totales calculados
+  subtotal       Decimal? @db.Decimal(10, 2) // Subtotal sin IVA ni envío
+  taxAmount      Decimal? @db.Decimal(10, 2) // IVA
+  estimatedTotal Decimal? @db.Decimal(10, 2) // Total estimado
+
+  // Estado del presupuesto
+  status QuoteStatus @default(PENDING_REVIEW)
+
+  // Notas
+  customerNotes String? @db.Text // Notas del cliente
+  adminNotes    String? @db.Text // Notas internas del admin
+
+  // Pago
+  paymentMethod   String? // "STRIPE" | "BIZUM" | "TRANSFER"
+  stripePaymentId String? // ID del pago en Stripe
+  paymentLinkUrl  String? // URL del Payment Link de Stripe
+
+  // Dirección de envío
+  shippingAddress Json? // Dirección completa de envío
+
+  // Conversión a pedido
+  orderId     String?   @unique // ID del Order creado cuando se paga
+  convertedAt DateTime? // Fecha de conversión a pedido
+
+  // Caducidad
+  expiresAt DateTime? // Fecha de caducidad (15 días desde creación)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  user           User?           @relation(fields: [userId], references: [id])
+  shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+
+  @@index([quoteNumber])
+  @@index([userId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("quotes")
+}
+
 // Facturas
 model Invoice {
-  id              String   @id @default(cuid())
-  invoiceNumber   String   @unique // Formato: FAC-YYYY-NNNNN
-  orderId         String   @unique
+  id            String @id @default(cuid())
+  invoiceNumber String @unique // Formato: FAC-YYYY-NNNNN
+  orderId       String @unique
 
   // Datos del cliente
   customerName    String
   customerEmail   String
   customerPhone   String?
-  customerTaxId   String?  // NIF/CIF del cliente
-  customerAddress Json?    // Dirección completa
+  customerTaxId   String? // NIF/CIF del cliente
+  customerAddress Json? // Dirección completa
 
   // Datos de la empresa
-  companyName     String   @default("LoviPrintDTF")
-  companyTaxId    String   @default("B12345678")
-  companyAddress  String   @default("Calle Ejemplo, 123, 28001 Madrid")
-  companyPhone    String?
-  companyEmail    String?
+  companyName    String  @default("LoviPrintDTF")
+  companyTaxId   String  @default("B12345678")
+  companyAddress String  @default("Calle Ejemplo, 123, 28001 Madrid")
+  companyPhone   String?
+  companyEmail   String?
 
   // Importes
-  subtotal        Decimal  @db.Decimal(10, 2)
-  discountAmount  Decimal  @db.Decimal(10, 2) @default(0)
-  taxAmount       Decimal  @db.Decimal(10, 2)
-  taxRate         Decimal  @db.Decimal(5, 2) @default(21) // % IVA
-  shippingCost    Decimal  @db.Decimal(10, 2)
-  totalPrice      Decimal  @db.Decimal(10, 2)
+  subtotal       Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  taxAmount      Decimal @db.Decimal(10, 2)
+  taxRate        Decimal @default(21) @db.Decimal(5, 2) // % IVA
+  shippingCost   Decimal @db.Decimal(10, 2)
+  totalPrice     Decimal @db.Decimal(10, 2)
 
   // PDF
-  pdfUrl          String?  // URL del PDF en Cloudinary o local
-  pdfPublicId     String?  // Public ID en Cloudinary
+  pdfUrl      String? // URL del PDF en Cloudinary o local
+  pdfPublicId String? // Public ID en Cloudinary
 
   // Metadatos
-  issueDate       DateTime @default(now())
-  dueDate         DateTime? // Fecha de vencimiento (para facturas a crédito)
-  notes           String?  @db.Text
+  issueDate DateTime  @default(now())
+  dueDate   DateTime? // Fecha de vencimiento (para facturas a crédito)
+  notes     String?   @db.Text
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([invoiceNumber])
   @@index([orderId])
@@ -480,14 +567,14 @@ model Invoice {
 
 // Configuración del sistema
 model Setting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String   @db.Text
+  id        String      @id @default(cuid())
+  key       String      @unique
+  value     String      @db.Text
   label     String?
   type      SettingType @default(TEXT)
-  category  String   @default("general") // general, payments, email, storage, validation
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  category  String      @default("general") // general, payments, email, storage, validation
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@index([category])
   @@map("settings")
@@ -495,19 +582,19 @@ model Setting {
 
 // Plantillas de email
 model EmailTemplate {
-  id          String              @id @default(cuid())
-  name        String              // Nombre descriptivo de la plantilla
-  type        EmailTemplateType   // Tipo de email (ORDER_CREATED, etc.)
-  subject     String              // Asunto del email (puede contener variables)
-  htmlContent String              @db.Text // Contenido HTML (puede contener variables)
-  textContent String?             @db.Text // Versión texto plano (opcional, se genera automático si no existe)
-  variables   Json?               // Array de variables disponibles para esta plantilla
-  sampleData  Json?               // Datos de ejemplo para vista previa
-  isActive    Boolean             @default(true)
-  isDefault   Boolean             @default(false) // Si es la plantilla por defecto para este tipo
-  attachments Json?               // Configuración de adjuntos
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id          String            @id @default(cuid())
+  name        String // Nombre descriptivo de la plantilla
+  type        EmailTemplateType // Tipo de email (ORDER_CREATED, etc.)
+  subject     String // Asunto del email (puede contener variables)
+  htmlContent String            @db.Text // Contenido HTML (puede contener variables)
+  textContent String?           @db.Text // Versión texto plano (opcional, se genera automático si no existe)
+  variables   Json? // Array de variables disponibles para esta plantilla
+  sampleData  Json? // Datos de ejemplo para vista previa
+  isActive    Boolean           @default(true)
+  isDefault   Boolean           @default(false) // Si es la plantilla por defecto para este tipo
+  attachments Json? // Configuración de adjuntos
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@index([type])
   @@index([isActive])
@@ -517,28 +604,28 @@ model EmailTemplate {
 
 // Códigos de descuento
 model DiscountCode {
-  id              String            @id @default(cuid())
-  code            String            @unique
-  name            String            // Nombre descriptivo del código
-  description     String?           @db.Text
-  type            DiscountType      // FIXED, PERCENTAGE, FREE_SHIPPING, FREE_PRODUCT
-  value           Decimal           @db.Decimal(10, 2) // Cantidad o porcentaje según el tipo
-  isEnabled       Boolean           @default(true)
-  isGlobal        Boolean           @default(true) // Si aplica a todos los productos o solo a uno específico
-  productId       String?           // Producto específico (si isGlobal = false)
-  minPurchase     Decimal?          @db.Decimal(10, 2) // Compra mínima requerida
-  maxDiscount     Decimal?          @db.Decimal(10, 2) // Descuento máximo (útil para porcentajes)
-  maxUses         Int?              // Límite de usos totales (null = ilimitado)
-  maxUsesPerUser  Int?              @default(1) // Límite de usos por usuario
-  usageCount      Int               @default(0) // Contador de usos totales
-  validFrom       DateTime?         // Fecha de inicio de validez
-  validUntil      DateTime?         // Fecha de fin de validez
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id             String       @id @default(cuid())
+  code           String       @unique
+  name           String // Nombre descriptivo del código
+  description    String?      @db.Text
+  type           DiscountType // FIXED, PERCENTAGE, FREE_SHIPPING, FREE_PRODUCT
+  value          Decimal      @db.Decimal(10, 2) // Cantidad o porcentaje según el tipo
+  isEnabled      Boolean      @default(true)
+  isGlobal       Boolean      @default(true) // Si aplica a todos los productos o solo a uno específico
+  productId      String? // Producto específico (si isGlobal = false)
+  minPurchase    Decimal?     @db.Decimal(10, 2) // Compra mínima requerida
+  maxDiscount    Decimal?     @db.Decimal(10, 2) // Descuento máximo (útil para porcentajes)
+  maxUses        Int? // Límite de usos totales (null = ilimitado)
+  maxUsesPerUser Int?         @default(1) // Límite de usos por usuario
+  usageCount     Int          @default(0) // Contador de usos totales
+  validFrom      DateTime? // Fecha de inicio de validez
+  validUntil     DateTime? // Fecha de fin de validez
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  product         Product?          @relation(fields: [productId], references: [id])
-  orders          Order[]           // Pedidos que usaron este código
-  usageHistory    DiscountCodeUsage[] // Historial de usos
+  product      Product?            @relation(fields: [productId], references: [id])
+  orders       Order[] // Pedidos que usaron este código
+  usageHistory DiscountCodeUsage[] // Historial de usos
 
   @@index([code])
   @@index([isEnabled])
@@ -548,15 +635,15 @@ model DiscountCode {
 
 // Historial de uso de códigos de descuento
 model DiscountCodeUsage {
-  id              String       @id @default(cuid())
-  discountCodeId  String
-  userId          String?
-  orderId         String?
-  discountAmount  Decimal      @db.Decimal(10, 2) // Monto del descuento aplicado
-  createdAt       DateTime     @default(now())
+  id             String   @id @default(cuid())
+  discountCodeId String
+  userId         String?
+  orderId        String?
+  discountAmount Decimal  @db.Decimal(10, 2) // Monto del descuento aplicado
+  createdAt      DateTime @default(now())
 
-  discountCode    DiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Cascade)
-  user            User?        @relation(fields: [userId], references: [id])
+  discountCode DiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
 
   @@index([discountCodeId])
   @@index([userId])
@@ -595,11 +682,11 @@ enum SettingType {
 }
 
 enum ProductType {
-  DTF_TEXTILE      // DTF para textil
-  DTF_UV           // UV DTF para rígidos
-  CONSUMABLE       // Consumibles (tintas, films, etc)
-  VOUCHER          // Bonos prepagados
-  SERVICE          // Servicios adicionales
+  DTF_TEXTILE // DTF para textil
+  DTF_UV // UV DTF para rígidos
+  CONSUMABLE // Consumibles (tintas, films, etc)
+  VOUCHER // Bonos prepagados
+  SERVICE // Servicios adicionales
 }
 
 enum StockStatus {
@@ -610,84 +697,84 @@ enum StockStatus {
 }
 
 enum VoucherType {
-  METERS           // Bono de metros
-  DISCOUNT_AMOUNT  // Descuento fijo
+  METERS // Bono de metros
+  DISCOUNT_AMOUNT // Descuento fijo
   DISCOUNT_PERCENT // Descuento porcentual
 }
 
 enum EmailTemplateType {
-  ORDER_CREATED           // Pedido creado
-  ORDER_STATUS_CHANGE     // Cambio de estado del pedido
-  ORDER_SHIPPED           // Pedido enviado
-  ORDER_DELIVERED         // Pedido entregado
-  VOUCHER_EXPIRING        // Bono próximo a caducar
-  VOUCHER_ACTIVATED       // Bono activado
-  USER_WELCOME            // Bienvenida de usuario
-  USER_PASSWORD_RESET     // Recuperar contraseña
-  ADMIN_NEW_ORDER         // Notificación admin de nuevo pedido
-  CUSTOM                  // Plantilla personalizada
+  ORDER_CREATED // Pedido creado
+  ORDER_STATUS_CHANGE // Cambio de estado del pedido
+  ORDER_SHIPPED // Pedido enviado
+  ORDER_DELIVERED // Pedido entregado
+  VOUCHER_EXPIRING // Bono próximo a caducar
+  VOUCHER_ACTIVATED // Bono activado
+  USER_WELCOME // Bienvenida de usuario
+  USER_PASSWORD_RESET // Recuperar contraseña
+  ADMIN_NEW_ORDER // Notificación admin de nuevo pedido
+  CUSTOM // Plantilla personalizada
 }
 
 enum DiscountType {
-  FIXED                   // Descuento de cantidad fija (ej: 10€ de descuento)
-  PERCENTAGE              // Descuento porcentual (ej: 20% de descuento)
-  FREE_SHIPPING           // Envío gratuito
-  FREE_PRODUCT            // Producto gratuito
+  FIXED // Descuento de cantidad fija (ej: 10€ de descuento)
+  PERCENTAGE // Descuento porcentual (ej: 20% de descuento)
+  FREE_SHIPPING // Envío gratuito
+  FREE_PRODUCT // Producto gratuito
 }
 
 enum LoyaltyTier {
-  BRONZE                  // 0-200€ gastados (1x puntos)
-  SILVER                  // 200-500€ gastados (1.25x puntos)
-  GOLD                    // 500-1000€ gastados (1.5x puntos)
-  PLATINUM                // +1000€ gastados (2x puntos)
+  BRONZE // 0-200€ gastados (1x puntos)
+  SILVER // 200-500€ gastados (1.25x puntos)
+  GOLD // 500-1000€ gastados (1.5x puntos)
+  PLATINUM // +1000€ gastados (2x puntos)
 }
 
 // Envíos GLS
 model Shipment {
-  id                String          @id @default(cuid())
-  orderId           String          @unique
-  glsReference      String?         @unique // Número de referencia GLS
-  trackingNumber    String?         // Número de seguimiento
-  labelUrl          String?         // URL de la etiqueta PDF
-  status            ShipmentStatus  @default(PENDING)
-  carrier           String          @default("GLS")
-  serviceName       String?         // Nombre del servicio (ej: "Express", "Standard")
-  estimatedDelivery DateTime?
-  actualDelivery    DateTime?
-  recipientName     String
-  recipientAddress  String
-  recipientCity     String
-  recipientPostal   String
-  recipientCountry  String          @default("ES")
-  recipientPhone    String?
-  recipientEmail    String?
-  weight            Decimal?        @db.Decimal(10, 2) // Peso en kg
-  packages          Int             @default(1) // Número de bultos
-  notes             String?         @db.Text
-  glsResponse       Json?           // Respuesta completa de GLS
+  id                    String             @id @default(cuid())
+  orderId               String             @unique
+  glsReference          String?            @unique // Número de referencia GLS
+  trackingNumber        String? // Número de seguimiento
+  labelUrl              String? // URL de la etiqueta PDF
+  status                ShipmentStatus     @default(PENDING)
+  carrier               String             @default("GLS")
+  serviceName           String? // Nombre del servicio (ej: "Express", "Standard")
+  estimatedDelivery     DateTime?
+  actualDelivery        DateTime?
+  recipientName         String
+  recipientAddress      String
+  recipientCity         String
+  recipientPostal       String
+  recipientCountry      String             @default("ES")
+  recipientPhone        String?
+  recipientEmail        String?
+  weight                Decimal?           @db.Decimal(10, 2) // Peso en kg
+  packages              Int                @default(1) // Número de bultos
+  notes                 String?            @db.Text
+  glsResponse           Json? // Respuesta completa de GLS
   // Campos adicionales para GLS
-  glsUid                  String?         // UID del envío en GLS
-  glsCodexp               String?         // Código de expedición GLS
-  glsServiceCode          String?         // Código de servicio GLS (96, 74, etc)
-  glsTimeFrame            String?         // Franja horaria GLS
-  labelBase64             String?         @db.Text // Etiqueta en base64
-  labelFormat             String?         // Formato de etiqueta (PDF, ZPL, etc)
-  recipientProvince       String?         // Provincia del destinatario
-  recipientMobile         String?         // Móvil internacional del destinatario
-  cashOnDelivery          Decimal?        @db.Decimal(10, 2) // Importe reembolso
-  insurance               Boolean         @default(false) // ¿Tiene seguro?
-  declaredValue           Decimal?        @db.Decimal(10, 2) // Valor declarado
-  incoterm                String?         // Incoterm para envíos internacionales
-  podImageUrl             String?         // URL imagen POD
-  deliverySignatureName   String?         // Nombre quien firma
-  deliveryDNI             String?         // DNI quien recibe
-  incidence               String?         // Descripción de incidencia
-  lastSyncAt              DateTime?       // Última sincronización con GLS
-  trackingEvents    ShipmentTracking[]
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  glsUid                String? // UID del envío en GLS
+  glsCodexp             String? // Código de expedición GLS
+  glsServiceCode        String? // Código de servicio GLS (96, 74, etc)
+  glsTimeFrame          String? // Franja horaria GLS
+  labelBase64           String?            @db.Text // Etiqueta en base64
+  labelFormat           String? // Formato de etiqueta (PDF, ZPL, etc)
+  recipientProvince     String? // Provincia del destinatario
+  recipientMobile       String? // Móvil internacional del destinatario
+  cashOnDelivery        Decimal?           @db.Decimal(10, 2) // Importe reembolso
+  insurance             Boolean            @default(false) // ¿Tiene seguro?
+  declaredValue         Decimal?           @db.Decimal(10, 2) // Valor declarado
+  incoterm              String? // Incoterm para envíos internacionales
+  podImageUrl           String? // URL imagen POD
+  deliverySignatureName String? // Nombre quien firma
+  deliveryDNI           String? // DNI quien recibe
+  incidence             String? // Descripción de incidencia
+  lastSyncAt            DateTime? // Última sincronización con GLS
+  trackingEvents        ShipmentTracking[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
-  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([glsReference])
@@ -700,17 +787,17 @@ model Shipment {
 model ShipmentTracking {
   id          String   @id @default(cuid())
   shipmentId  String
-  status      String   // Estado del envío
-  description String   // Descripción del evento
-  location    String?  // Ubicación del evento
+  status      String // Estado del envío
+  description String // Descripción del evento
+  location    String? // Ubicación del evento
   eventDate   DateTime // Fecha del evento
-  eventType   String?  // Tipo de evento GLS
-  eventCode   String?  // Código del evento
-  agencyCode  String?  // Código de agencia GLS
-  agencyName  String?  // Nombre de agencia GLS
+  eventType   String? // Tipo de evento GLS
+  eventCode   String? // Código del evento
+  agencyCode  String? // Código de agencia GLS
+  agencyName  String? // Nombre de agencia GLS
   createdAt   DateTime @default(now())
 
-  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@index([shipmentId])
   @@index([eventDate])
@@ -718,12 +805,21 @@ model ShipmentTracking {
 }
 
 enum ShipmentStatus {
-  PENDING           // Pendiente de crear
-  CREATED           // Creado en GLS
-  PICKED_UP         // Recogido
-  IN_TRANSIT        // En tránsito
-  OUT_FOR_DELIVERY  // En reparto
-  DELIVERED         // Entregado
-  EXCEPTION         // Incidencia
-  CANCELLED         // Cancelado
+  PENDING // Pendiente de crear
+  CREATED // Creado en GLS
+  PICKED_UP // Recogido
+  IN_TRANSIT // En tránsito
+  OUT_FOR_DELIVERY // En reparto
+  DELIVERED // Entregado
+  EXCEPTION // Incidencia
+  CANCELLED // Cancelado
+}
+
+enum QuoteStatus {
+  PENDING_REVIEW // Recién creado, admin debe revisar
+  QUOTED // Admin ha calculado metros y precio
+  PAYMENT_SENT // Enlace de pago enviado al cliente
+  PAID // Cliente ha pagado (se convierte en Order)
+  EXPIRED // Presupuesto caducado
+  CANCELLED // Cancelado por admin o cliente
 }
