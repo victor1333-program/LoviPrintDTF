@@ -11,7 +11,7 @@ import { sendEmail } from '@/lib/email'
 
 /**
  * POST /api/admin/print-queue/[id]/printed
- * Marcar pedido como impreso (cambiar a READY + generar etiqueta GLS automáticamente)
+ * Marcar pedido como impreso (cambiar a SHIPPED + generar etiqueta GLS automáticamente)
  */
 export async function POST(
   request: Request,
@@ -26,11 +26,12 @@ export async function POST(
 
     const { id } = await params
 
-    // Obtener el pedido con su información de envío
+    // Obtener el pedido con su información de envío y método de envío
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        shipment: true
+        shipment: true,
+        shippingMethod: true
       }
     })
 
@@ -68,6 +69,10 @@ export async function POST(
         const recipientCountryCode = normalizeCountryCode(shippingAddr.country)
         const recipientProvince = getProvinceName(shippingAddr.postalCode || '')
 
+        // Obtener configuración de servicio GLS del método de envío
+        const glsServiceCode = order.shippingMethod?.glsServiceCode || '1' // Courier por defecto
+        const glsTimeFrame = order.shippingMethod?.glsTimeFrame || '19' // Express 19h por defecto
+
         // Crear envío en GLS con estructura correcta
         const glsResponse = await glsService.createShipment({
           orderId: order.orderNumber,
@@ -85,11 +90,31 @@ export async function POST(
           weight: 0.5,
           packages: 1,
           notes: `Pedido ${order.orderNumber}`,
+          service: glsServiceCode, // Usar servicio configurado
+          timeFrame: glsTimeFrame, // Usar franja horaria configurada
           labelFormat: 'PDF', // Solicitar etiqueta PDF directamente
         })
 
         if (!glsResponse.success) {
           throw new Error(glsResponse.error || 'Error creando envío en GLS')
+        }
+
+        // Determinar nombre del servicio según configuración
+        let serviceName = 'GLS Courier'
+        if (glsServiceCode === '1') {
+          if (glsTimeFrame === '3') {
+            serviceName = 'GLS Express 14h'
+          } else if (glsTimeFrame === '19') {
+            serviceName = 'GLS Express 19h'
+          } else if (glsTimeFrame === '2') {
+            serviceName = 'GLS Express 10h'
+          } else {
+            serviceName = 'GLS Courier'
+          }
+        } else if (glsServiceCode === '96') {
+          serviceName = 'GLS BusinessParcel'
+        } else if (glsServiceCode === '74') {
+          serviceName = 'GLS EuroBusinessParcel'
         }
 
         // Crear registro de envío en la base de datos
@@ -104,7 +129,7 @@ export async function POST(
             labelFormat: 'PDF',
             status: 'CREATED',
             carrier: 'GLS',
-            serviceName: 'GLS BusinessParcel',
+            serviceName: serviceName,
             recipientName: order.customerName,
             recipientAddress: shippingAddr.street || '',
             recipientCity: shippingAddr.city || '',
@@ -148,15 +173,15 @@ export async function POST(
       }
     }
 
-    // Actualizar estado del pedido a READY
+    // Actualizar estado del pedido a SHIPPED
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        status: 'READY',
+        status: 'SHIPPED',
         trackingNumber: shipmentData.trackingNumber || undefined,
         statusHistory: {
           create: {
-            status: 'READY',
+            status: 'SHIPPED',
             notes: 'Pedido impreso - Etiqueta GLS generada automáticamente',
             createdBy: session.user.email || undefined
           }

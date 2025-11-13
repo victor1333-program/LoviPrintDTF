@@ -6,6 +6,7 @@ import {
   createStripePaymentLink,
   getQuoteStatusText
 } from '@/lib/quotes'
+import { sendQuotePaymentLinkEmail, sendQuoteBizumEmail } from '@/lib/email'
 
 /**
  * GET /api/quotes/[id]
@@ -271,7 +272,13 @@ export async function PATCH(
         },
       })
 
-      // TODO: Enviar email al cliente con el enlace de pago
+      // Enviar email al cliente con el enlace de pago
+      try {
+        await sendQuotePaymentLinkEmail(updatedQuote)
+      } catch (emailError) {
+        console.error('Error sending payment link email:', emailError)
+        // No fallar la petición si falla el email
+      }
 
       return NextResponse.json({
         success: true,
@@ -299,7 +306,13 @@ export async function PATCH(
         },
       })
 
-      // TODO: Enviar email al cliente con instrucciones de Bizum
+      // Enviar email al cliente con instrucciones de Bizum
+      try {
+        await sendQuoteBizumEmail(updatedQuote)
+      } catch (emailError) {
+        console.error('Error sending Bizum email:', emailError)
+        // No fallar la petición si falla el email
+      }
 
       return NextResponse.json({
         success: true,

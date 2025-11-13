@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { FileUpload } from "@/components/FileUpload"
-import { ArrowLeft, Send, CheckCircle, Upload, FileText, User } from "lucide-react"
+import { ArrowLeft, Send, CheckCircle, Upload, FileText, User, LogIn } from "lucide-react"
 import Link from "next/link"
 import toast from "react-hot-toast"
 
@@ -20,6 +21,7 @@ interface UploadedFileData {
 
 export default function SolicitarPresupuestoPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [designFile, setDesignFile] = useState<UploadedFileData | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -31,6 +33,18 @@ export default function SolicitarPresupuestoPage() {
     customerPhone: '',
     customerNotes: '',
   })
+
+  // Autocompletar datos si el usuario está logueado
+  useEffect(() => {
+    if (session?.user) {
+      setFormData({
+        customerName: session.user.name || '',
+        customerEmail: session.user.email || '',
+        customerPhone: session.user.phone || '',
+        customerNotes: '',
+      })
+    }
+  }, [session])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -124,6 +138,126 @@ export default function SolicitarPresupuestoPage() {
     }
   }
 
+  // Pantalla de login requerido si no está autenticado
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            href="/"
+            className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver al inicio
+          </Link>
+
+          <Card className="border-2 border-purple-200 shadow-xl">
+            <CardHeader className="text-center space-y-4">
+              <div className="mx-auto w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center">
+                <LogIn className="w-12 h-12 text-purple-600" />
+              </div>
+              <CardTitle className="text-3xl text-purple-700">
+                Inicia sesión para solicitar un presupuesto
+              </CardTitle>
+              <p className="text-gray-600">
+                Crea una cuenta o inicia sesión para acceder a todas las ventajas
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Beneficios de registrarse */}
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
+                <h3 className="font-semibold text-lg text-purple-900 mb-4 flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2 text-purple-600" />
+                  Beneficios de tener una cuenta
+                </h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Gestión de presupuestos</strong>
+                      <p className="text-sm text-gray-600">Consulta el estado de tus presupuestos en tiempo real</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Historial de pedidos</strong>
+                      <p className="text-sm text-gray-600">Accede a todos tus pedidos anteriores y repite fácilmente</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Bonos prepagados</strong>
+                      <p className="text-sm text-gray-600">Compra bonos y ahorra hasta un 33% en tus pedidos</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Proceso más rápido</strong>
+                      <p className="text-sm text-gray-600">Tus datos ya estarán guardados para futuras compras</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Seguimiento de envíos</strong>
+                      <p className="text-sm text-gray-600">Recibe actualizaciones automáticas del estado de tus pedidos</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Ofertas exclusivas</strong>
+                      <p className="text-sm text-gray-600">Recibe descuentos especiales y promociones por email</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-gray-900">Soporte prioritario</strong>
+                      <p className="text-sm text-gray-600">Atención preferente para usuarios registrados</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/auth/signin?callbackUrl=/solicitar-presupuesto" className="flex-1">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+                <Link href="/auth/signin?callbackUrl=/solicitar-presupuesto" className="flex-1">
+                  <Button className="w-full" variant="outline">
+                    <User className="w-4 h-4 mr-2" />
+                    Crear Cuenta Nueva
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="text-center text-sm text-gray-600 pt-4 border-t">
+                <p>¿Ya tienes cuenta? Inicia sesión para continuar</p>
+                <p className="mt-2">¿Nuevo en LoviPrintDTF? Regístrate gratis en segundos</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   // Vista de éxito
   if (success) {
     return (
@@ -186,7 +320,7 @@ export default function SolicitarPresupuestoPage() {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Tiempo de respuesta:</strong> Normalmente respondemos en 24-48 horas laborables
+                  <strong>Tiempo de respuesta:</strong> Normalmente respondemos en 1 a 3 horas
                 </p>
               </div>
 
@@ -244,6 +378,11 @@ export default function SolicitarPresupuestoPage() {
                   <User className="w-5 h-5 mr-2" />
                   Tus datos de contacto
                 </CardTitle>
+                {session?.user && (
+                  <p className="text-sm text-green-600 mt-2">
+                    ✓ Datos cargados desde tu cuenta
+                  </p>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -257,6 +396,8 @@ export default function SolicitarPresupuestoPage() {
                     onChange={handleInputChange}
                     placeholder="Tu nombre"
                     required
+                    disabled={!!session?.user}
+                    className={session?.user ? 'bg-gray-50' : ''}
                   />
                 </div>
 
@@ -271,6 +412,8 @@ export default function SolicitarPresupuestoPage() {
                     onChange={handleInputChange}
                     placeholder="tu@email.com"
                     required
+                    disabled={!!session?.user}
+                    className={session?.user ? 'bg-gray-50' : ''}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Te enviaremos el presupuesto a este email

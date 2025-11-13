@@ -43,7 +43,9 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
   const [quoteForm, setQuoteForm] = useState({
     estimatedMeters: quote.estimatedMeters || '',
     needsCutting: quote.needsCutting || false,
-    needsLayout: quote.needsLayout || false,
+    // Si el presupuesto ya fue cotizado (tiene estimatedMeters), usar el valor guardado
+    // Si es nuevo (sin estimatedMeters), marcar needsLayout como true por defecto
+    needsLayout: quote.estimatedMeters ? quote.needsLayout : true,
     isPriority: quote.isPriority || false,
     shippingMethodId: '',
     adminNotes: '',
@@ -57,10 +59,12 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
     fetch('/api/shipping-methods')
       .then(res => res.json())
       .then(data => {
-        if (data.methods) {
-          setShippingMethods(data.methods)
-          if (data.methods.length > 0 && !quoteForm.shippingMethodId) {
-            setQuoteForm(prev => ({ ...prev, shippingMethodId: data.methods[0].id }))
+        // La API devuelve directamente un array
+        if (Array.isArray(data)) {
+          setShippingMethods(data)
+          // Seleccionar el primer método por defecto si hay alguno
+          if (data.length > 0 && !quoteForm.shippingMethodId) {
+            setQuoteForm(prev => ({ ...prev, shippingMethodId: data[0].id }))
           }
         }
       })
@@ -397,6 +401,9 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    ℹ️ Envío GRATIS en pedidos superiores a 100€ (sin IVA)
+                  </p>
                 </div>
 
                 <div className="space-y-2">

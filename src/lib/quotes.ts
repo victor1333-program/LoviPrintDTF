@@ -152,11 +152,15 @@ export function calculateQuotePrice(params: QuotePriceCalculationParams): QuoteP
   // 3. Subtotal (sin IVA ni envío)
   const subtotal = metersSubtotal + cuttingPrice + layoutPrice + priorityPrice
 
-  // 4. IVA
+  // 4. Aplicar envío gratuito si el subtotal supera 100€
+  const FREE_SHIPPING_THRESHOLD = 100
+  const finalShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : shippingCost
+
+  // 5. IVA
   const taxAmount = subtotal * taxRate
 
-  // 5. Total
-  const total = subtotal + taxAmount + shippingCost
+  // 6. Total
+  const total = subtotal + taxAmount + finalShippingCost
 
   return {
     pricePerMeter,
@@ -166,7 +170,7 @@ export function calculateQuotePrice(params: QuotePriceCalculationParams): QuoteP
     priorityPrice,
     subtotal,
     taxAmount,
-    shippingCost,
+    shippingCost: finalShippingCost,
     total,
   }
 }

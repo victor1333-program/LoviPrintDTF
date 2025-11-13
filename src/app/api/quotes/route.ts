@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateQuoteNumber, calculateQuoteExpirationDate } from '@/lib/quotes'
+import { sendQuoteConfirmationEmail, sendAdminQuoteNotification } from '@/lib/email'
 import { auth } from '@/auth'
 
 /**
@@ -76,8 +77,13 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // TODO: Enviar email de confirmación al cliente
-    // TODO: Enviar notificación al admin
+    // Enviar emails de forma asíncrona (sin bloquear la respuesta)
+    Promise.all([
+      sendQuoteConfirmationEmail(quote),
+      sendAdminQuoteNotification(quote),
+    ]).catch((error) => {
+      console.error('Error sending quote emails:', error)
+    })
 
     return NextResponse.json(
       {

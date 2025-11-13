@@ -183,6 +183,36 @@ export async function sendAdminOrderNotification(order: any) {
   }
 }
 
+export async function sendQuoteConfirmationEmail(quote: any) {
+  const html = generateQuoteConfirmationHTML(quote)
+
+  await sendEmail({
+    to: quote.customerEmail,
+    subject: `Solicitud de Presupuesto #${quote.quoteNumber} - LoviPrintDTF`,
+    html,
+  })
+}
+
+export async function sendAdminQuoteNotification(quote: any) {
+  try {
+    const adminEmailSetting = await prisma.setting.findUnique({
+      where: { key: 'admin_notification_email' }
+    })
+
+    const adminEmail = adminEmailSetting?.value || 'info@loviprintdtf.es'
+
+    const html = generateAdminQuoteNotificationHTML(quote)
+
+    await sendEmail({
+      to: adminEmail,
+      subject: `Nueva Solicitud de Presupuesto #${quote.quoteNumber} - LoviPrintDTF`,
+      html,
+    })
+  } catch (error) {
+    console.error('Error sending admin quote notification:', error)
+  }
+}
+
 // Templates HTML para emails
 function generateOrderConfirmationHTML(order: any): string {
   const itemsHTML = order.items?.map((item: any) => `
@@ -846,6 +876,759 @@ function generateVoucherPurchaseHTML(order: any, voucher: any): string {
                     <a href="https://www.loviprintdtf.es" style="color: #6366f1; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
                     •
                     <a href="mailto:info@loviprintdtf.es" style="color: #6366f1; text-decoration: none;">info@loviprintdtf.es</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+function generateQuoteConfirmationHTML(quote: any): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Solicitud de Presupuesto - LoviPrintDTF</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Logo -->
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px 30px 20px; text-align: center; border-bottom: 3px solid #667eea;">
+                  <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto;" />
+                </td>
+              </tr>
+
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #000000; font-size: 32px; font-weight: bold;">¡Solicitud Recibida!</h1>
+                  <p style="margin: 10px 0 0; color: #000000; font-size: 18px; font-weight: 600;">Presupuesto #${quote.quoteNumber}</p>
+                </td>
+              </tr>
+
+              <!-- Contenido Principal -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <p style="margin: 0 0 20px; color: #111827; font-size: 16px; line-height: 1.5;">
+                    Hola <strong>${formatCustomerName(quote.customerName)}</strong>,
+                  </p>
+                  <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.7;">
+                    Hemos recibido tu solicitud de presupuesto correctamente y ya estamos trabajando en ella.
+                  </p>
+
+                  <!-- Info del Presupuesto -->
+                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Número de presupuesto:</td>
+                        <td align="right" style="padding: 8px 0; color: #667eea; font-size: 14px; font-weight: 700;">#${quote.quoteNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Archivo de diseño:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${quote.designFileName}</td>
+                      </tr>
+                      ${quote.customerPhone ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Teléfono de contacto:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${quote.customerPhone}</td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </div>
+
+                  ${quote.customerNotes ? `
+                  <div style="margin: 25px 0; padding: 20px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">📝 Tus notas:</p>
+                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.7;">${quote.customerNotes}</p>
+                  </div>
+                  ` : ''}
+
+                  <!-- Qué sigue -->
+                  <div style="margin: 30px 0; padding: 25px; background-color: #eff6ff; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                    <h3 style="margin: 0 0 20px; color: #1e40af; font-size: 18px; font-weight: 700;">📋 ¿Qué sigue?</h3>
+                    <div style="margin-bottom: 15px;">
+                      <div style="display: flex; align-items: flex-start;">
+                        <span style="display: inline-block; min-width: 28px; height: 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; font-size: 14px; margin-right: 12px;">1</span>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 28px;">
+                          Recibirás este <strong>email de confirmación</strong> (este mismo)
+                        </p>
+                      </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                      <div style="display: flex; align-items: flex-start;">
+                        <span style="display: inline-block; min-width: 28px; height: 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; font-size: 14px; margin-right: 12px;">2</span>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 28px;">
+                          Nuestro equipo <strong>revisará y montará tu diseño</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                      <div style="display: flex; align-items: flex-start;">
+                        <span style="display: inline-block; min-width: 28px; height: 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; font-size: 14px; margin-right: 12px;">3</span>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 28px;">
+                          Te enviaremos el <strong>presupuesto con los metros calculados</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display: flex; align-items: flex-start;">
+                        <span style="display: inline-block; min-width: 28px; height: 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; font-size: 14px; margin-right: 12px;">4</span>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 28px;">
+                          Recibirás un <strong>enlace de pago</strong> para completar tu pedido
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="margin: 25px 0; padding: 20px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.7;">
+                      <strong>⏱️ Tiempo de respuesta:</strong> Normalmente respondemos en 1 a 3 horas
+                    </p>
+                  </div>
+
+                  <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+                    ¿Alguna duda? <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">Contáctanos</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
+                  </p>
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    <a href="https://www.loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
+                    •
+                    <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none;">info@loviprintdtf.es</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+function generateAdminQuoteNotificationHTML(quote: any): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Nueva Solicitud de Presupuesto - Admin</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Logo -->
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px 30px 20px; text-align: center; border-bottom: 3px solid #f59e0b;">
+                  <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto;" />
+                </td>
+              </tr>
+
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #000000; font-size: 32px; font-weight: bold;">Nueva Solicitud de Presupuesto</h1>
+                  <p style="margin: 10px 0 0; color: #000000; font-size: 16px;">¡Acaba de llegar una solicitud!</p>
+                </td>
+              </tr>
+
+              <!-- Alerta -->
+              <tr>
+                <td style="padding: 0;">
+                  <div style="background: linear-gradient(to right, #fef3c7, #fde68a); padding: 20px 30px; text-align: center; border-bottom: 3px solid #f59e0b;">
+                    <p style="margin: 0; color: #92400e; font-size: 18px; font-weight: 700;">
+                      Presupuesto #${quote.quoteNumber}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Contenido -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <!-- Cliente -->
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700; display: flex; align-items: center;">
+                      <span style="font-size: 24px; margin-right: 10px;">👤</span> Información del Cliente
+                    </h2>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb; padding: 20px;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 120px;">Nombre:</td>
+                        <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${formatCustomerName(quote.customerName)}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email:</td>
+                        <td style="padding: 8px 0;"><a href="mailto:${quote.customerEmail}" style="color: #3b82f6; text-decoration: none; font-size: 14px;">${quote.customerEmail}</a></td>
+                      </tr>
+                      ${quote.customerPhone ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Teléfono:</td>
+                        <td style="padding: 8px 0;"><a href="tel:${quote.customerPhone}" style="color: #3b82f6; text-decoration: none; font-size: 14px;">${quote.customerPhone}</a></td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </div>
+
+                  <!-- Diseño -->
+                  <div style="margin: 30px 0;">
+                    <h2 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700; display: flex; align-items: center;">
+                      <span style="font-size: 24px; margin-right: 10px;">🎨</span> Diseño
+                    </h2>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; overflow: hidden; padding: 20px;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 120px;">Archivo:</td>
+                        <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${quote.designFileName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 15px 0 0; color: #6b7280; font-size: 14px;" colspan="2">
+                          <a href="${quote.designFileUrl}" style="display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #667eea, #764ba2); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 700;">
+                            ⬇️ Descargar Diseño
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  ${quote.customerNotes ? `
+                  <div style="margin: 25px 0; padding: 20px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">📝 Notas del Cliente:</p>
+                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.7;">${quote.customerNotes}</p>
+                  </div>
+                  ` : ''}
+
+                  <!-- Recordatorio -->
+                  <div style="margin: 30px 0; padding: 20px; background: linear-gradient(to right, #dbeafe, #bfdbfe); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.7;">
+                      <strong>⏱️ Recordatorio:</strong> El cliente espera una respuesta en 1 a 3 horas
+                    </p>
+                  </div>
+
+                  <!-- Botón de acción -->
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.loviprintdtf.es/admin/presupuestos/${quote.quoteNumber}"
+                       style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                      📋 Ver Presupuesto Completo
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF - Panel de Administración
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+export async function sendQuotePaymentLinkEmail(quote: any) {
+  const html = generateQuotePaymentLinkHTML(quote)
+
+  await sendEmail({
+    to: quote.customerEmail,
+    subject: `Enlace de pago - Presupuesto #${quote.quoteNumber} - LoviPrintDTF`,
+    html,
+  })
+}
+
+export async function sendQuoteBizumEmail(quote: any) {
+  const html = generateQuoteBizumHTML(quote)
+
+  await sendEmail({
+    to: quote.customerEmail,
+    subject: `Instrucciones de pago Bizum - Presupuesto #${quote.quoteNumber} - LoviPrintDTF`,
+    html,
+  })
+}
+
+function generateQuotePaymentLinkHTML(quote: any): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Enlace de Pago - LoviPrintDTF</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Logo -->
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px 30px 20px; text-align: center; border-bottom: 3px solid #667eea;">
+                  <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto;" />
+                </td>
+              </tr>
+
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #000000; font-size: 32px; font-weight: bold;">¡Tu presupuesto está listo!</h1>
+                  <p style="margin: 10px 0 0; color: #000000; font-size: 18px; font-weight: 600;">Presupuesto #${quote.quoteNumber}</p>
+                </td>
+              </tr>
+
+              <!-- Contenido Principal -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <p style="margin: 0 0 20px; color: #111827; font-size: 16px; line-height: 1.5;">
+                    Hola <strong>${formatCustomerName(quote.customerName)}</strong>,
+                  </p>
+                  <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.7;">
+                    Hemos calculado tu presupuesto y está listo para ser pagado. Haz clic en el botón de abajo para completar el pago de forma segura.
+                  </p>
+
+                  <!-- Resumen del presupuesto -->
+                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 15px; color: #111827; font-size: 18px; font-weight: 700;">Resumen</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Metros calculados:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${quote.estimatedMeters}m</td>
+                      </tr>
+                      ${quote.needsLayout ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">• Maquetación:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px;">Incluida</td>
+                      </tr>
+                      ` : ''}
+                      ${quote.needsCutting ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">• Corte:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px;">Incluido</td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 15px 0 8px; color: #111827; font-size: 18px; font-weight: 700; border-top: 2px solid #e5e7eb;">TOTAL:</td>
+                        <td align="right" style="padding: 15px 0 8px; color: #667eea; font-size: 24px; font-weight: 700; border-top: 2px solid #e5e7eb;">${new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR',
+                        }).format(Number(quote.estimatedTotal))}</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Botón de pago -->
+                  <div style="text-align: center; margin: 35px 0;">
+                    <a href="${quote.paymentLinkUrl}"
+                       style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                      💳 Pagar Ahora
+                    </a>
+                  </div>
+
+                  <!-- Info adicional -->
+                  <div style="margin: 30px 0; padding: 20px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0 0 10px; color: #1e40af; font-size: 14px; font-weight: 700;">🔒 Pago 100% seguro</p>
+                    <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.7;">
+                      El pago se procesa de forma segura a través de Stripe. Aceptamos tarjetas de crédito y débito.
+                    </p>
+                  </div>
+
+                  <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+                    ¿Alguna duda? <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">Contáctanos</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
+                  </p>
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    <a href="https://www.loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
+                    •
+                    <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none;">info@loviprintdtf.es</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+function generateQuoteBizumHTML(quote: any): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+      <title>Pago por Bizum - LoviPrintDTF</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Logo -->
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px 30px 20px; text-align: center; border-bottom: 3px solid #f59e0b;">
+                  <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto;" />
+                </td>
+              </tr>
+
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #000000; font-size: 32px; font-weight: bold;">¡Tu presupuesto está listo!</h1>
+                  <p style="margin: 10px 0 0; color: #000000; font-size: 18px; font-weight: 600;">Presupuesto #${quote.quoteNumber}</p>
+                </td>
+              </tr>
+
+              <!-- Contenido Principal -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <p style="margin: 0 0 20px; color: #111827; font-size: 16px; line-height: 1.5;">
+                    Hola <strong>${formatCustomerName(quote.customerName)}</strong>,
+                  </p>
+                  <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.7;">
+                    Hemos calculado tu presupuesto y está listo para ser pagado mediante <strong>Bizum</strong>.
+                  </p>
+
+                  <!-- Resumen del presupuesto -->
+                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 15px; color: #111827; font-size: 18px; font-weight: 700;">Resumen</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Metros calculados:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${quote.estimatedMeters}m</td>
+                      </tr>
+                      ${quote.needsLayout ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">• Maquetación:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px;">Incluida</td>
+                      </tr>
+                      ` : ''}
+                      ${quote.needsCutting ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">• Corte:</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px;">Incluido</td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 15px 0 8px; color: #111827; font-size: 18px; font-weight: 700; border-top: 2px solid #e5e7eb;">TOTAL:</td>
+                        <td align="right" style="padding: 15px 0 8px; color: #f59e0b; font-size: 24px; font-weight: 700; border-top: 2px solid #e5e7eb;">${new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR',
+                        }).format(Number(quote.estimatedTotal))}</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Instrucciones de Bizum -->
+                  <div style="margin: 30px 0; padding: 30px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 12px; border: 3px solid #f59e0b;">
+                    <h3 style="margin: 0 0 20px; color: #92400e; font-size: 20px; font-weight: 700; text-align: center;">📱 Instrucciones de Pago Bizum</h3>
+
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                      <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">1. Abre tu app bancaria</p>
+                      <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.7;">
+                        Accede a la sección de Bizum en tu aplicación bancaria
+                      </p>
+                    </div>
+
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                      <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">2. Envía el pago a este número:</p>
+                      <p style="margin: 0; color: #f59e0b; font-size: 28px; font-weight: 700; text-align: center; font-family: monospace;">
+                        611066997
+                      </p>
+                    </div>
+
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                      <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">3. Importe a enviar:</p>
+                      <p style="margin: 0; color: #f59e0b; font-size: 28px; font-weight: 700; text-align: center;">
+                        ${new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR',
+                        }).format(Number(quote.estimatedTotal))}
+                      </p>
+                    </div>
+
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px;">
+                      <p style="margin: 0 0 10px; color: #92400e; font-size: 14px; font-weight: 700;">4. Concepto (IMPORTANTE):</p>
+                      <p style="margin: 0; color: #92400e; font-size: 16px; font-weight: 700; text-align: center; font-family: monospace; background: #fef3c7; padding: 10px; border-radius: 4px;">
+                        ${quote.quoteNumber}
+                      </p>
+                      <p style="margin: 10px 0 0; color: #92400e; font-size: 12px; text-align: center;">
+                        Indica este número en el concepto para identificar tu pago
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style="margin: 25px 0; padding: 20px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.7;">
+                      <strong>⏱️ Confirmación:</strong> Una vez realizado el pago, tu pedido se procesará automáticamente. Recibirás un email de confirmación en breve.
+                    </p>
+                  </div>
+
+                  <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+                    ¿Alguna duda? <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">Contáctanos</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
+                  </p>
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    <a href="https://www.loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
+                    •
+                    <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none;">info@loviprintdtf.es</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+export async function sendQuoteWithAllPaymentOptionsEmail(quote: any, shippingMethod: any) {
+  const html = generateQuoteAllPaymentOptionsHTML(quote, shippingMethod)
+
+  await sendEmail({
+    to: quote.customerEmail,
+    subject: `Tu presupuesto está listo - #${quote.quoteNumber} - LoviPrintDTF`,
+    html,
+  })
+}
+
+function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): string {
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null) return '-'
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(amount)
+  }
+
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Tu Presupuesto - LoviPrintDTF</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f7;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f7; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Logo -->
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px 30px 20px; text-align: center; border-bottom: 3px solid #667eea;">
+                  <img src="https://www.loviprintdtf.es/logo.png" alt="LoviPrintDTF" style="max-width: 200px; height: auto;" />
+                </td>
+              </tr>
+
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">¡Tu presupuesto está listo!</h1>
+                  <p style="margin: 10px 0 0; color: #ffffff; font-size: 18px; font-weight: 600;">Presupuesto #${quote.quoteNumber}</p>
+                </td>
+              </tr>
+
+              <!-- Contenido Principal -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <p style="margin: 0 0 20px; color: #111827; font-size: 16px; line-height: 1.5;">
+                    Hola <strong>${formatCustomerName(quote.customerName)}</strong>,
+                  </p>
+                  <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.7;">
+                    Hemos calculado tu presupuesto. A continuación encontrarás el desglose completo y las opciones de pago disponibles.
+                  </p>
+
+                  <!-- Desglose Completo del Presupuesto -->
+                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700;">📋 Cotización</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Metros calculados</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e5e7eb;">${quote.estimatedMeters}m</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Precio por metro</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e5e7eb;">${formatCurrency(Number(quote.pricePerMeter))}/m</td>
+                      </tr>
+                      
+                      ${(quote.needsCutting || quote.needsLayout || quote.isPriority) ? `
+                      <tr>
+                        <td colspan="2" style="padding: 15px 0 10px; color: #6b7280; font-size: 13px; font-weight: 700;">Extras:</td>
+                      </tr>
+                      ` : ''}
+                      
+                      ${quote.needsCutting ? `
+                      <tr>
+                        <td style="padding: 8px 0 8px 20px; color: #6b7280; font-size: 14px;">• Corte</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${formatCurrency(Number(quote.cuttingPrice))}</td>
+                      </tr>
+                      ` : ''}
+                      
+                      ${quote.needsLayout ? `
+                      <tr>
+                        <td style="padding: 8px 0 8px 20px; color: #6b7280; font-size: 14px;">• Maquetación</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${formatCurrency(Number(quote.layoutPrice))}</td>
+                      </tr>
+                      ` : ''}
+                      
+                      ${quote.isPriority ? `
+                      <tr>
+                        <td style="padding: 8px 0 8px 20px; color: #6b7280; font-size: 14px;">• Priorización</td>
+                        <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${formatCurrency(Number(quote.priorityPrice))}</td>
+                      </tr>
+                      ` : ''}
+                      
+                      ${shippingMethod ? `
+                      <tr>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb;">Envío - ${shippingMethod.name}</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb;">${Number(quote.shippingCost) === 0 ? 'GRATIS' : formatCurrency(Number(quote.shippingCost))}</td>
+                      </tr>
+                      ` : ''}
+                      
+                      <tr>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Subtotal</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e5e7eb;">${formatCurrency(Number(quote.subtotal))}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 2px solid #667eea;">IVA (21%)</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 2px solid #667eea;">${formatCurrency(Number(quote.taxAmount))}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 15px 0 0; color: #111827; font-size: 20px; font-weight: 700;">Total</td>
+                        <td align="right" style="padding: 15px 0 0; color: #667eea; font-size: 28px; font-weight: 700;">${formatCurrency(Number(quote.estimatedTotal))}</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Opciones de Pago -->
+                  <div style="margin: 35px 0;">
+                    <h3 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700; text-align: center;">💳 Elige tu forma de pago</h3>
+                    
+                    <!-- Opción 1: Tarjeta (Stripe) -->
+                    <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
+                      <p style="margin: 0 0 15px; color: #ffffff; font-size: 16px; font-weight: 700;">Opción 1: Tarjeta de Crédito/Débito</p>
+                      <p style="margin: 0 0 15px; color: #ffffff; font-size: 13px;">Pago seguro con Stripe. Acepta Visa, Mastercard, y más.</p>
+                      <div style="text-align: center;">
+                        <a href="${quote.paymentLinkUrl}"
+                           style="display: inline-block; padding: 15px 40px; background: #ffffff; color: #667eea; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                          💳 Pagar con Tarjeta
+                        </a>
+                      </div>
+                    </div>
+
+                    <!-- Opción 2: Bizum -->
+                    <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 12px; border: 2px solid #f59e0b;">
+                      <p style="margin: 0 0 10px; color: #92400e; font-size: 16px; font-weight: 700;">Opción 2: Bizum</p>
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding: 8px 0; color: #92400e; font-size: 13px;">Teléfono:</td>
+                          <td align="right" style="padding: 8px 0; color: #f59e0b; font-size: 18px; font-weight: 700; font-family: monospace;">611066997</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #92400e; font-size: 13px;">Importe:</td>
+                          <td align="right" style="padding: 8px 0; color: #f59e0b; font-size: 18px; font-weight: 700;">${formatCurrency(Number(quote.estimatedTotal))}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #92400e; font-size: 13px;">Concepto:</td>
+                          <td align="right" style="padding: 8px 0; color: #92400e; font-size: 14px; font-weight: 700; font-family: monospace; background: #ffffff; padding: 5px 10px; border-radius: 4px;">${quote.quoteNumber}</td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <!-- Opción 3: Transferencia -->
+                    <div style="padding: 20px; background: linear-gradient(to right, #dbeafe, #bfdbfe); border-radius: 12px; border: 2px solid #3b82f6;">
+                      <p style="margin: 0 0 10px; color: #1e40af; font-size: 16px; font-weight: 700;">Opción 3: Transferencia Bancaria</p>
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding: 8px 0; color: #1e40af; font-size: 13px;">Banco:</td>
+                          <td align="right" style="padding: 8px 0; color: #1e40af; font-size: 14px; font-weight: 700;">BBVA</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #1e40af; font-size: 13px;">IBAN:</td>
+                          <td align="right" style="padding: 8px 0; color: #1e40af; font-size: 12px; font-weight: 700; font-family: monospace;">ES60 0182 1294 1702 0635 2868</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #1e40af; font-size: 13px;">Importe:</td>
+                          <td align="right" style="padding: 8px 0; color: #3b82f6; font-size: 18px; font-weight: 700;">${formatCurrency(Number(quote.estimatedTotal))}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #1e40af; font-size: 13px;">Concepto:</td>
+                          <td align="right" style="padding: 8px 0; color: #1e40af; font-size: 14px; font-weight: 700; font-family: monospace; background: #ffffff; padding: 5px 10px; border-radius: 4px;">${quote.quoteNumber}</td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- Nota importante -->
+                  <div style="margin: 30px 0; padding: 20px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0 0 10px; color: #1e40af; font-size: 14px; font-weight: 700;">📝 Importante</p>
+                    <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.7;">
+                      Al realizar el pago por Bizum o Transferencia, indica siempre el número de presupuesto <strong>${quote.quoteNumber}</strong> en el concepto para que podamos identificar tu pago.
+                    </p>
+                  </div>
+
+                  <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+                    ¿Alguna duda? <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">Contáctanos</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                    © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
+                  </p>
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                    <a href="https://www.loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">www.loviprintdtf.es</a>
+                    •
+                    <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none;">info@loviprintdtf.es</a>
                   </p>
                 </td>
               </tr>

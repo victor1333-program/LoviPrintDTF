@@ -806,15 +806,24 @@ export default function ProductDetailPage() {
                             <p className="text-xs text-orange-800 mb-3">
                               No te preocupes, nuestro equipo te ayudará a calcular la cantidad exacta según tus diseños
                             </p>
-                            <a
-                              href="https://wa.me/34614040296?text=Hola,%20necesito%20ayuda%20para%20calcular%20los%20metros%20de%20mi%20pedido%20DTF"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition shadow-sm"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              Contáctanos por WhatsApp
-                            </a>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Button
+                                onClick={() => router.push('/solicitar-presupuesto')}
+                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition shadow-sm"
+                              >
+                                <FileText className="h-4 w-4" />
+                                Solicitar Presupuesto
+                              </Button>
+                              <a
+                                href="https://wa.me/34614040296?text=Hola,%20necesito%20ayuda%20para%20calcular%20los%20metros%20de%20mi%20pedido%20DTF"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition shadow-sm"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                WhatsApp
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>

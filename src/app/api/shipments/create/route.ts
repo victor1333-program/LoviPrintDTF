@@ -17,10 +17,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Order ID requerido' }, { status: 400 })
     }
 
-    // Obtener el pedido
+    // Obtener el pedido con método de envío
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { shipment: true }
+      include: {
+        shipment: true,
+        shippingMethod: true
+      }
     })
 
     if (!order) {
@@ -75,6 +78,10 @@ export async function POST(request: NextRequest) {
       return countryMap[countryUpper] || 'ES'
     }
 
+    // Obtener configuración de servicio GLS del método de envío
+    const glsServiceCode = order.shippingMethod?.glsServiceCode || '1' // Courier por defecto
+    const glsTimeFrame = order.shippingMethod?.glsTimeFrame || '19' // Express 19h por defecto
+
     // Crear envío en GLS
     const glsResponse = await glsService.createShipment({
       orderId: order.id,
@@ -87,8 +94,28 @@ export async function POST(request: NextRequest) {
       recipientEmail: order.customerEmail,
       weight: 1.0,
       packages: 1,
-      notes: order.notes || undefined
+      notes: order.notes || undefined,
+      service: glsServiceCode, // Usar servicio configurado
+      timeFrame: glsTimeFrame // Usar franja horaria configurada
     })
+
+    // Determinar nombre del servicio según configuración
+    let serviceName = 'GLS Courier'
+    if (glsServiceCode === '1') {
+      if (glsTimeFrame === '3') {
+        serviceName = 'GLS Express 14h'
+      } else if (glsTimeFrame === '19') {
+        serviceName = 'GLS Express 19h'
+      } else if (glsTimeFrame === '2') {
+        serviceName = 'GLS Express 10h'
+      } else {
+        serviceName = 'GLS Courier'
+      }
+    } else if (glsServiceCode === '96') {
+      serviceName = 'GLS BusinessParcel'
+    } else if (glsServiceCode === '74') {
+      serviceName = 'GLS EuroBusinessParcel'
+    }
 
     // Crear registro de envío en la base de datos
     const shipment = await prisma.shipment.create({
@@ -98,6 +125,7 @@ export async function POST(request: NextRequest) {
         trackingNumber: glsResponse.trackingNumber,
         status: 'CREATED',
         carrier: 'GLS',
+        serviceName: serviceName,
         recipientName: order.customerName,
         recipientAddress: address.street || address.address || '',
         recipientCity: address.city || '',
