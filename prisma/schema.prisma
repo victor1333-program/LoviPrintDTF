@@ -250,6 +250,7 @@ model Voucher {
   user    User?    @relation(fields: [userId], references: [id])
   product Product? @relation(fields: [productId], references: [id])
   orders  Order[]
+  quotes  Quote[]
 
   @@index([code])
   @@index([slug])
@@ -369,6 +370,7 @@ model Order {
   pointsUsed        Int           @default(0) // Puntos canjeados en este pedido
   pointsDiscount    Decimal       @default(0) @db.Decimal(10, 2) // Descuento en € por puntos
   isVoucherPurchase Boolean       @default(false) // true si es compra de bono
+  taxExempt         Boolean       @default(false) // Sin IVA (exportación/intracomunitario)
   status            OrderStatus   @default(PENDING)
   paymentStatus     PaymentStatus @default(PENDING)
   paymentMethod     String?
@@ -484,9 +486,16 @@ model Quote {
   adminNotes    String? @db.Text // Notas internas del admin
 
   // Pago
-  paymentMethod   String? // "STRIPE" | "BIZUM" | "TRANSFER"
+  paymentMethod   String? // "STRIPE" | "BIZUM" | "TRANSFER" | "VOUCHER"
   stripePaymentId String? // ID del pago en Stripe
   paymentLinkUrl  String? // URL del Payment Link de Stripe
+
+  // Bono
+  voucherId  String?  // ID del bono usado para pagar
+  useVoucher Boolean  @default(false) // Si se debe usar el bono del cliente
+
+  // Impuestos
+  taxExempt Boolean @default(false) // Sin IVA (exportación/intracomunitario)
 
   // Dirección de envío
   shippingAddress Json? // Dirección completa de envío
@@ -506,6 +515,7 @@ model Quote {
   user           User?           @relation(fields: [userId], references: [id])
   shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
   order          Order?          @relation(fields: [orderId], references: [id])
+  voucher        Voucher?        @relation(fields: [voucherId], references: [id])
 
   @@index([quoteNumber])
   @@index([userId])

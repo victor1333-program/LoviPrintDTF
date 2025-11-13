@@ -23,6 +23,7 @@ interface Quote {
   id: string
   quoteNumber: string
   status: string
+  userId: string | null
   estimatedMeters: number | null
   pricePerMeter: number | null
   estimatedTotal: number | null
@@ -32,6 +33,8 @@ interface Quote {
   paymentMethod: string | null
   paymentLinkUrl: string | null
   orderId: string | null
+  useVoucher: boolean
+  taxExempt: boolean
 }
 
 export default function QuoteActions({ quote }: { quote: Quote }) {
@@ -49,10 +52,14 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
     isPriority: quote.isPriority || false,
     shippingMethodId: '',
     adminNotes: '',
+    taxExempt: quote.taxExempt || false,
+    useVoucher: quote.useVoucher || false,
   })
 
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [calculatedPrice, setCalculatedPrice] = useState<any>(null)
+  const [activeVouchers, setActiveVouchers] = useState<any[]>([])
+  const [loadingVouchers, setLoadingVouchers] = useState(false)
 
   // Cargar métodos de envío
   useEffect(() => {
@@ -70,6 +77,29 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
       })
       .catch(err => console.error('Error loading shipping methods:', err))
   }, [])
+
+  // Cargar bonos activos del usuario
+  useEffect(() => {
+    if (!quote.userId) return
+
+    setLoadingVouchers(true)
+    fetch(`/api/user/vouchers?userId=${quote.userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.vouchers) {
+          // Filtrar solo bonos activos con metros disponibles
+          const active = data.vouchers.filter((v: any) =>
+            v.isActive &&
+            v.type === 'METERS' &&
+            parseFloat(v.remainingMeters) > 0 &&
+            (!v.expiresAt || new Date(v.expiresAt) > new Date())
+          )
+          setActiveVouchers(active)
+        }
+      })
+      .catch(err => console.error('Error loading vouchers:', err))
+      .finally(() => setLoadingVouchers(false))
+  }, [quote.userId])
 
   const handleQuoteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -101,6 +131,8 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
           isPriority: quoteForm.isPriority,
           shippingMethodId: quoteForm.shippingMethodId || null,
           adminNotes: quoteForm.adminNotes || null,
+          taxExempt: quoteForm.taxExempt,
+          useVoucher: quoteForm.useVoucher,
         }),
       })
 
@@ -110,10 +142,20 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
         throw new Error(data.error || 'Error al cotizar')
       }
 
-      toast.success('Presupuesto cotizado correctamente')
-      setShowQuoteForm(false)
-      setCalculatedPrice(data.calculation)
-      router.refresh()
+      // Si se usó un bono, se convirtió automáticamente a pedido
+      if (data.order && data.voucherUsed) {
+        toast.success(
+          `¡Bono usado exitosamente! Se descontaron ${data.voucherUsed.metersDeducted}m. ` +
+          `Pedido ${data.order.orderNumber} creado automáticamente.`
+        )
+        // Redirigir al pedido creado
+        router.push(`/admin/pedidos/${data.order.id}`)
+      } else {
+        toast.success('Presupuesto cotizado correctamente')
+        setShowQuoteForm(false)
+        setCalculatedPrice(data.calculation)
+        router.refresh()
+      }
     } catch (error) {
       console.error('Error submitting quote:', error)
       toast.error(error instanceof Error ? error.message : 'Error al cotizar')
@@ -198,7 +240,7 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
   }
 
   const handleMarkPaid = async () => {
-    if (!confirm('¿Marcar este presupuesto como PAGADO? Esta acción indica que el cliente ya realizó el pago.')) {
+    if (!confirm('¿Marcar este presupuesto como PAGADO?\n\nEsta acción:\n1. Marcará el presupuesto como pagado\n2. Convertirá automáticamente el presupuesto en un pedido confirmado\n3. Te redirigirá al nuevo pedido')) {
       return
     }
 
@@ -221,8 +263,10 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
         throw new Error(data.error || 'Error al marcar como pagado')
       }
 
-      toast.success('Marcado como pagado. Ahora convierte a pedido.')
-      router.refresh()
+      toast.success(`Presupuesto pagado y convertido a pedido ${data.order.orderNumber}`)
+
+      // Redirigir al pedido creado
+      router.push(`/admin/pedidos/${data.order.id}`)
     } catch (error) {
       console.error('Error marking as paid:', error)
       toast.error(error instanceof Error ? error.message : 'Error al marcar como pagado')
@@ -364,6 +408,60 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
           <div>
             {showQuoteForm ? (
               <div className="space-y-4">
+                {/* Card de Bono Activo */}
+                {activeVouchers.length > 0 && (
+                  <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <DollarSign className="w-5 h-5 text-amber-600" />
+                      <p className="font-semibold text-amber-900">🎁 Cliente tiene bono activo</p>
+                    </div>
+                    {activeVouchers.map(voucher => (
+                      <div key={voucher.id} className="mb-3 p-3 bg-white rounded border border-amber-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{voucher.name}</p>
+                            <p className="text-xs text-gray-600">Código: {voucher.code}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-amber-600">{parseFloat(voucher.remainingMeters).toFixed(1)}m</p>
+                            <p className="text-xs text-gray-500">disponibles</p>
+                          </div>
+                        </div>
+                        {voucher.expiresAt && (
+                          <p className="text-xs text-gray-500">
+                            Expira: {new Date(voucher.expiresAt).toLocaleDateString('es-ES')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                    <label className="flex items-center gap-3 p-3 bg-amber-100 rounded-lg cursor-pointer hover:bg-amber-200 transition">
+                      <input
+                        type="checkbox"
+                        name="useVoucher"
+                        checked={quoteForm.useVoucher}
+                        onChange={handleQuoteInputChange}
+                        className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-amber-900">
+                          ✅ Descontar del bono activo (no cobrar al cliente)
+                        </span>
+                        {quoteForm.useVoucher && quoteForm.estimatedMeters && (
+                          <p className="text-xs text-amber-700 mt-1">
+                            Se descontarán {parseFloat(quoteForm.estimatedMeters as string || '0').toFixed(1)}m del bono.
+                            Restantes después: {(parseFloat(activeVouchers[0].remainingMeters) - parseFloat(quoteForm.estimatedMeters as string || '0')).toFixed(1)}m
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                    {quoteForm.useVoucher && quoteForm.estimatedMeters && parseFloat(quoteForm.estimatedMeters as string) > parseFloat(activeVouchers[0].remainingMeters) && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                        ⚠️ Advertencia: Los metros solicitados ({parseFloat(quoteForm.estimatedMeters as string).toFixed(1)}m) superan los disponibles en el bono ({parseFloat(activeVouchers[0].remainingMeters).toFixed(1)}m)
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm font-medium text-blue-900 mb-1">
                     Paso 1: Cotizar presupuesto
@@ -438,6 +536,22 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
                         className="rounded"
                       />
                       <span className="text-sm">Priorización</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Opciones adicionales</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="taxExempt"
+                        checked={quoteForm.taxExempt}
+                        onChange={handleQuoteInputChange}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Sin IVA (exportación/intracomunitario)</span>
                     </label>
                   </div>
                 </div>
@@ -558,18 +672,21 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
           </div>
         )}
 
-        {/* PASO 3: Marcar como pagado (para Bizum) */}
-        {quote.status === 'PAYMENT_SENT' && quote.paymentMethod === 'BIZUM' && (
+        {/* PASO 3: Marcar como pagado (convierte automáticamente a pedido) */}
+        {(quote.status === 'PAYMENT_SENT' || quote.status === 'QUOTED') && !quote.orderId && (
           <div className="space-y-3">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm font-medium text-yellow-900 mb-1">
-                Esperando pago por Bizum
+                💰 Esperando confirmación de pago
               </p>
+              {quote.paymentMethod === 'BIZUM' && (
+                <p className="text-xs text-yellow-700 mb-2">
+                  📱 Bizum: 611066997
+                </p>
+              )}
               <p className="text-xs text-yellow-700">
-                Cuando el cliente pague, márcalo como pagado aquí
-              </p>
-              <p className="text-xs text-yellow-700 mt-2 font-medium">
-                📱 Bizum: 611066997
+                Cuando confirmes que recibiste el pago (Bizum o Transferencia),
+                marca el presupuesto como pagado. Se convertirá automáticamente en pedido.
               </p>
             </div>
 
@@ -586,42 +703,13 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Marcar como Pagado
+                  Confirmar Pago y Crear Pedido
                 </>
               )}
             </Button>
-          </div>
-        )}
-
-        {/* PASO 4: Convertir a pedido (si está pagado) */}
-        {quote.status === 'PAID' && !quote.orderId && (
-          <div className="space-y-3">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-green-900 mb-1">
-                ✅ Presupuesto pagado
-              </p>
-              <p className="text-xs text-green-700">
-                Ahora puedes convertirlo en pedido oficial
-              </p>
-            </div>
-
-            <Button
-              onClick={handleConvertToOrder}
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Convirtiendo...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Convertir a Pedido
-                </>
-              )}
-            </Button>
+            <p className="text-xs text-center text-gray-500">
+              Esta acción marcará como pagado y creará el pedido automáticamente
+            </p>
           </div>
         )}
 

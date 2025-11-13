@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendOrderStatusUpdateEmail, sendAdminOrderNotification } from '@/lib/email'
 import { calculatePointsEarned, calculateTier } from '@/lib/loyalty'
+import { auth } from '@/auth'
 
 export async function GET(
   request: NextRequest,
@@ -315,6 +316,116 @@ export async function PATCH(
     console.error('Error al actualizar pedido:', error)
     return NextResponse.json(
       { error: 'Error al actualizar el pedido' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verificar autenticación y permisos de admin
+    const session = await auth()
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'No autorizado. Solo administradores.' },
+        { status: 401 }
+      )
+    }
+
+    const { id } = await params
+
+    // Buscar el pedido
+    let order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        shipment: true,
+        invoice: true,
+      },
+    })
+
+    if (!order) {
+      // Intentar buscar por orderNumber
+      order = await prisma.order.findUnique({
+        where: { orderNumber: id },
+        include: {
+          items: true,
+          shipment: true,
+          invoice: true,
+        },
+      })
+    }
+
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Pedido no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Verificar que el pedido pueda ser eliminado
+    // Solo permitir eliminar pedidos en ciertos estados
+    const deletableStatuses = ['PENDING', 'CANCELLED']
+    if (!deletableStatuses.includes(order.status)) {
+      return NextResponse.json(
+        {
+          error: `No se puede eliminar un pedido en estado "${order.status}". Solo se pueden eliminar pedidos pendientes o cancelados.`,
+          suggestion: 'Considere cancelar el pedido primero antes de eliminarlo.'
+        },
+        { status: 400 }
+      )
+    }
+
+    // Eliminar en una transacción
+    await prisma.$transaction(async (tx) => {
+      // Eliminar items del pedido
+      await tx.orderItem.deleteMany({
+        where: { orderId: order.id },
+      })
+
+      // Eliminar historial de estado
+      await tx.orderStatusHistory.deleteMany({
+        where: { orderId: order.id },
+      })
+
+      // Si tiene envío, eliminar eventos de tracking primero
+      if (order.shipment) {
+        await tx.shipmentTracking.deleteMany({
+          where: { shipmentId: order.shipment.id },
+        })
+
+        await tx.shipment.delete({
+          where: { id: order.shipment.id },
+        })
+      }
+
+      // Si tiene factura, eliminarla
+      if (order.invoice) {
+        await tx.invoice.delete({
+          where: { id: order.invoice.id },
+        })
+      }
+
+      // Finalmente, eliminar el pedido
+      await tx.order.delete({
+        where: { id: order.id },
+      })
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: `Pedido ${order.orderNumber} eliminado correctamente`,
+    })
+  } catch (error) {
+    console.error('Error al eliminar pedido:', error)
+    return NextResponse.json(
+      {
+        error: 'Error al eliminar el pedido',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      },
       { status: 500 }
     )
   }

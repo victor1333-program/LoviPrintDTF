@@ -206,7 +206,10 @@ export default function PedidoDetailPage() {
           </Card>
 
           {/* Extras Seleccionados */}
-          {order.items && order.items.some((item: any) => item.customizations?.extras) && (
+          {order.items && order.items.some((item: any) => {
+            const customizations = item.customizations
+            return customizations && (customizations.cutting || customizations.layout || customizations.priority || customizations.extras)
+          }) && (
             <Card className="border-2 border-orange-200 bg-orange-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-orange-900">
@@ -216,44 +219,87 @@ export default function PedidoDetailPage() {
               </CardHeader>
               <CardContent>
                 {order.items.map((item: any, index: number) => {
-                  if (!item.customizations?.extras) return null
+                  const customizations = item.customizations
+                  if (!customizations) return null
+
+                  // Verificar formato nuevo (desde presupuestos) o formato antiguo (desde carrito)
+                  const hasCutting = customizations.cutting && customizations.cuttingPrice
+                  const hasLayout = customizations.layout && customizations.layoutPrice
+                  const hasPriority = customizations.priority && customizations.priorityPrice
+                  const hasOldExtras = customizations.extras
+
+                  if (!hasCutting && !hasLayout && !hasPriority && !hasOldExtras) return null
 
                   return (
                     <div key={index} className="mb-4 last:mb-0">
                       <p className="font-semibold text-sm text-gray-700 mb-2">{item.productName}</p>
                       <div className="space-y-2 pl-4">
-                        {item.customizations.extras.prioritize && (
+                        {/* Formato nuevo: desde presupuestos */}
+                        {hasPriority && (
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="h-4 w-4 text-orange-600" />
-                            <span className="font-medium">Priorizar mi Pedido</span>
+                            <span className="font-medium">⚡ Producción Prioritaria</span>
                             <span className="text-orange-700">
-                              (+{formatCurrency(item.customizations.extras.prioritize.price)})
+                              (+{formatCurrency(customizations.priorityPrice)})
                             </span>
                           </div>
                         )}
-                        {item.customizations.extras.layout && (
+                        {hasLayout && (
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">Maquetación</span>
+                            <span className="font-medium">📐 Maquetación</span>
                             <span className="text-blue-700">
-                              (+{formatCurrency(item.customizations.extras.layout.price)})
+                              (+{formatCurrency(customizations.layoutPrice)})
                             </span>
                           </div>
                         )}
-                        {item.customizations.extras.cutting && (
+                        {hasCutting && (
                           <div className="flex items-center gap-2 text-sm">
                             <Check className="h-4 w-4 text-purple-600" />
-                            <span className="font-medium">Servicio de Corte</span>
+                            <span className="font-medium">✂️ Corte y Perfilado</span>
                             <span className="text-purple-700">
-                              (+{formatCurrency(item.customizations.extras.cutting.price)})
+                              (+{formatCurrency(customizations.cuttingPrice)})
                             </span>
                           </div>
                         )}
+
+                        {/* Formato antiguo: desde carrito */}
+                        {hasOldExtras && (
+                          <>
+                            {customizations.extras.prioritize && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Check className="h-4 w-4 text-orange-600" />
+                                <span className="font-medium">Priorizar mi Pedido</span>
+                                <span className="text-orange-700">
+                                  (+{formatCurrency(customizations.extras.prioritize.price)})
+                                </span>
+                              </div>
+                            )}
+                            {customizations.extras.layout && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Check className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium">Maquetación</span>
+                                <span className="text-blue-700">
+                                  (+{formatCurrency(customizations.extras.layout.price)})
+                                </span>
+                              </div>
+                            )}
+                            {customizations.extras.cutting && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Check className="h-4 w-4 text-purple-600" />
+                                <span className="font-medium">Servicio de Corte</span>
+                                <span className="text-purple-700">
+                                  (+{formatCurrency(customizations.extras.cutting.price)})
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
-                      {item.customizations.extrasTotal && (
+                      {customizations.extrasTotal && (
                         <div className="mt-2 pt-2 border-t border-orange-200">
                           <p className="text-sm font-bold text-orange-900">
-                            Total extras: {formatCurrency(item.customizations.extrasTotal)}
+                            Total extras: {formatCurrency(customizations.extrasTotal)}
                           </p>
                         </div>
                       )}

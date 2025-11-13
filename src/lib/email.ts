@@ -215,11 +215,36 @@ export async function sendAdminQuoteNotification(quote: any) {
 
 // Templates HTML para emails
 function generateOrderConfirmationHTML(order: any): string {
-  const itemsHTML = order.items?.map((item: any) => `
+  const itemsHTML = order.items?.map((item: any) => {
+    // Generar HTML para los extras si existen
+    let extrasHTML = ''
+    if (item.customizations) {
+      const customizations = typeof item.customizations === 'string'
+        ? JSON.parse(item.customizations)
+        : item.customizations
+
+      const extras = []
+      if (customizations.cutting && customizations.cuttingPrice) {
+        extras.push(`✂️ Corte y perfilado: ${parseFloat(customizations.cuttingPrice).toFixed(2)}€`)
+      }
+      if (customizations.layout && customizations.layoutPrice) {
+        extras.push(`📐 Maquetación: ${parseFloat(customizations.layoutPrice).toFixed(2)}€`)
+      }
+      if (customizations.priority && customizations.priorityPrice) {
+        extras.push(`⚡ Producción prioritaria: ${parseFloat(customizations.priorityPrice).toFixed(2)}€`)
+      }
+
+      if (extras.length > 0) {
+        extrasHTML = `<br><span style="color: #6b7280; font-size: 12px; display: block; margin-top: 5px;">${extras.join('<br>')}</span>`
+      }
+    }
+
+    return `
     <tr>
       <td style="padding: 15px 10px; border-bottom: 1px solid #e5e7eb; color: #111827; font-size: 14px;">
         <strong>${item.productName}</strong>
         ${item.fileName ? `<br><span style="color: #6b7280; font-size: 12px;">📎 ${item.fileName}</span>` : ''}
+        ${extrasHTML}
       </td>
       <td style="padding: 15px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #374151; font-size: 14px;">
         ${item.quantity} ${item.product?.unit || 'ud'}
@@ -231,7 +256,8 @@ function generateOrderConfirmationHTML(order: any): string {
         ${parseFloat(item.subtotal).toFixed(2)}€
       </td>
     </tr>
-  `).join('') || ''
+    `
+  }).join('') || ''
 
   return `
     <!DOCTYPE html>
@@ -300,10 +326,12 @@ function generateOrderConfirmationHTML(order: any): string {
                             <td align="right" style="padding: 8px 0; color: #059669; font-size: 14px; font-weight: 700;">-${parseFloat(order.discountAmount).toFixed(2)}€</td>
                           </tr>
                           ` : ''}
+                          ${!order.taxExempt ? `
                           <tr>
                             <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">IVA (21%):</td>
                             <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${parseFloat(order.taxAmount).toFixed(2)}€</td>
                           </tr>
+                          ` : ''}
                           <tr>
                             <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Envío:</td>
                             <td align="right" style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600;">${parseFloat(order.shippingCost).toFixed(2)}€</td>
@@ -1468,7 +1496,7 @@ function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): st
 
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                <td style="background-color: #667eea; padding: 40px 30px; text-align: center;">
                   <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">¡Tu presupuesto está listo!</h1>
                   <p style="margin: 10px 0 0; color: #ffffff; font-size: 18px; font-weight: 600;">Presupuesto #${quote.quoteNumber}</p>
                 </td>
@@ -1485,7 +1513,7 @@ function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): st
                   </p>
 
                   <!-- Desglose Completo del Presupuesto -->
-                  <div style="margin: 30px 0; padding: 25px; background: linear-gradient(to right, #f9fafb, #f3f4f6); border-radius: 12px; border: 2px solid #e5e7eb;">
+                  <div style="margin: 30px 0; padding: 25px; background-color: #f3f4f6; border-radius: 12px; border: 2px solid #e5e7eb;">
                     <h3 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700;">📋 Cotización</h3>
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
                       <tr>
@@ -1532,13 +1560,15 @@ function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): st
                       ` : ''}
                       
                       <tr>
-                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Subtotal</td>
-                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e5e7eb;">${formatCurrency(Number(quote.subtotal))}</td>
+                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: ${quote.taxExempt ? '2px solid #667eea' : '1px solid #e5e7eb'};">Subtotal</td>
+                        <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: ${quote.taxExempt ? '2px solid #667eea' : '1px solid #e5e7eb'};">${formatCurrency(Number(quote.subtotal))}</td>
                       </tr>
+                      ${!quote.taxExempt ? `
                       <tr>
                         <td style="padding: 10px 0; color: #6b7280; font-size: 14px; border-bottom: 2px solid #667eea;">IVA (21%)</td>
                         <td align="right" style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600; border-bottom: 2px solid #667eea;">${formatCurrency(Number(quote.taxAmount))}</td>
                       </tr>
+                      ` : ''}
                       <tr>
                         <td style="padding: 15px 0 0; color: #111827; font-size: 20px; font-weight: 700;">Total</td>
                         <td align="right" style="padding: 15px 0 0; color: #667eea; font-size: 28px; font-weight: 700;">${formatCurrency(Number(quote.estimatedTotal))}</td>
@@ -1551,19 +1581,21 @@ function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): st
                     <h3 style="margin: 0 0 20px; color: #111827; font-size: 20px; font-weight: 700; text-align: center;">💳 Elige tu forma de pago</h3>
                     
                     <!-- Opción 1: Tarjeta (Stripe) -->
-                    <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
+                    ${quote.paymentLinkUrl ? `
+                    <div style="margin-bottom: 20px; padding: 20px; background-color: #667eea; border-radius: 12px; border: 2px solid #667eea;">
                       <p style="margin: 0 0 15px; color: #ffffff; font-size: 16px; font-weight: 700;">Opción 1: Tarjeta de Crédito/Débito</p>
                       <p style="margin: 0 0 15px; color: #ffffff; font-size: 13px;">Pago seguro con Stripe. Acepta Visa, Mastercard, y más.</p>
                       <div style="text-align: center;">
                         <a href="${quote.paymentLinkUrl}"
-                           style="display: inline-block; padding: 15px 40px; background: #ffffff; color: #667eea; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                           style="display: inline-block; padding: 15px 40px; background-color: #ffffff; color: #667eea; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 3px solid #667eea;">
                           💳 Pagar con Tarjeta
                         </a>
                       </div>
                     </div>
+                    ` : ''}
 
                     <!-- Opción 2: Bizum -->
-                    <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 12px; border: 2px solid #f59e0b;">
+                    <div style="margin-bottom: 20px; padding: 20px; background-color: #fef3c7; border-radius: 12px; border: 2px solid #f59e0b;">
                       <p style="margin: 0 0 10px; color: #92400e; font-size: 16px; font-weight: 700;">Opción 2: Bizum</p>
                       <table width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
@@ -1582,7 +1614,7 @@ function generateQuoteAllPaymentOptionsHTML(quote: any, shippingMethod: any): st
                     </div>
 
                     <!-- Opción 3: Transferencia -->
-                    <div style="padding: 20px; background: linear-gradient(to right, #dbeafe, #bfdbfe); border-radius: 12px; border: 2px solid #3b82f6;">
+                    <div style="padding: 20px; background-color: #dbeafe; border-radius: 12px; border: 2px solid #3b82f6;">
                       <p style="margin: 0 0 10px; color: #1e40af; font-size: 16px; font-weight: 700;">Opción 3: Transferencia Bancaria</p>
                       <table width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>

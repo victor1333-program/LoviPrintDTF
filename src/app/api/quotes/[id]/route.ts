@@ -4,9 +4,10 @@ import { auth } from '@/auth'
 import {
   calculateQuotePrice,
   createStripePaymentLink,
-  getQuoteStatusText
+  getQuoteStatusText,
+  convertQuoteToOrder
 } from '@/lib/quotes'
-import { sendQuotePaymentLinkEmail, sendQuoteBizumEmail } from '@/lib/email'
+import { sendQuotePaymentLinkEmail, sendQuoteBizumEmail, sendQuoteWithAllPaymentOptionsEmail } from '@/lib/email'
 
 /**
  * GET /api/quotes/[id]
@@ -193,9 +194,122 @@ export async function PATCH(
         isPriority: isPriority || false,
         shippingCost,
         taxRate: 0.21, // IVA 21%
+        taxExempt: body.taxExempt || false,
       })
 
-      // Actualizar presupuesto con cotización
+      // Manejar pago con bono si se solicitó
+      if (body.useVoucher && existingQuote.userId) {
+        // Validar que el usuario tenga un bono activo con metros suficientes
+        const activeVoucher = await prisma.voucher.findFirst({
+          where: {
+            userId: existingQuote.userId,
+            isActive: true,
+            type: 'METERS',
+            remainingMeters: {
+              gte: estimatedMeters,
+            },
+            OR: [
+              { expiresAt: null },
+              { expiresAt: { gt: new Date() } },
+            ],
+          },
+          orderBy: {
+            expiresAt: 'asc', // Usar primero el que expira antes
+          },
+        })
+
+        if (!activeVoucher) {
+          return NextResponse.json(
+            { error: 'No hay bonos activos con metros suficientes para este presupuesto' },
+            { status: 400 }
+          )
+        }
+
+        // Descontar metros del bono
+        await prisma.voucher.update({
+          where: { id: activeVoucher.id },
+          data: {
+            remainingMeters: {
+              decrement: estimatedMeters,
+            },
+          },
+        })
+
+        // Actualizar presupuesto como PAGADO con bono
+        const updatedQuote = await prisma.quote.update({
+          where: { id: quoteId },
+          data: {
+            estimatedMeters,
+            pricePerMeter: priceCalc.pricePerMeter,
+            needsCutting: needsCutting || false,
+            cuttingPrice: priceCalc.cuttingPrice || null,
+            needsLayout: needsLayout || false,
+            layoutPrice: priceCalc.layoutPrice || null,
+            isPriority: isPriority || false,
+            priorityPrice: priceCalc.priorityPrice || null,
+            shippingMethodId: shippingMethodId || null,
+            shippingCost: shippingCost || null,
+            subtotal: priceCalc.subtotal,
+            taxAmount: priceCalc.taxAmount,
+            estimatedTotal: priceCalc.total,
+            status: 'PAID',
+            adminNotes: adminNotes || existingQuote.adminNotes,
+            paymentMethod: 'VOUCHER',
+            voucherId: activeVoucher.id,
+            useVoucher: true,
+            taxExempt: body.taxExempt || false,
+          },
+          include: {
+            shippingMethod: true,
+          },
+        })
+
+        // Convertir automáticamente a pedido
+        const conversionResult = await convertQuoteToOrder(quoteId, session.user.id!)
+
+        if (!conversionResult.success) {
+          return NextResponse.json(
+            { error: conversionResult.error || 'Error al convertir a pedido' },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: `Presupuesto pagado con bono y convertido automáticamente a pedido ${conversionResult.order.orderNumber}`,
+          quote: updatedQuote,
+          calculation: priceCalc,
+          order: {
+            id: conversionResult.order.id,
+            orderNumber: conversionResult.order.orderNumber,
+            status: conversionResult.order.status,
+            totalPrice: conversionResult.order.totalPrice,
+          },
+          voucherUsed: {
+            code: activeVoucher.code,
+            metersDeducted: estimatedMeters,
+            remainingMeters: Number(activeVoucher.remainingMeters) - estimatedMeters,
+          },
+        })
+      }
+
+      // Flujo normal: Generar Payment Link de Stripe automáticamente
+      const description = `Presupuesto DTF - ${estimatedMeters}m - ${existingQuote.customerName}`
+
+      const paymentLinkResult = await createStripePaymentLink({
+        quoteId: existingQuote.id,
+        quoteNumber: existingQuote.quoteNumber,
+        amount: priceCalc.total,
+        customerEmail: existingQuote.customerEmail,
+        description,
+      })
+
+      if (!paymentLinkResult.success) {
+        console.error('Error generating payment link:', paymentLinkResult.error)
+        // Continuar aunque falle el payment link
+      }
+
+      // Actualizar presupuesto con cotización y payment link
       const updatedQuote = await prisma.quote.update({
         where: { id: quoteId },
         data: {
@@ -214,17 +328,30 @@ export async function PATCH(
           estimatedTotal: priceCalc.total,
           status: 'QUOTED',
           adminNotes: adminNotes || existingQuote.adminNotes,
+          paymentMethod: paymentLinkResult.success ? 'STRIPE' : null,
+          paymentLinkUrl: paymentLinkResult.success ? paymentLinkResult.url : null,
+          taxExempt: body.taxExempt || false,
+          useVoucher: false,
         },
         include: {
           shippingMethod: true,
         },
       })
 
+      // Enviar email automáticamente con todas las opciones de pago
+      try {
+        await sendQuoteWithAllPaymentOptionsEmail(updatedQuote, updatedQuote.shippingMethod)
+      } catch (emailError) {
+        console.error('Error sending quote email:', emailError)
+        // No fallar la petición si falla el email
+      }
+
       return NextResponse.json({
         success: true,
-        message: 'Presupuesto cotizado exitosamente',
+        message: 'Presupuesto cotizado y enviado al cliente con todas las opciones de pago',
         quote: updatedQuote,
         calculation: priceCalc,
+        paymentLinkGenerated: paymentLinkResult.success,
       })
     }
 
@@ -323,6 +450,7 @@ export async function PATCH(
 
     if (action === 'mark_paid') {
       // ACCIÓN: Marcar como pagado manualmente (para Bizum/Transferencia)
+      // Automáticamente convierte el presupuesto en pedido
 
       if (existingQuote.status === 'PAID') {
         return NextResponse.json(
@@ -338,20 +466,35 @@ export async function PATCH(
         )
       }
 
-      // Actualizar presupuesto
-      const updatedQuote = await prisma.quote.update({
+      // Marcar como pagado primero
+      await prisma.quote.update({
         where: { id: quoteId },
         data: {
           status: 'PAID',
         },
       })
 
-      // TODO: Llamar a función de conversión Quote → Order
+      // Convertir automáticamente a pedido
+      const conversionResult = await convertQuoteToOrder(quoteId, session.user.id!)
+
+      if (!conversionResult.success) {
+        return NextResponse.json(
+          { error: conversionResult.error || 'Error al convertir a pedido' },
+          { status: 500 }
+        )
+      }
 
       return NextResponse.json({
         success: true,
-        message: 'Presupuesto marcado como pagado. Ahora debes convertirlo a pedido.',
-        quote: updatedQuote,
+        message: `Presupuesto marcado como pagado y convertido automáticamente a pedido ${conversionResult.order.orderNumber}`,
+        quote: { id: quoteId, status: 'PAID', orderId: conversionResult.order.id },
+        order: {
+          id: conversionResult.order.id,
+          orderNumber: conversionResult.order.orderNumber,
+          status: conversionResult.order.status,
+          totalPrice: conversionResult.order.totalPrice,
+        },
+        pointsEarned: conversionResult.pointsEarned,
       })
     }
 

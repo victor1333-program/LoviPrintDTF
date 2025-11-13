@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/Button"
-import { Download, Eye, Printer, FileText, RefreshCw } from "lucide-react"
+import { Download, Eye, Printer, FileText, RefreshCw, XCircle, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import toast from "react-hot-toast"
+import { useRouter } from "next/navigation"
 
 interface OrdersTableProps {
   orders: any[]
 }
 
 export default function OrdersTable({ orders }: OrdersTableProps) {
+  const router = useRouter()
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [isPrinting, setIsPrinting] = useState(false)
   const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null)
@@ -19,6 +21,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const [statusModalOpen, setStatusModalOpen] = useState(false)
   const [selectedOrderForStatus, setSelectedOrderForStatus] = useState<any>(null)
   const [newStatus, setNewStatus] = useState<string>('')
+  const [cancellingOrder, setCancellingOrder] = useState<string | null>(null)
+  const [deletingOrder, setDeletingOrder] = useState<string | null>(null)
 
   // Filtrar pedidos que están en estado READY (tienen etiqueta lista)
   const ordersWithLabels = orders.filter(order =>
@@ -143,6 +147,63 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       toast.error(error.message || 'Error al cambiar el estado')
     } finally {
       setChangingStatus(null)
+    }
+  }
+
+  const handleCancelOrder = async (order: any) => {
+    if (!confirm(`¿Cancelar el pedido ${order.orderNumber}?\n\nEsta acción cambiará el estado del pedido a CANCELADO.`)) {
+      return
+    }
+
+    setCancellingOrder(order.id)
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'CANCELLED'
+        })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Error al cancelar el pedido')
+      }
+
+      toast.success('Pedido cancelado correctamente')
+      router.refresh()
+    } catch (error: any) {
+      console.error('Error cancelling order:', error)
+      toast.error(error.message || 'Error al cancelar el pedido')
+    } finally {
+      setCancellingOrder(null)
+    }
+  }
+
+  const handleDeleteOrder = async (order: any) => {
+    if (!confirm(`⚠️ ELIMINAR PEDIDO ${order.orderNumber}\n\nEsta acción es IRREVERSIBLE y eliminará:\n- El pedido y todos sus datos\n- Items del pedido\n- Historial de estados\n- Envío y tracking (si existe)\n- Factura (si existe)\n\n¿Estás seguro de que deseas continuar?`)) {
+      return
+    }
+
+    setDeletingOrder(order.id)
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al eliminar el pedido')
+      }
+
+      toast.success(data.message || 'Pedido eliminado correctamente')
+      router.refresh()
+    } catch (error: any) {
+      console.error('Error deleting order:', error)
+      toast.error(error.message || 'Error al eliminar el pedido')
+    } finally {
+      setDeletingOrder(null)
     }
   }
 
@@ -298,6 +359,40 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                           <RefreshCw className="h-4 w-4" />
                         )}
                       </Button>
+                      {/* Botón de Cancelar */}
+                      {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancelOrder(order)}
+                          disabled={cancellingOrder === order.id}
+                          title="Cancelar pedido"
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          {cancellingOrder === order.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                      {/* Botón de Eliminar - Solo para pedidos PENDING o CANCELLED */}
+                      {(order.status === 'PENDING' || order.status === 'CANCELLED') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteOrder(order)}
+                          disabled={deletingOrder === order.id}
+                          title="Eliminar pedido"
+                          className="border-red-500 text-red-700 hover:bg-red-100"
+                        >
+                          {deletingOrder === order.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
