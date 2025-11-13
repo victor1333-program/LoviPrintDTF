@@ -3,6 +3,7 @@ import { getStripeInstance } from './stripe'
 import { calculateUnitPrice } from './pricing'
 import { Decimal } from '@prisma/client/runtime/library'
 import Stripe from 'stripe'
+import { sendOrderConfirmationEmail } from './email'
 
 /**
  * Genera un número único de presupuesto con formato PRES-YYYY-NNNN
@@ -59,6 +60,7 @@ export interface QuotePriceCalculationParams {
   shippingCost?: number
   // IVA
   taxRate?: number
+  taxExempt?: boolean // Sin IVA (exportación/intracomunitario)
 }
 
 /**
@@ -137,6 +139,7 @@ export function calculateQuotePrice(params: QuotePriceCalculationParams): QuoteP
     isPriority = false,
     shippingCost = 0,
     taxRate = 0.21, // IVA 21% por defecto
+    taxExempt = false, // Sin IVA (exportación/intracomunitario)
   } = params
 
   // 1. Calcular precio por metro según rangos
@@ -156,8 +159,9 @@ export function calculateQuotePrice(params: QuotePriceCalculationParams): QuoteP
   const FREE_SHIPPING_THRESHOLD = 100
   const finalShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : shippingCost
 
-  // 5. IVA
-  const taxAmount = subtotal * taxRate
+  // 5. IVA (0% si está exento)
+  const effectiveTaxRate = taxExempt ? 0 : taxRate
+  const taxAmount = subtotal * effectiveTaxRate
 
   // 6. Total
   const total = subtotal + taxAmount + finalShippingCost
@@ -384,4 +388,267 @@ export function getQuoteStatusColor(status: string): string {
   }
 
   return statusColors[status] || 'gray'
+}
+
+/**
+ * Convierte un presupuesto pagado en un pedido oficial
+ * @param quoteId - ID del presupuesto a convertir
+ * @param adminUserId - ID del admin que realiza la conversión
+ * @returns El pedido creado con información adicional
+ */
+export async function convertQuoteToOrder(quoteId: string, adminUserId: string): Promise<{
+  success: boolean
+  order?: any
+  pointsEarned?: number
+  error?: string
+}> {
+  try {
+    // 1. Verificar que el presupuesto existe y está pagado
+    const quote = await prisma.quote.findUnique({
+      where: { id: quoteId },
+      include: {
+        user: true,
+        shippingMethod: true,
+      },
+    })
+
+    if (!quote) {
+      return { success: false, error: 'Presupuesto no encontrado' }
+    }
+
+    if (quote.status !== 'PAID') {
+      return { success: false, error: 'El presupuesto debe estar pagado para convertirlo a pedido' }
+    }
+
+    if (quote.orderId) {
+      return { success: false, error: 'Este presupuesto ya fue convertido a pedido' }
+    }
+
+    if (!quote.estimatedMeters || !quote.estimatedTotal) {
+      return { success: false, error: 'El presupuesto no tiene valores calculados' }
+    }
+
+    // 2. Buscar el producto DTF
+    const dtfProduct = await prisma.product.findFirst({
+      where: { productType: 'DTF_TEXTILE', isActive: true },
+    })
+
+    if (!dtfProduct) {
+      return { success: false, error: 'Producto DTF no encontrado' }
+    }
+
+    // 3. Generar número de pedido
+    const { generateOrderNumber } = await import('./utils')
+    const orderNumber = generateOrderNumber(false)
+
+    // 4. Determinar si se pagó con voucher
+    const isPaidWithVoucher = quote.paymentMethod === 'VOUCHER' && quote.voucherId
+
+    // 5. Calcular puntos de fidelización si el usuario está registrado
+    // (Si se pagó con bono, no se otorgan puntos porque no gastó dinero real)
+    let pointsEarned = 0
+    let loyaltyTier = 'BRONZE'
+
+    if (quote.userId && !isPaidWithVoucher) {
+      const user = await prisma.user.findUnique({
+        where: { id: quote.userId },
+        select: {
+          loyaltyTier: true,
+          totalSpent: true,
+        },
+      })
+
+      if (user) {
+        loyaltyTier = user.loyaltyTier
+
+        // Calcular puntos según tier
+        const pointMultipliers: Record<string, number> = {
+          BRONZE: 1.0,
+          SILVER: 1.25,
+          GOLD: 1.5,
+          PLATINUM: 2.0,
+        }
+
+        const multiplier = pointMultipliers[loyaltyTier] || 1.0
+        const pointsPerEuro = 1 // 1 punto por euro gastado (configurable)
+
+        pointsEarned = Math.floor(Number(quote.estimatedTotal) * pointsPerEuro * multiplier)
+      }
+    }
+
+    // 6. Crear el pedido en una transacción
+    const order = await prisma.$transaction(async (tx) => {
+      // Crear Order
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          userId: quote.userId,
+          customerName: quote.customerName,
+          customerEmail: quote.customerEmail,
+          customerPhone: quote.customerPhone,
+          voucherId: isPaidWithVoucher ? quote.voucherId : null,
+          shippingMethodId: quote.shippingMethodId,
+          // Si se pagó con bono, todos los precios deben ser 0
+          subtotal: isPaidWithVoucher ? 0 : Number(quote.subtotal),
+          discountAmount: 0,
+          taxAmount: isPaidWithVoucher ? 0 : Number(quote.taxAmount),
+          shippingCost: isPaidWithVoucher ? 0 : Number(quote.shippingCost || 0),
+          totalPrice: isPaidWithVoucher ? 0 : Number(quote.estimatedTotal),
+          metersOrdered: Number(quote.estimatedMeters),
+          pricePerMeter: Number(quote.pricePerMeter),
+          designFileUrl: quote.designFileUrl,
+          designFileName: quote.designFileName,
+          pointsEarned,
+          pointsUsed: 0,
+          pointsDiscount: 0,
+          taxExempt: quote.taxExempt || false,
+          status: 'CONFIRMED', // Pedido confirmado porque ya está pagado
+          paymentStatus: 'PAID',
+          paymentMethod: quote.paymentMethod || 'MANUAL',
+          stripePaymentId: quote.stripePaymentId,
+          notes: quote.customerNotes,
+          adminNotes: quote.adminNotes,
+          shippingAddress: quote.shippingAddress as any,
+        },
+      })
+
+      // Crear OrderItem para los metros de DTF
+      await tx.orderItem.create({
+        data: {
+          orderId: newOrder.id,
+          productId: dtfProduct.id,
+          productName: `Impresión DTF - ${quote.estimatedMeters}m`,
+          quantity: Number(quote.estimatedMeters),
+          unitPrice: Number(quote.pricePerMeter),
+          subtotal: Number(quote.subtotal),
+          fileUrl: quote.designFileUrl,
+          fileName: quote.designFileName,
+          fileMetadata: (quote.fileMetadata || null) as any,
+          customizations: {
+            cutting: quote.needsCutting,
+            cuttingPrice: quote.cuttingPrice ? Number(quote.cuttingPrice) : null,
+            layout: quote.needsLayout,
+            layoutPrice: quote.layoutPrice ? Number(quote.layoutPrice) : null,
+            priority: quote.isPriority,
+            priorityPrice: quote.priorityPrice ? Number(quote.priorityPrice) : null,
+          },
+        },
+      })
+
+      // Crear historial de estado inicial
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: newOrder.id,
+          status: 'CONFIRMED',
+          notes: `Pedido creado desde presupuesto ${quote.quoteNumber}`,
+          createdBy: adminUserId,
+        },
+      })
+
+      // Actualizar Quote con el orderId
+      await tx.quote.update({
+        where: { id: quoteId },
+        data: {
+          orderId: newOrder.id,
+          convertedAt: new Date(),
+        },
+      })
+
+      // Si hay usuario, actualizar sus puntos y total gastado
+      if (quote.userId && pointsEarned > 0) {
+        const currentUser = await tx.user.findUnique({
+          where: { id: quote.userId },
+          select: {
+            loyaltyPoints: true,
+            totalSpent: true,
+          },
+        })
+
+        if (currentUser) {
+          const newTotalSpent = Number(currentUser.totalSpent) + Number(quote.estimatedTotal)
+          const newLoyaltyPoints = currentUser.loyaltyPoints + pointsEarned
+
+          // Determinar nuevo tier según gasto total
+          let newTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' = 'BRONZE'
+          if (newTotalSpent >= 1000) newTier = 'PLATINUM'
+          else if (newTotalSpent >= 500) newTier = 'GOLD'
+          else if (newTotalSpent >= 200) newTier = 'SILVER'
+
+          await tx.user.update({
+            where: { id: quote.userId },
+            data: {
+              loyaltyPoints: newLoyaltyPoints,
+              totalSpent: newTotalSpent,
+              loyaltyTier: newTier,
+            },
+          })
+
+          // Registrar transacción de puntos si existe LoyaltyPoints
+          const loyaltyRecord = await tx.loyaltyPoints.findUnique({
+            where: { userId: quote.userId },
+          })
+
+          if (loyaltyRecord) {
+            await tx.loyaltyPoints.update({
+              where: { userId: quote.userId },
+              data: {
+                totalPoints: { increment: pointsEarned },
+                availablePoints: { increment: pointsEarned },
+                lifetimePoints: { increment: pointsEarned },
+                tier: newTier,
+              },
+            })
+
+            await tx.pointTransaction.create({
+              data: {
+                pointsId: loyaltyRecord.id,
+                points: pointsEarned,
+                type: 'earned',
+                description: `Puntos ganados por pedido ${orderNumber} (desde presupuesto ${quote.quoteNumber})`,
+                orderId: newOrder.id,
+              },
+            })
+          }
+        }
+      }
+
+      return newOrder
+    })
+
+    // 7. Obtener el pedido completo con sus items para el email
+    const orderWithItems = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        shippingMethod: true,
+        user: true,
+      },
+    })
+
+    // 8. Enviar email de confirmación de pedido al cliente
+    try {
+      if (orderWithItems) {
+        await sendOrderConfirmationEmail(orderWithItems)
+      }
+    } catch (emailError) {
+      console.error('Error sending order confirmation email:', emailError)
+      // No fallar la conversión si falla el email
+    }
+
+    return {
+      success: true,
+      order,
+      pointsEarned,
+    }
+  } catch (error) {
+    console.error('Error converting quote to order:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido al convertir',
+    }
+  }
 }
