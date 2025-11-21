@@ -111,7 +111,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Bonos prepagados sin caducidad.",
               "@id": "https://loviprintdtf.es",
               "url": "https://loviprintdtf.es",
-              "telephone": "+34614040296",
+              "telephone": "+34614051291",
               "email": "info@loviprintdtf.es",
               "address": {
                 "@type": "PostalAddress",
@@ -167,7 +167,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               "logo": "https://loviprintdtf.es/logo.png",
               "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Especialistas en impresión DTF profesional desde Hellín, Albacete.",
               "email": "info@loviprintdtf.es",
-              "telephone": "+34614040296",
+              "telephone": "+34614051291",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "Calle Antonio López del Oro 7",

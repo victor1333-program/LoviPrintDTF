@@ -29,7 +29,8 @@ export async function GET() {
             product: true
           }
         },
-        user: true
+        user: true,
+        shippingMethod: true
       },
       orderBy: {
         createdAt: 'asc' // Ordenar por fecha de entrada
@@ -59,6 +60,10 @@ export async function GET() {
         customerEmail: order.customerEmail,
         status: order.status,
         createdAt: order.createdAt.toISOString(),
+        shippingMethod: order.shippingMethod ? {
+          id: order.shippingMethod.id,
+          name: order.shippingMethod.name
+        } : null,
         items: order.items.map(item => ({
           id: item.id,
           productName: item.productName,

@@ -68,8 +68,8 @@ export default function ContactoPage() {
     {
       icon: <Phone className="w-6 h-6" />,
       title: 'Teléfono',
-      value: '+34 614 04 02 96',
-      link: 'tel:+34614040296',
+      value: '+34 614 051 291',
+      link: 'tel:+34614051291',
       color: 'from-green-500 to-green-600'
     },
     {
@@ -82,7 +82,7 @@ export default function ContactoPage() {
     {
       icon: <Clock className="w-6 h-6" />,
       title: 'Horario',
-      value: 'Lun-Vie: 9:00-13:00 y 17:00-20:00',
+      value: 'Lun-Vie: 10:00-13:30 y 17:30-20:30 | Sáb: 10:00-13:30',
       link: null,
       color: 'from-purple-500 to-purple-600'
     }
@@ -294,40 +294,11 @@ export default function ContactoPage() {
                   </p>
                   <Button
                     className="bg-green-500 hover:bg-green-600"
-                    onClick={() => window.open('https://wa.me/34614040296', '_blank')}
+                    onClick={() => window.open('https://wa.me/34614051291', '_blank')}
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
                     Abrir WhatsApp
                   </Button>
-                </CardContent>
-              </Card>
-
-              {/* Location Map */}
-              <Card>
-                <CardContent className="p-0">
-                  <div className="aspect-video rounded-lg overflow-hidden">
-                    <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3118.789!2d-1.6984334!3d38.5085122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd642fa3cf6f90ad%3A0xdfb28a45482e45a!2sC.%20de%20Antonio%20L%C3%B3pez%20del%20Oro%2C%207%2C%2002400%20Hell%C3%ADn%2C%20Albacete!5e0!3m2!1ses!2ses!4v1697000000000!5m2!1ses!2ses"
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Ubicación de LoviPrintDTF"
-                    ></iframe>
-                  </div>
-                  <div className="p-4 bg-gray-50 text-center">
-                    <a
-                      href="https://maps.app.goo.gl/xFaTPNsGpKBAb6Ku6"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-orange-600 hover:underline text-sm font-medium inline-flex items-center gap-2"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Abrir en Google Maps
-                    </a>
-                  </div>
                 </CardContent>
               </Card>
             </div>

@@ -52,7 +52,7 @@ La integración completa con GLS ha sido implementada exitosamente. El sistema a
    - Ciudad: HELLIN
    - Código Postal: 02400
    - País: ES
-   - Teléfono: 614040296
+   - Teléfono: 614051291
    - Email: info@loviprintdtf.com
 
 🔐 Credenciales GLS:

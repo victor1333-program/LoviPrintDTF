@@ -18,6 +18,10 @@ interface QueueOrder {
   createdAt: string
   items: any[]
   isPrioritized: boolean
+  shippingMethod: {
+    id: string
+    name: string
+  } | null
 }
 
 export default function ColaImpresionPage() {
@@ -65,7 +69,7 @@ export default function ColaImpresionPage() {
     }
   }
 
-  const handlePrinted = async (orderId: string) => {
+  const handlePrinted = async (orderId: string, isLocalPickup: boolean) => {
     setProcessingOrder(orderId)
     try {
       const res = await fetch(`/api/admin/print-queue/${orderId}/printed`, {
@@ -73,7 +77,11 @@ export default function ColaImpresionPage() {
       })
 
       if (res.ok) {
-        toast.success('Pedido marcado como impreso - Etiqueta GLS generada')
+        if (isLocalPickup) {
+          toast.success('Pedido marcado como impreso - Email de recogida enviado')
+        } else {
+          toast.success('Pedido marcado como impreso - Etiqueta GLS generada')
+        }
         await loadQueue()
       } else {
         const error = await res.json()
@@ -267,11 +275,12 @@ function OrderCard({
 }: {
   order: QueueOrder
   onReceived: (id: string) => void
-  onPrinted: (id: string) => void
+  onPrinted: (id: string, isLocalPickup: boolean) => void
   onDownload: (url: string, name: string) => void
   processing: boolean
 }) {
   const extras = order.items[0]?.customizations?.extras
+  const isLocalPickup = order.shippingMethod?.name?.toLowerCase().includes('recogida')
 
   return (
     <Card className={order.isPrioritized ? 'border-2 border-orange-400 bg-orange-50' : ''}>
@@ -289,6 +298,11 @@ function OrderCard({
               <Badge variant={order.status === 'CONFIRMED' ? 'warning' : 'info'}>
                 {order.status === 'CONFIRMED' ? 'Pendiente' : 'En Producción'}
               </Badge>
+              {isLocalPickup && (
+                <Badge className="bg-purple-600 text-white">
+                  📍 RECOGIDA LOCAL
+                </Badge>
+              )}
             </div>
             <p className="text-gray-600">
               Cliente: <span className="font-semibold">{order.customerName}</span> • {order.customerEmail}
@@ -296,6 +310,11 @@ function OrderCard({
             <p className="text-sm text-gray-500">
               Recibido: {formatDate(new Date(order.createdAt))}
             </p>
+            {order.shippingMethod && (
+              <p className="text-sm text-gray-500">
+                Envío: <span className="font-medium">{order.shippingMethod.name}</span>
+              </p>
+            )}
           </div>
 
           <Link href={`/admin/pedidos/${order.id}`}>
@@ -397,12 +416,15 @@ function OrderCard({
 
           {order.status === 'IN_PRODUCTION' && (
             <Button
-              onClick={() => onPrinted(order.id)}
+              onClick={() => onPrinted(order.id, !!isLocalPickup)}
               disabled={processing}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
               <Printer className="h-4 w-4 mr-2" />
-              {processing ? 'Generando etiqueta...' : 'Marcar como Impreso → Generar Etiqueta GLS'}
+              {processing
+                ? (isLocalPickup ? 'Enviando email...' : 'Generando etiqueta...')
+                : (isLocalPickup ? 'Marcar como Impreso → Listo para Recoger' : 'Marcar como Impreso → Generar Etiqueta GLS')
+              }
             </Button>
           )}
         </div>

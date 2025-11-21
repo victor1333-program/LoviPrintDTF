@@ -127,7 +127,12 @@ export default function ConfiguracionPage() {
 
       if (!res.ok) throw new Error('Error saving settings')
 
-      toast.success('Configuración guardada correctamente')
+      // Mensaje específico para WhatsApp
+      if (activeTab === 'whatsapp') {
+        toast.success('Configuración de WhatsApp guardada. Los cambios se aplicarán automáticamente en 30 segundos.')
+      } else {
+        toast.success('Configuración guardada correctamente')
+      }
       await loadSettings()
     } catch (error) {
       console.error('Error saving settings:', error)

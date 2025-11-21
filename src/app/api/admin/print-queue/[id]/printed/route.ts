@@ -26,12 +26,13 @@ export async function POST(
 
     const { id } = await params
 
-    // Obtener el pedido con su información de envío y método de envío
+    // Obtener el pedido con su información de envío, método de envío e items
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
         shipment: true,
-        shippingMethod: true
+        shippingMethod: true,
+        items: true
       }
     })
 
@@ -39,6 +40,93 @@ export async function POST(
       return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
     }
 
+    // Detectar si es recogida local
+    const isLocalPickup = order.shippingMethod?.name?.toLowerCase().includes('recogida')
+
+    // Si es recogida local, marcar como READY y enviar email específico
+    if (isLocalPickup) {
+      // Actualizar estado del pedido a READY (listo para recoger)
+      const updatedOrder = await prisma.order.update({
+        where: { id },
+        data: {
+          status: 'READY',
+          statusHistory: {
+            create: {
+              status: 'READY',
+              notes: 'Pedido impreso - Listo para recoger en tienda',
+              createdBy: session.user.email || undefined
+            }
+          }
+        }
+      })
+
+      // Formatear items para el email
+      const orderItemsHtml = order.items.map(item => {
+        return `<li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">${item.productName} x ${item.quantity} - ${Number(item.subtotal).toFixed(2)}€</li>`
+      }).join('')
+
+      // Enviar email de "Pedido Listo para Recoger" usando la plantilla
+      try {
+        // Obtener plantilla de la base de datos
+        const template = await prisma.emailTemplate.findFirst({
+          where: {
+            type: 'ORDER_READY_FOR_PICKUP',
+            isActive: true
+          }
+        })
+
+        if (template) {
+          // Importar función de reemplazo de variables
+          const { replaceVariables } = await import('@/types/email-templates')
+
+          // Preparar variables para el email
+          const variables = {
+            customerName: order.customerName,
+            orderNumber: order.orderNumber,
+            orderItems: `<ul style="list-style: none; padding: 0; margin: 0;">${orderItemsHtml}</ul>`,
+            totalPrice: Number(order.totalPrice).toFixed(2)
+          }
+
+          // Reemplazar variables en el contenido
+          const processedSubject = replaceVariables(template.subject, variables)
+          const processedHtml = replaceVariables(template.htmlContent, variables)
+
+          // Enviar email
+          await sendEmail({
+            to: order.customerEmail,
+            subject: processedSubject,
+            html: processedHtml
+          })
+        } else {
+          // Fallback si no existe la plantilla
+          await sendEmail({
+            to: order.customerEmail,
+            subject: `Tu pedido ${order.orderNumber} está listo para recoger`,
+            html: `
+              <h2>¡Tu pedido está listo!</h2>
+              <p>Hola ${order.customerName},</p>
+              <p>Tu pedido <strong>${order.orderNumber}</strong> ya está listo para recoger en nuestra tienda.</p>
+              <p><strong>Dirección:</strong><br>
+              Lovilike - Hellín<br>
+              Calle Antonio Lopez del Oro, 7<br>
+              02400 Hellín, Albacete</p>
+              <p><a href="https://maps.app.goo.gl/VZ7n3FCfmJKZKQUq7">Ver en Google Maps</a></p>
+            `
+          })
+        }
+      } catch (emailError) {
+        console.error('Error enviando email de recogida:', emailError)
+        // No fallar si el email falla
+      }
+
+      return NextResponse.json({
+        success: true,
+        order: updatedOrder,
+        isLocalPickup: true
+      })
+    }
+
+    // Flujo normal para envíos con GLS
     // Verificar que tenga dirección de envío
     if (!order.shippingAddress || typeof order.shippingAddress !== 'object') {
       return NextResponse.json(

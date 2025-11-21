@@ -484,59 +484,6 @@ export default async function HomePage() {
 
       {/* FAQ */}
       <FAQSection />
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold mb-4 text-primary-400">LoviPrintDTF</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Impresión DTF profesional de alta calidad
-              </p>
-              <div className="space-y-2 text-sm text-gray-400">
-                <p>📍 Calle Antonio López del Oro 7</p>
-                <p className="ml-4">Hellín, Albacete</p>
-                <p>📧 info@loviprintdtf.es</p>
-                <p>📞 Por confirmar</p>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Productos</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/productos?category=dtf-textil" className="hover:text-primary-400 transition">DTF Textil</Link></li>
-                <li><Link href="/productos?category=uv-dtf" className="hover:text-primary-400 transition">UV DTF</Link></li>
-                <li><Link href="/productos?category=consumibles" className="hover:text-primary-400 transition">Consumibles</Link></li>
-                <li><Link href="/bonos" className="hover:text-primary-400 transition">Bonos</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Recursos</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/guias" className="hover:text-primary-400 transition">Guías de Diseño</Link></li>
-                <li><Link href="/faq" className="hover:text-primary-400 transition">FAQ</Link></li>
-                <li><Link href="/contacto" className="hover:text-primary-400 transition">Contacto</Link></li>
-                <li><Link href="/blog" className="hover:text-primary-400 transition">Blog</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/terminos" className="hover:text-primary-400 transition">Términos y Condiciones</Link></li>
-                <li><Link href="/privacidad" className="hover:text-primary-400 transition">Política de Privacidad</Link></li>
-                <li><Link href="/envios" className="hover:text-primary-400 transition">Envíos y Devoluciones</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

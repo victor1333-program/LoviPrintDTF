@@ -49,7 +49,14 @@ export function WhatsAppWidget() {
       }
     }
 
+    // Cargar configuración inicial
     loadConfig()
+
+    // Recargar configuración cada 30 segundos para detectar cambios
+    const interval = setInterval(loadConfig, 30000)
+
+    // Limpiar intervalo al desmontar
+    return () => clearInterval(interval)
   }, [])
 
   const handleOpenChat = () => {

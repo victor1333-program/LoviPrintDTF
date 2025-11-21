@@ -266,7 +266,7 @@ export default function EnviosDevolucionesPage() {
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
                   <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
-                  <li><strong>Horario de atención:</strong> Lunes a Viernes, 9:00h - 18:00h</li>
+                  <li><strong>Horario de atención:</strong> Lunes a Viernes, 10:00 - 13:30 y 17:30 - 20:30 | Sábados, 10:00 - 13:30</li>
                 </ul>
               </div>
             </section>

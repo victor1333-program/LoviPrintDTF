@@ -64,6 +64,12 @@ export const EMAIL_TEMPLATE_VARIABLES: Record<EmailTemplateType, EmailVariable[]
     { name: 'orderNumber', description: 'Número de pedido', example: 'ORD-2024-001', required: true },
     { name: 'deliveredAt', description: 'Fecha de entrega', example: '2024-01-25 14:30', required: false },
   ],
+  ORDER_READY_FOR_PICKUP: [
+    { name: 'customerName', description: 'Nombre del cliente', example: 'Juan Pérez', required: true },
+    { name: 'orderNumber', description: 'Número de pedido', example: 'ORD-2024-001', required: true },
+    { name: 'orderItems', description: 'Lista HTML de productos del pedido', example: '<ul><li>Transfer DTF x 5</li></ul>', required: true },
+    { name: 'totalPrice', description: 'Precio total del pedido', example: '125.50', required: true },
+  ],
   VOUCHER_EXPIRING: [
     { name: 'customerName', description: 'Nombre del cliente', example: 'Juan Pérez', required: true },
     { name: 'voucherCode', description: 'Código del bono', example: 'BONO-2024-001', required: true },
@@ -143,6 +149,12 @@ export const EMAIL_TEMPLATE_SAMPLE_DATA: Record<EmailTemplateType, Record<string
     orderNumber: 'ORD-2024-001',
     deliveredAt: '25 de enero de 2024 a las 14:30',
   },
+  ORDER_READY_FOR_PICKUP: {
+    customerName: 'Juan Pérez',
+    orderNumber: 'ORD-2024-001',
+    orderItems: '<ul style="list-style: none; padding: 0;"><li>Transfer DTF x 5 metros - 51.25€</li><li>Servicio de corte incluido</li></ul>',
+    totalPrice: '51.25',
+  },
   VOUCHER_EXPIRING: {
     customerName: 'María González',
     voucherCode: 'BONO-2024-001',
@@ -192,6 +204,7 @@ export const EMAIL_TEMPLATE_TYPE_LABELS: Record<EmailTemplateType, string> = {
   ORDER_STATUS_CHANGE: 'Cambio de Estado del Pedido',
   ORDER_SHIPPED: 'Pedido Enviado',
   ORDER_DELIVERED: 'Pedido Entregado',
+  ORDER_READY_FOR_PICKUP: 'Pedido Listo para Recoger',
   VOUCHER_EXPIRING: 'Bono Próximo a Caducar',
   VOUCHER_ACTIVATED: 'Bono Activado',
   USER_WELCOME: 'Bienvenida de Usuario',

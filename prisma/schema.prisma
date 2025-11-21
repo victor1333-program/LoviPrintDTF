@@ -717,6 +717,7 @@ enum EmailTemplateType {
   ORDER_STATUS_CHANGE // Cambio de estado del pedido
   ORDER_SHIPPED // Pedido enviado
   ORDER_DELIVERED // Pedido entregado
+  ORDER_READY_FOR_PICKUP // Pedido listo para recoger en tienda
   VOUCHER_EXPIRING // Bono próximo a caducar
   VOUCHER_ACTIVATED // Bono activado
   USER_WELCOME // Bienvenida de usuario

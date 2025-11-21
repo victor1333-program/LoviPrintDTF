@@ -740,6 +740,25 @@ export default function ProductDetailPage() {
                         <Upload className="h-4 w-4 inline mr-1" />
                         Subir Diseño *
                       </label>
+
+                      {/* Mensaje informativo sobre tamaño y cantidad */}
+                      {product.slug === 'transfer-dtf' && (
+                        <div className="mb-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-300">
+                          <div className="flex items-start gap-3">
+                            <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-bold text-blue-900 mb-2">
+                                📏 Importante: Formato de archivo
+                              </p>
+                              <p className="text-sm text-blue-800 leading-relaxed">
+                                Suba aquí su <span className="font-semibold">diseño montado en tamaño de metro (100x56cm)</span>.
+                                La cantidad de metros que seleccione arriba determinará cuántas copias de este mismo diseño se imprimirán.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <FileUpload
                         onFileUpload={setUploadedFile}
                         currentFile={uploadedFile}

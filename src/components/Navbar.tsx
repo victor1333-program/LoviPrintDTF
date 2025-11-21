@@ -66,11 +66,11 @@ export function Navbar() {
             <div className="flex items-center justify-center gap-3 text-sm font-medium flex-wrap">
               {/* Teléfono */}
               <a
-                href="tel:+34614040296"
+                href="tel:+34614051291"
                 className="flex items-center gap-1.5 hover:text-orange-100 transition-colors group"
               >
                 <Phone className="w-4 h-4 group-hover:animate-bounce" />
-                <span className="font-semibold">+34 614 04 02 96</span>
+                <span className="font-semibold">+34 614 051 291</span>
               </a>
 
               <span className="hidden sm:inline text-orange-200">•</span>
