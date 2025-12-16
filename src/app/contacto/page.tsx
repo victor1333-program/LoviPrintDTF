@@ -37,8 +37,19 @@ export default function ContactoPage() {
     setLoading(true)
 
     try {
-      // Simulación de envío
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar el mensaje')
+      }
 
       toast.success('¡Mensaje enviado! Te responderemos pronto.')
 
@@ -51,7 +62,7 @@ export default function ContactoPage() {
         message: ''
       })
     } catch (error) {
-      toast.error('Error al enviar el mensaje. Inténtalo de nuevo.')
+      toast.error(error instanceof Error ? error.message : 'Error al enviar el mensaje. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }

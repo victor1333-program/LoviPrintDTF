@@ -17,7 +17,9 @@ import {
   Zap,
   Menu,
   X,
-  Phone
+  Phone,
+  Droplet,
+  ChevronDown
 } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 
@@ -25,6 +27,7 @@ export function Navbar() {
   const { data: session } = useSession()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   const menuItems = [
     {
@@ -40,6 +43,24 @@ export function Navbar() {
       icon: <Ticket className="w-4 h-4" />,
       gradient: 'from-purple-500 to-purple-600',
       description: 'Ahorra hasta 33%'
+    },
+    {
+      label: 'Sublimación',
+      icon: <Droplet className="w-4 h-4" />,
+      gradient: 'from-cyan-500 to-cyan-600',
+      description: 'Papel de sublimación',
+      submenu: [
+        {
+          href: 'https://www.loviprintdtf.es/productos/papel-de-sublimacion',
+          label: 'Sublimación Metros',
+          description: 'Papel en metros'
+        },
+        {
+          href: 'https://www.loviprintdtf.es/productos/folio-a4-sublimacion',
+          label: 'Sublimación Folios',
+          description: 'Folios A4'
+        }
+      ]
     },
     {
       href: '/faq',
@@ -104,28 +125,83 @@ export function Navbar() {
 
               {/* Desktop Menu */}
               <nav className="hidden lg:flex items-center gap-2">
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="group relative px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
-                        {item.icon}
+                {menuItems.map((item) => {
+                  const hasSubmenu = 'submenu' in item && item.submenu
+
+                  if (hasSubmenu) {
+                    return (
+                      <div
+                        key={item.label}
+                        className="relative"
+                        onMouseEnter={() => setOpenDropdown(item.label)}
+                        onMouseLeave={() => setOpenDropdown(null)}
+                      >
+                        <button
+                          className="group relative px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center gap-2"
+                        >
+                          <div className={`p-1.5 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
+                            {item.icon}
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                                {item.label}
+                              </span>
+                              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${openDropdown === item.label ? 'rotate-180' : ''}`} />
+                            </div>
+                            <span className="text-xs text-gray-500 hidden xl:block">
+                              {item.description}
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></div>
+                        </button>
+
+                        {/* Dropdown menu */}
+                        {openDropdown === item.label && (
+                          <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                            {item.submenu.map((subitem) => (
+                              <Link
+                                key={subitem.href}
+                                href={subitem.href}
+                                className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="font-semibold text-gray-900 text-sm">
+                                  {subitem.label}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {subitem.description}
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
-                          {item.label}
-                        </span>
-                        <span className="text-xs text-gray-500 hidden xl:block">
-                          {item.description}
-                        </span>
+                    )
+                  }
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href || '#'}
+                      className="group relative px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
+                          {item.icon}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                            {item.label}
+                          </span>
+                          <span className="text-xs text-gray-500 hidden xl:block">
+                            {item.description}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></div>
-                  </Link>
-                ))}
+                      <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></div>
+                    </Link>
+                  )
+                })}
               </nav>
             </div>
 
@@ -191,22 +267,63 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t bg-white shadow-lg">
             <div className="container mx-auto px-4 py-4 space-y-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
-                >
-                  <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white`}>
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  </div>
-                </Link>
-              ))}
+              {menuItems.map((item) => {
+                const hasSubmenu = 'submenu' in item && item.submenu
+
+                if (hasSubmenu) {
+                  return (
+                    <div key={item.label} className="space-y-1">
+                      <button
+                        onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
+                        className="w-full flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white`}>
+                            {item.icon}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">{item.label}</div>
+                            <div className="text-xs text-gray-500">{item.description}</div>
+                          </div>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openDropdown === item.label ? 'rotate-180' : ''}`} />
+                      </button>
+                      {openDropdown === item.label && (
+                        <div className="ml-4 pl-4 border-l-2 border-gray-200 space-y-1">
+                          {item.submenu.map((subitem) => (
+                            <Link
+                              key={subitem.href}
+                              href={subitem.href}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="block p-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                            >
+                              <div className="font-semibold text-gray-900 text-sm">{subitem.label}</div>
+                              <div className="text-xs text-gray-500">{subitem.description}</div>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href || '#'}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                  >
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">{item.label}</div>
+                      <div className="text-xs text-gray-500">{item.description}</div>
+                    </div>
+                  </Link>
+                )
+              })}
 
               <div className="pt-4 border-t space-y-2">
                 {session?.user ? (

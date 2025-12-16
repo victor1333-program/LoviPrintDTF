@@ -157,8 +157,8 @@ export default function ProductDetailPage() {
   const handleAddToCart = async () => {
     if (!product) return
 
-    // Validar archivo si es DTF textil o UV DTF
-    if ((product.productType === 'DTF_TEXTILE' || product.productType === 'DTF_UV') && !uploadedFile) {
+    // Validar archivo si es DTF textil, UV DTF o sublimación
+    if ((product.productType === 'DTF_TEXTILE' || product.productType === 'DTF_UV' || product.productType === 'SUBLIMATION') && !uploadedFile) {
       toast.error('Por favor sube tu diseño antes de agregar al carrito')
       return
     }
@@ -377,42 +377,85 @@ export default function ProductDetailPage() {
                   Características Principales
                 </h2>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Palette className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Colores Vibrantes</h3>
-                      <p className="text-sm text-gray-600">Impresión DTF con tecnología CMYK + White de alta calidad</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <ThermometerSun className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Resistente al Lavado</h3>
-                      <p className="text-sm text-gray-600">Garantizado para más de 50 lavados sin perder calidad</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Zap className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Entrega Express</h3>
-                      <p className="text-sm text-gray-600">Producción y envío en 24-48 horas laborables</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Ruler className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Tamaño Flexible</h3>
-                      <p className="text-sm text-gray-600">Desde 1 metro hasta grandes volúmenes</p>
-                    </div>
-                  </div>
+                  {product.category?.slug === 'sublimacion' ? (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Palette className="h-5 w-5 text-cyan-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Colores Brillantes</h3>
+                          <p className="text-sm text-gray-600">Transferencia de colores vibrantes a textiles de poliéster</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <ThermometerSun className="h-5 w-5 text-cyan-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Integrado en la Fibra</h3>
+                          <p className="text-sm text-gray-600">El diseño se integra en el tejido, no se agrieta ni desprende</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Zap className="h-5 w-5 text-cyan-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Envío Rápido</h3>
+                          <p className="text-sm text-gray-600">Envío en 24-48 horas laborables</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Shield className="h-5 w-5 text-cyan-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Alta Calidad</h3>
+                          <p className="text-sm text-gray-600">Papel de sublimación profesional de 100 g/m²</p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Palette className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Colores Vibrantes</h3>
+                          <p className="text-sm text-gray-600">Impresión DTF con tecnología CMYK + White de alta calidad</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <ThermometerSun className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Resistente al Lavado</h3>
+                          <p className="text-sm text-gray-600">Garantizado para más de 50 lavados sin perder calidad</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Zap className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Entrega Express</h3>
+                          <p className="text-sm text-gray-600">Producción y envío en 24-48 horas laborables</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Ruler className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">Tamaño Flexible</h3>
+                          <p className="text-sm text-gray-600">Desde 1 metro hasta grandes volúmenes</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -426,7 +469,32 @@ export default function ProductDetailPage() {
                 </h2>
                 <div className="prose prose-lg max-w-none text-gray-700">
                   {product.description ? (
-                    <p className="leading-relaxed">{product.description}</p>
+                    <>
+                      {product.description.split('\n\n').map((paragraph, idx) => {
+                        // Detectar si es un párrafo con características (contiene "Características destacadas:" o empieza con •)
+                        if (paragraph.includes('Características destacadas:') || paragraph.trim().startsWith('•')) {
+                          const lines = paragraph.split('\n')
+                          const title = lines.find(l => l.includes('Características destacadas:'))
+                          const items = lines.filter(l => l.trim().startsWith('•')).map(l => l.replace('•', '').trim())
+
+                          return (
+                            <div key={idx} className="mb-4">
+                              {title && <p className="font-semibold mb-2">{title}</p>}
+                              <ul className="list-none space-y-2 ml-0">
+                                {items.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="text-orange-600 mt-1">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )
+                        }
+
+                        return paragraph.trim() && <p key={idx} className="mb-4 leading-relaxed">{paragraph}</p>
+                      })}
+                    </>
                   ) : (
                     <>
                       <p className="mb-4 leading-relaxed">
@@ -456,91 +524,140 @@ export default function ProductDetailPage() {
                   <Info className="h-6 w-6 text-orange-600" />
                   Especificaciones Técnicas
                 </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Ancho máximo:</span>
-                      <span className="font-semibold">60 cm</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Resolución:</span>
-                      <span className="font-semibold">1440 DPI</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Tecnología:</span>
-                      <span className="font-semibold">DTF (Direct to Film)</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Colores:</span>
-                      <span className="font-semibold">CMYK + White</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Aplicación:</span>
-                      <span className="font-semibold">170°C / 15 seg</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600 font-medium">Durabilidad:</span>
-                      <span className="font-semibold">50+ lavados</span>
-                    </div>
-                  </div>
-                </div>
-                {product.specifications && (
-                  <div className="mt-6 pt-6 border-t">
-                    <h3 className="font-semibold mb-3 text-sm text-gray-500 uppercase">Especificaciones Adicionales</h3>
-                    <dl className="grid md:grid-cols-2 gap-3">
-                      {Object.entries(product.specifications as Record<string, any>).map(([key, value]) => (
-                        <div key={key} className="flex justify-between py-2 border-b text-sm">
-                          <dt className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</dt>
-                          <dd className="font-medium">{String(value)}</dd>
+                {product.specifications ? (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      {Object.entries(product.specifications as Record<string, any>).slice(0, Math.ceil(Object.entries(product.specifications as Record<string, any>).length / 2)).map(([key, value]) => (
+                        <div key={key} className="flex justify-between py-2 border-b">
+                          <span className="text-gray-600 font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-semibold">{String(value)}</span>
                         </div>
                       ))}
-                    </dl>
+                    </div>
+                    <div className="space-y-3">
+                      {Object.entries(product.specifications as Record<string, any>).slice(Math.ceil(Object.entries(product.specifications as Record<string, any>).length / 2)).map(([key, value]) => (
+                        <div key={key} className="flex justify-between py-2 border-b">
+                          <span className="text-gray-600 font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-semibold">{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Ancho máximo:</span>
+                        <span className="font-semibold">60 cm</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Resolución:</span>
+                        <span className="font-semibold">1440 DPI</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Tecnología:</span>
+                        <span className="font-semibold">DTF (Direct to Film)</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Colores:</span>
+                        <span className="font-semibold">CMYK + White</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Aplicación:</span>
+                        <span className="font-semibold">170°C / 15 seg</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600 font-medium">Durabilidad:</span>
+                        <span className="font-semibold">50+ lavados</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Instrucciones de Aplicación */}
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-              <CardContent className="p-8">
-                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-orange-900">
-                  <CheckCircle2 className="h-6 w-6 text-orange-600" />
-                  Instrucciones de Aplicación
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
-                    <div>
-                      <h3 className="font-semibold text-orange-900 mb-1">Preparar la prenda</h3>
-                      <p className="text-orange-800">Asegúrate de que la prenda esté limpia, seca y sin arrugas. Precalienta la plancha o prensa a 170°C.</p>
+            {product.category?.slug === 'sublimacion' ? (
+              <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200">
+                <CardContent className="p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-cyan-900">
+                    <CheckCircle2 className="h-6 w-6 text-cyan-600" />
+                    Instrucciones de Sublimación
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                      <div>
+                        <h3 className="font-semibold text-cyan-900 mb-1">Imprimir el diseño</h3>
+                        <p className="text-cyan-800">Imprime tu diseño en el papel de sublimación usando una impresora de sublimación con tintas especiales.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                      <div>
+                        <h3 className="font-semibold text-cyan-900 mb-1">Preparar el textil</h3>
+                        <p className="text-cyan-800">Usa un textil de poliéster (mínimo 50% de poliéster). Precalienta la prensa térmica a 180-200°C.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                      <div>
+                        <h3 className="font-semibold text-cyan-900 mb-1">Posicionar y prensar</h3>
+                        <p className="text-cyan-800">Coloca el papel con el diseño hacia abajo sobre el textil. Prensa durante 45-60 segundos con presión media-alta.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-cyan-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                      <div>
+                        <h3 className="font-semibold text-cyan-900 mb-1">Retirar el papel</h3>
+                        <p className="text-cyan-800">Retira el papel de sublimación con cuidado (puede estar caliente). ¡El diseño se ha integrado en la fibra!</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
-                    <div>
-                      <h3 className="font-semibold text-orange-900 mb-1">Posicionar el transfer</h3>
-                      <p className="text-orange-800">Coloca el transfer en la posición deseada con el diseño hacia arriba. Utiliza cinta térmica si es necesario.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <CardContent className="p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-orange-900">
+                    <CheckCircle2 className="h-6 w-6 text-orange-600" />
+                    Instrucciones de Aplicación
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                      <div>
+                        <h3 className="font-semibold text-orange-900 mb-1">Preparar la prenda</h3>
+                        <p className="text-orange-800">Asegúrate de que la prenda esté limpia, seca y sin arrugas. Precalienta la plancha o prensa a 170°C.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                      <div>
+                        <h3 className="font-semibold text-orange-900 mb-1">Posicionar el transfer</h3>
+                        <p className="text-orange-800">Coloca el transfer en la posición deseada con el diseño hacia arriba. Utiliza cinta térmica si es necesario.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                      <div>
+                        <h3 className="font-semibold text-orange-900 mb-1">Aplicar calor y presión</h3>
+                        <p className="text-orange-800">Presiona firmemente durante 15 segundos a 170°C. Deja enfriar completamente antes de retirar el film.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                      <div>
+                        <h3 className="font-semibold text-orange-900 mb-1">Retirar el film protector</h3>
+                        <p className="text-orange-800">Una vez frío al tacto, retira suavemente el film transparente. ¡Tu diseño está listo!</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
-                    <div>
-                      <h3 className="font-semibold text-orange-900 mb-1">Aplicar calor y presión</h3>
-                      <p className="text-orange-800">Presiona firmemente durante 15 segundos a 170°C. Deja enfriar completamente antes de retirar el film.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
-                    <div>
-                      <h3 className="font-semibold text-orange-900 mb-1">Retirar el film protector</h3>
-                      <p className="text-orange-800">Una vez frío al tacto, retira suavemente el film transparente. ¡Tu diseño está listo!</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Sticky Order Form */}
@@ -734,7 +851,7 @@ export default function ProductDetailPage() {
                   )}
 
                   {/* Upload de Diseño */}
-                  {(product.productType === 'DTF_TEXTILE' || product.productType === 'DTF_UV') && (
+                  {(product.productType === 'DTF_TEXTILE' || product.productType === 'DTF_UV' || product.productType === 'SUBLIMATION') && (
                     <div className="mb-6">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <Upload className="h-4 w-4 inline mr-1" />
@@ -923,33 +1040,42 @@ export default function ProductDetailPage() {
                       <Shield className="h-4 w-4 text-orange-600 flex-shrink-0" />
                       <span>Garantía de calidad total</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Droplets className="h-4 w-4 text-orange-600 flex-shrink-0" />
-                      <span>Resistente a 50+ lavados</span>
-                    </div>
+                    {product.category?.slug === 'sublimacion' ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Sparkles className="h-4 w-4 text-cyan-600 flex-shrink-0" />
+                        <span>Papel profesional 100 g/m²</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Droplets className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                        <span>Resistente a 50+ lavados</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Banner de Bonos */}
-              <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-3 mb-3">
-                    <Sparkles className="h-6 w-6 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-bold mb-1">¿Compras regularmente?</h3>
-                      <p className="text-sm text-purple-100">Ahorra hasta un 33% con nuestros bonos prepagados</p>
+              {product.category?.slug !== 'sublimacion' && (
+                <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-3 mb-3">
+                      <Sparkles className="h-6 w-6 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold mb-1">¿Compras regularmente?</h3>
+                        <p className="text-sm text-purple-100">Ahorra hasta un 33% con nuestros bonos prepagados</p>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white text-purple-700 hover:bg-purple-50 border-0"
-                    onClick={() => router.push('/bonos')}
-                  >
-                    Ver Bonos Disponibles
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-white text-purple-700 hover:bg-purple-50 border-0"
+                      onClick={() => router.push('/bonos')}
+                    >
+                      Ver Bonos Disponibles
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

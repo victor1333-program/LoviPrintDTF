@@ -697,6 +697,7 @@ enum ProductType {
   CONSUMABLE // Consumibles (tintas, films, etc)
   VOUCHER // Bonos prepagados
   SERVICE // Servicios adicionales
+  SUBLIMATION // Papel de sublimación
 }
 
 enum StockStatus {

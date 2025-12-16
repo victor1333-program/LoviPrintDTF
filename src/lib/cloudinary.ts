@@ -210,3 +210,34 @@ export function getTransformedUrl(
 ): string {
   return cloudinary.url(publicId, transformations)
 }
+
+/**
+ * Genera una URL firmada para descargar un archivo de forma segura
+ * La URL expira después de 1 hora
+ */
+export async function getSignedDownloadUrl(publicId: string, resourceType: string = 'raw'): Promise<string | null> {
+  try {
+    const isConfigured = await configureCloudinary()
+
+    if (!isConfigured) {
+      uploadLogger.warn('Cloudinary not configured')
+      return null
+    }
+
+    // Generar URL firmada con expiración de 1 hora
+    const timestamp = Math.round(Date.now() / 1000) + 3600 // 1 hora desde ahora
+
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: resourceType,
+      type: 'upload',
+      sign_url: true,
+      expires_at: timestamp,
+      attachment: true // Forzar descarga en lugar de visualización
+    })
+
+    return signedUrl
+  } catch (error) {
+    uploadLogger.error('Error generating signed URL', error)
+    return null
+  }
+}

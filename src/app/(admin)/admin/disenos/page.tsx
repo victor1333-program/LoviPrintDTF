@@ -44,6 +44,37 @@ export default function AdminDisenosPage() {
       : true
   )
 
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      // Usar el endpoint API para descargar el archivo de manera segura
+      const downloadUrl = `/api/admin/download-attachment?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(fileName)}`
+
+      // Descargar el archivo
+      const response = await fetch(downloadUrl)
+      if (!response.ok) {
+        throw new Error('Error al descargar el archivo')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Limpiar el objeto URL
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Archivo descargado correctamente')
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      toast.error('Error al descargar el archivo')
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
@@ -136,7 +167,16 @@ export default function AdminDisenosPage() {
                           )}
 
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                if (item.fileUrl) {
+                                  window.open(item.fileUrl, '_blank')
+                                }
+                              }}
+                            >
                               <Eye className="h-3 w-3 mr-1" />
                               Ver
                             </Button>
@@ -145,7 +185,7 @@ export default function AdminDisenosPage() {
                               size="sm"
                               onClick={() => {
                                 if (item.fileUrl) {
-                                  window.open(item.fileUrl, '_blank')
+                                  downloadFile(item.fileUrl, item.fileName || 'diseño.pdf')
                                 }
                               }}
                             >
