@@ -25,6 +25,9 @@ export const idSchema = z.string().cuid('ID inválido')
 // Schema más flexible para productId que acepta CUIDs o IDs personalizados de productos (como voucher_prod_*)
 export const productIdSchema = z.string().min(1, 'Product ID requerido')
 
+// Schema más flexible para shippingMethodId que acepta UUIDs, CUIDs o cualquier ID personalizado
+export const shippingMethodIdSchema = z.string().min(1, 'Shipping Method ID requerido')
+
 export const positiveNumberSchema = z.number().positive('Debe ser un número positivo')
 
 export const nonNegativeNumberSchema = z.number().nonnegative('No puede ser negativo')
@@ -110,7 +113,7 @@ export const createCheckoutOrderSchema = z.object({
   designFileName: z.string().max(255, 'Nombre de archivo muy largo'),
   voucherCode: z.string().max(50, 'Código muy largo').optional(),
   discountCodeId: idSchema.optional(),
-  shippingMethodId: idSchema.optional(),
+  shippingMethodId: shippingMethodIdSchema.optional(),
   notes: z.string().max(1000, 'Notas muy largas').optional(),
   shippingAddress: addressSchema,
   saveProfile: z.boolean().optional(),
@@ -147,7 +150,7 @@ export const createRegularOrderSchema = z.object({
   shippingAddress: addressSchema.optional(),
   notes: z.string().max(1000, 'Notas muy largas').optional(),
   voucherId: idSchema.optional(),
-  shippingMethodId: idSchema.optional(),
+  shippingMethodId: shippingMethodIdSchema.optional(),
   pointsUsed: nonNegativeNumberSchema.optional(),
   pointsDiscount: nonNegativeNumberSchema.optional(),
   useMeterVouchers: z.boolean().optional(),
