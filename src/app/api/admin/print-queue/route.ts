@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { OrderStatus, PaymentStatus } from '@prisma/client'
 
 /**
  * GET /api/admin/print-queue
  * Obtener pedidos para la cola de impresión
  * Solo pedidos CONFIRMED o IN_PRODUCTION con pago PAID
+ * Soporta paginación: ?page=1&limit=50 (default: limit=100)
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth()
 
@@ -15,13 +17,23 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    // Obtener parámetros de paginación desde query params
+    const { searchParams } = new URL(request.url)
+    const pageParam = searchParams.get('page')
+    const limitParam = searchParams.get('limit')
+    const usePagination = pageParam !== null || limitParam !== null
+
+    const page = parseInt(pageParam || '1', 10)
+    const limit = Math.min(parseInt(limitParam || '100', 10), 200) // Máximo 200
+    const skip = (page - 1) * limit
+
     // Obtener pedidos CONFIRMED o IN_PRODUCTION que estén pagados
-    const orders = await prisma.order.findMany({
+    const queryConfig = {
       where: {
         status: {
-          in: ['CONFIRMED', 'IN_PRODUCTION']
+          in: [OrderStatus.CONFIRMED, OrderStatus.IN_PRODUCTION]
         },
-        paymentStatus: 'PAID'
+        paymentStatus: PaymentStatus.PAID
       },
       include: {
         items: {
@@ -33,9 +45,22 @@ export async function GET() {
         shippingMethod: true
       },
       orderBy: {
-        createdAt: 'asc' // Ordenar por fecha de entrada
-      }
-    })
+        createdAt: 'asc' as const // Ordenar por fecha de entrada
+      },
+      ...(usePagination && { take: limit, skip: skip })
+    }
+
+    const [orders, totalCount] = await Promise.all([
+      prisma.order.findMany(queryConfig),
+      usePagination ? prisma.order.count({
+        where: {
+          status: {
+            in: [OrderStatus.CONFIRMED, OrderStatus.IN_PRODUCTION]
+          },
+          paymentStatus: PaymentStatus.PAID
+        }
+      }) : Promise.resolve(0)
+    ])
 
     // IMPORTANTE: Filtrar pedidos de bonos (no deben aparecer en cola de impresión)
     const printableOrders = orders.filter(order => {
@@ -87,7 +112,23 @@ export async function GET() {
 
     const sorted = [...prioritized, ...normal]
 
-    return NextResponse.json(sorted)
+    // Si se usa paginación, incluir metadata; si no, retornar array directo (compatibilidad)
+    if (usePagination) {
+      return NextResponse.json({
+        data: sorted,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasNextPage: page < Math.ceil(totalCount / limit),
+          hasPrevPage: page > 1
+        }
+      })
+    } else {
+      // Comportamiento por defecto sin paginación (compatibilidad con frontend actual)
+      return NextResponse.json(sorted)
+    }
   } catch (error) {
     console.error('Error loading print queue:', error)
     return NextResponse.json(

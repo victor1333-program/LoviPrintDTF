@@ -45,6 +45,8 @@ export default function OrderPage() {
   const [downloadingInvoice, setDownloadingInvoice] = useState(false)
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null
+
     const initPage = async () => {
       const loadedOrder = await loadOrder()
 
@@ -52,11 +54,18 @@ export default function OrderPage() {
       const paymentStatus = searchParams.get('payment')
       if (paymentStatus === 'success' && loadedOrder) {
         setCheckingPayment(true)
-        await checkPaymentStatus(loadedOrder)
+        intervalId = await checkPaymentStatus(loadedOrder)
       }
     }
 
     initPage()
+
+    // Cleanup: limpiar el intervalo si el componente se desmonta
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
   }, [orderNumber])
 
   const loadOrder = async (): Promise<Order | null> => {
@@ -78,11 +87,11 @@ export default function OrderPage() {
     }
   }
 
-  const checkPaymentStatus = async (orderData: Order) => {
+  const checkPaymentStatus = async (orderData: Order): Promise<NodeJS.Timeout | null> => {
     if (!orderData) {
       console.error('[Client] No order available for payment verification')
       setCheckingPayment(false)
-      return
+      return null
     }
 
     let attempts = 0
@@ -152,7 +161,7 @@ export default function OrderPage() {
 
     // Primer intento: verificar directamente con Stripe
     const isPaidDirect = await verifyPaymentDirectly()
-    if (isPaidDirect) return
+    if (isPaidDirect) return null
 
     // Si no está pagado aún, hacer polling
     const intervalId = setInterval(async () => {
@@ -176,6 +185,9 @@ export default function OrderPage() {
         }
       }
     }, interval)
+
+    // Devolver el intervalId para que pueda ser limpiado si el componente se desmonta
+    return intervalId
   }
 
   const handlePayment = async () => {
