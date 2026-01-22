@@ -157,6 +157,13 @@ export async function POST(
         const recipientCountryCode = normalizeCountryCode(shippingAddr.country)
         const recipientProvince = getProvinceName(shippingAddr.postalCode || '')
 
+        console.log('📦 Preparando envío GLS:', {
+          orderId: order.orderNumber,
+          recipientCountry: recipientCountryCode,
+          recipientProvince,
+          shippingAddr,
+        })
+
         // Obtener configuración de servicio GLS del método de envío
         const glsServiceCode = order.shippingMethod?.glsServiceCode || '1' // Courier por defecto
         const glsTimeFrame = order.shippingMethod?.glsTimeFrame || '19' // Express 19h por defecto
@@ -253,7 +260,11 @@ export async function POST(
           // No fallar si el email falla
         }
       } catch (error: any) {
-        console.error('Error creating GLS shipment:', error)
+        console.error('❌ Error creating GLS shipment:', {
+          message: error.message,
+          stack: error.stack,
+          orderId: order.orderNumber,
+        })
         return NextResponse.json(
           { error: `Error al crear envío en GLS: ${error.message}` },
           { status: 500 }

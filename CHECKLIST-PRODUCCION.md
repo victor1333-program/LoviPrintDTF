@@ -287,7 +287,7 @@ git push origin main
 ssh root@loviprintdtf.es
 
 # Actualizar código
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 git pull
 
 # Instalar dependencias
@@ -353,7 +353,7 @@ psql -U postgres loviprintdtf < backup-YYYYMMDD.sql
 # Detener PM2
 ./manage.sh stop
 
-# Mostrar página de mantenimiento (crear /root/loviprintDTF/maintenance.html)
+# Mostrar página de mantenimiento (crear /home/loviadmin/projects/loviprintdtf/maintenance.html)
 ```
 
 ---

@@ -44,7 +44,7 @@ https://dashboard.stripe.com/test/webhooks
 ssh root@loviprintdtf.es
 
 # Editar .env
-nano /root/loviprintDTF/.env
+nano /home/loviadmin/projects/loviprintdtf/.env
 
 # Buscar la línea:
 STRIPE_WEBHOOK_SECRET=whsec_REEMPLAZAR_CON_TU_WEBHOOK_SECRET

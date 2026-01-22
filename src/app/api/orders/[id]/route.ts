@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendOrderStatusUpdateEmail, sendAdminOrderNotification } from '@/lib/email'
+import { sendOrderStatusUpdateEmail } from '@/lib/email'
 import { calculatePointsEarned, calculateTier } from '@/lib/loyalty'
 import { auth } from '@/auth'
 
@@ -297,10 +297,10 @@ export async function PATCH(
         console.error('Error sending status update email:', err)
       )
 
-      // Notificar al admin también (en background)
-      sendAdminOrderNotification(order).catch(err =>
-        console.error('Error sending admin notification:', err)
-      )
+      // NOTA: NO enviamos sendAdminOrderNotification aquí porque esa función
+      // es para notificar de NUEVOS pedidos, no para cambios de estado.
+      // Los cambios de estado son iniciados manualmente por el admin,
+      // por lo que no necesita ser notificado de su propia acción.
     }
     // Si el pedido está en estado SHIPPED y se actualiza el número de seguimiento
     else if (isShipped && trackingNumberUpdated) {

@@ -29,7 +29,7 @@
 Se ha creado un script de gestión para facilitar el manejo del servicio:
 
 ```bash
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 ./manage.sh [comando]
 ```
 
@@ -62,7 +62,7 @@ journalctl -u loviprint-dtf -f    # Ver logs en tiempo real
 ## Estructura de Archivos
 
 ```
-/root/loviprintDTF/
+/home/loviadmin/projects/loviprintdtf/
 ├── .env                          # Variables de entorno (configurado)
 ├── .next/                        # Build de producción
 ├── node_modules/                 # Dependencias instaladas
@@ -105,7 +105,7 @@ NEXT_PUBLIC_APP_URL=http://157.173.97.116:3000
 ### 1. Configuración de Email (Opcional)
 Para habilitar las notificaciones por correo:
 ```bash
-nano /root/loviprintDTF/.env
+nano /home/loviadmin/projects/loviprintdtf/.env
 ```
 Actualiza las siguientes variables:
 - `SMTP_USER`: Tu email de Gmail
@@ -122,7 +122,7 @@ Si necesitas pagos en producción:
 
 1. **Cambiar secretos de autenticación:**
    ```bash
-   nano /root/loviprintDTF/.env
+   nano /home/loviadmin/projects/loviprintdtf/.env
    # Genera nuevos secretos con: openssl rand -base64 32
    ```
 
@@ -181,7 +181,7 @@ psql -h localhost -p 5433 -U dtf_user dtf_print_services < backup_YYYYMMDD.sql
 Cuando necesites actualizar el código:
 
 ```bash
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 
 # 1. Detener el servicio
 ./manage.sh stop
@@ -216,7 +216,7 @@ npm install
 journalctl -u loviprint-dtf -n 50 --no-pager
 
 # Verificar permisos
-ls -la /root/loviprintDTF
+ls -la /home/loviadmin/projects/loviprintdtf
 
 # Reconstruir aplicación
 ./manage.sh build

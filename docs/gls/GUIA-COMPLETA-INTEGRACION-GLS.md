@@ -511,7 +511,7 @@ Teléfono: 690393135
 
 Todos los archivos de documentación oficial están en:
 ```
-/root/loviprintDTF/docs/gls/
+/home/loviadmin/projects/loviprintdtf/docs/gls/
 - b2b.wsdl
 - ES-GLS-iClientes (WS-Envios_InsercionyTracking).docx.pdf
 - ES-GLS-Maestros_V2.xlsx

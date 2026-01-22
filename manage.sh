@@ -27,17 +27,17 @@ case "$1" in
     ;;
   build)
     echo "Construyendo aplicación..."
-    cd /root/loviprintDTF
+    cd /home/loviadmin/projects/loviprintdtf
     npm run build
     ;;
   db-push)
     echo "Sincronizando base de datos..."
-    cd /root/loviprintDTF
+    cd /home/loviadmin/projects/loviprintdtf
     npm run db:push
     ;;
   db-studio)
     echo "Abriendo Prisma Studio..."
-    cd /root/loviprintDTF
+    cd /home/loviadmin/projects/loviprintdtf
     npm run db:studio
     ;;
   *)

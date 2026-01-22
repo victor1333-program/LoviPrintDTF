@@ -8,9 +8,9 @@ Este documento describe los permisos correctos de archivos y directorios para ma
 ### Archivos de Configuración Sensibles (600 - Solo propietario lectura/escritura)
 
 ```bash
-chmod 600 /root/loviprintDTF/.env
-chmod 600 /root/loviprintDTF/.env.local
-chmod 600 /root/loviprintDTF/ecosystem.config.js
+chmod 600 /home/loviadmin/projects/loviprintdtf/.env
+chmod 600 /home/loviadmin/projects/loviprintdtf/.env.local
+chmod 600 /home/loviadmin/projects/loviprintdtf/ecosystem.config.js
 chmod 600 ~/.ssh/id_*
 chmod 600 ~/.ssh/authorized_keys
 ```
@@ -27,7 +27,7 @@ chmod 600 ~/.ssh/authorized_keys
 ```bash
 chmod 640 /var/log/loviprintdtf*.log
 chmod 640 /var/log/nginx/loviprintdtf*.log
-chmod 640 /root/loviprintDTF/server.log
+chmod 640 /home/loviadmin/projects/loviprintdtf/server.log
 ```
 
 **Razón**: Los logs pueden contener información sensible (IPs, emails, errores con datos internos). Solo el propietario debe poder escribir, el grupo puede leer para debugging.
@@ -35,11 +35,11 @@ chmod 640 /root/loviprintDTF/server.log
 ### Archivos de Código Fuente (644 - Lectura general, escritura propietario)
 
 ```bash
-chmod 644 /root/loviprintDTF/package.json
-chmod 644 /root/loviprintDTF/tsconfig.json
-chmod 644 /root/loviprintDTF/next.config.mjs
-chmod 644 /root/loviprintDTF/src/**/*.ts
-chmod 644 /root/loviprintDTF/src/**/*.tsx
+chmod 644 /home/loviadmin/projects/loviprintdtf/package.json
+chmod 644 /home/loviadmin/projects/loviprintdtf/tsconfig.json
+chmod 644 /home/loviadmin/projects/loviprintdtf/next.config.mjs
+chmod 644 /home/loviadmin/projects/loviprintdtf/src/**/*.ts
+chmod 644 /home/loviadmin/projects/loviprintdtf/src/**/*.tsx
 ```
 
 **Razón**: El código fuente no es ejecutable y puede ser leído por el sistema, pero solo el propietario debe modificarlo.
@@ -47,8 +47,8 @@ chmod 644 /root/loviprintDTF/src/**/*.tsx
 ### Scripts Ejecutables (744 - Propietario ejecución, otros solo lectura)
 
 ```bash
-chmod 744 /root/*.sh
-chmod 744 /root/loviprintDTF/scripts/*.sh
+chmod 744 /home/loviadmin/scripts/*.sh
+chmod 744 /home/loviadmin/projects/loviprintdtf/scripts/*.sh
 ```
 
 **Razón**: Scripts de mantenimiento deben ser ejecutables por el propietario, pero otros usuarios no deben poder ejecutarlos.
@@ -57,8 +57,8 @@ chmod 744 /root/loviprintDTF/scripts/*.sh
 
 ```bash
 # Establecer permisos por defecto para uploads
-chmod 644 /root/loviprintDTF/public/uploads/designs/*
-chmod 644 /root/loviprintDTF/public/uploads/images/*
+chmod 644 /home/loviadmin/projects/loviprintdtf/public/uploads/designs/*
+chmod 644 /home/loviadmin/projects/loviprintdtf/public/uploads/images/*
 ```
 
 **Razón**: Los archivos subidos deben ser servidos por el servidor web, pero no ejecutables.
@@ -68,7 +68,7 @@ chmod 644 /root/loviprintDTF/public/uploads/images/*
 ### Directorio Raíz del Proyecto (755 - Ejecución y lectura general)
 
 ```bash
-chmod 755 /root/loviprintDTF
+chmod 755 /home/loviadmin/projects/loviprintdtf
 ```
 
 **Razón**: El directorio debe ser navegable por el proceso de Node.js y otros servicios.
@@ -84,10 +84,10 @@ chmod 700 ~/.ssh
 ### Directorios de Uploads (755 - Ejecución y lectura general)
 
 ```bash
-chmod 755 /root/loviprintDTF/public
-chmod 755 /root/loviprintDTF/public/uploads
-chmod 755 /root/loviprintDTF/public/uploads/designs
-chmod 755 /root/loviprintDTF/public/uploads/images
+chmod 755 /home/loviadmin/projects/loviprintdtf/public
+chmod 755 /home/loviadmin/projects/loviprintdtf/public/uploads
+chmod 755 /home/loviadmin/projects/loviprintdtf/public/uploads/designs
+chmod 755 /home/loviadmin/projects/loviprintdtf/public/uploads/images
 ```
 
 **Razón**: nginx necesita acceso de lectura y navegación para servir archivos estáticos.
@@ -95,9 +95,9 @@ chmod 755 /root/loviprintDTF/public/uploads/images
 ### Directorios de Código Fuente (755 - Ejecución y lectura general)
 
 ```bash
-chmod 755 /root/loviprintDTF/src
-chmod 755 /root/loviprintDTF/prisma
-chmod 755 /root/loviprintDTF/scripts
+chmod 755 /home/loviadmin/projects/loviprintdtf/src
+chmod 755 /home/loviadmin/projects/loviprintdtf/prisma
+chmod 755 /home/loviadmin/projects/loviprintdtf/scripts
 ```
 
 **Razón**: Node.js necesita acceso de lectura para cargar módulos.
@@ -142,23 +142,23 @@ curl -k -I -H "Host: www.loviprintdtf.es" https://localhost/
 
 ```bash
 # Ver permisos de archivos críticos
-ls -la /root/loviprintDTF/.env
-ls -la /root/loviprintDTF/ecosystem.config.js
+ls -la /home/loviadmin/projects/loviprintdtf/.env
+ls -la /home/loviadmin/projects/loviprintdtf/ecosystem.config.js
 ls -la ~/.ssh/id_*
 ls -la /var/log/loviprintdtf*.log
 
 # Buscar archivos con permisos demasiado abiertos (777, 666)
-find /root/loviprintDTF -type f -perm /o+w ! -path "*/node_modules/*" ! -path "*/.next/*"
+find /home/loviadmin/projects/loviprintdtf -type f -perm /o+w ! -path "*/node_modules/*" ! -path "*/.next/*"
 
 # Buscar archivos .env accidentalmente expuestos
-find /root/loviprintDTF -name ".env*" -type f -exec ls -la {} \;
+find /home/loviadmin/projects/loviprintdtf -name ".env*" -type f -exec ls -la {} \;
 ```
 
 ### Corregir Permisos Automáticamente
 
 ```bash
 # Script para corregir permisos
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 
 # Archivos sensibles
 chmod 600 .env* ecosystem.config.js 2>/dev/null
@@ -205,13 +205,13 @@ Múltiples capas de protección:
 ### ⚠️ NUNCA hacer esto:
 ```bash
 # ❌ NO dar permisos 777 a nada
-chmod 777 /root/loviprintDTF  # INSEGURO
+chmod 777 /home/loviadmin/projects/loviprintdtf  # INSEGURO
 
 # ❌ NO dar permisos de escritura global
 chmod 666 .env  # EXPONE CREDENCIALES
 
 # ❌ NO hacer el proyecto propiedad de www-data
-chown -R www-data:www-data /root/loviprintDTF  # PELIGROSO
+chown -R www-data:www-data /home/loviadmin/projects/loviprintdtf  # PELIGROSO
 ```
 
 ### ✅ Buenas Prácticas:
@@ -220,10 +220,10 @@ chown -R www-data:www-data /root/loviprintDTF  # PELIGROSO
 chmod 600 .env
 
 # ✅ Verificar propietario correcto
-chown root:root /root/loviprintDTF/.env
+chown root:root /home/loviadmin/projects/loviprintdtf/.env
 
 # ✅ Auditar regularmente
-find /root/loviprintDTF -type f -perm -002  # Buscar archivos escribibles por todos
+find /home/loviadmin/projects/loviprintdtf -type f -perm -002  # Buscar archivos escribibles por todos
 ```
 
 ## Checklist de Seguridad de Permisos

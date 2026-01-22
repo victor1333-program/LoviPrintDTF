@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'loviprintdtf',
     script: 'server.js',
-    cwd: '/root/projects/loviprintdtf',
+    cwd: '/home/loviadmin/projects/loviprintdtf',
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,
@@ -15,8 +15,8 @@ module.exports = {
       AUTH_SECRET: 'JjC4lLs18JO36d5+W8u/dX7k9QApVQtEZaBQ5Cw6fFQ=',
       NEXTAUTH_SECRET: 'M1LOS64HCOMu/bIkAif+ANgNL1rPO2Z4S20ixjia6kw='
     },
-    error_file: '/var/log/loviprintdtf-error.log',
-    out_file: '/var/log/loviprintdtf-out.log',
+    error_file: '/home/loviadmin/logs/loviprintdtf-error.log',
+    out_file: '/home/loviadmin/logs/loviprintdtf-out.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     merge_logs: true,
     min_uptime: '10s',

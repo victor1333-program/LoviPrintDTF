@@ -147,7 +147,7 @@
 Los nuevos archivos TypeScript necesitan ser compilados:
 
 ```bash
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 
 # Generar cliente de Prisma con nuevos campos
 npx prisma generate

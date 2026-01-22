@@ -347,7 +347,7 @@ Sistema de Alertas - LoviPrintDTF
 Revisa: https://www.loviprintdtf.es/api/health
 ```
 
-### 5. Script de Monitoreo Automatizado (/root/scripts/monitor-system.sh)
+### 5. Script de Monitoreo Automatizado (/home/loviadmin/scripts/monitor-system.sh)
 
 **Propósito:** Ejecutar checks periódicos y auto-recuperar servicios.
 
@@ -381,10 +381,10 @@ CPU_CRITICAL=95     # %
 **Ejecución manual:**
 ```bash
 # Con output verbose
-/root/scripts/monitor-system.sh --verbose
+/home/loviadmin/scripts/monitor-system.sh --verbose
 
 # Silencioso (solo logs)
-/root/scripts/monitor-system.sh
+/home/loviadmin/scripts/monitor-system.sh
 ```
 
 **Exit codes:**
@@ -392,7 +392,7 @@ CPU_CRITICAL=95     # %
 - `1` - Algunos warnings
 - `2` - Algunos errores críticos
 
-### 6. Script de Backup Automático (/root/scripts/backup-database.sh)
+### 6. Script de Backup Automático (/home/loviadmin/scripts/backup-database.sh)
 
 **Propósito:** Backup diario de la base de datos PostgreSQL.
 
@@ -405,7 +405,7 @@ CPU_CRITICAL=95     # %
 - ✅ Retención de 30 días
 - ✅ Limpieza automática de backups antiguos
 
-**Ubicación:** `/root/loviprintDTF/backups/`
+**Ubicación:** `/home/loviadmin/projects/loviprintdtf/backups/`
 
 **Formato:** `backup_YYYYMMDD_HHMMSS.sql.gz`
 
@@ -414,10 +414,10 @@ CPU_CRITICAL=95     # %
 **Restaurar backup:**
 ```bash
 # Listar backups disponibles
-ls -lh /root/loviprintDTF/backups/
+ls -lh /home/loviadmin/projects/loviprintdtf/backups/
 
 # Restaurar (PELIGRO: sobrescribe datos actuales)
-gunzip -c /root/loviprintDTF/backups/backup_20251025_030000.sql.gz | \
+gunzip -c /home/loviadmin/projects/loviprintdtf/backups/backup_20251025_030000.sql.gz | \
   PGPASSWORD=fe06b83ec2c4a7e62c05e514d53277d9 \
   psql -h localhost -p 5433 -U dtf_user -d dtf_print_services
 ```
@@ -436,10 +436,10 @@ crontab -e
 
 | Frecuencia | Comando | Descripción |
 |-----------|---------|-------------|
-| */5 * * * * | /root/scripts/monitor-system.sh | Monitoreo sistema cada 5 min |
-| */10 * * * * | /root/monitor-loviprintdtf.sh | Monitor legacy cada 10 min |
+| */5 * * * * | /home/loviadmin/scripts/monitor-system.sh | Monitoreo sistema cada 5 min |
+| */10 * * * * | /home/loviadmin/scripts/monitor-loviprintdtf.sh | Monitor legacy cada 10 min |
 | 0 2 * * * | find ... -mtime +30 -delete | Limpieza logs > 30 días |
-| 0 3 * * * | /root/scripts/backup-database.sh | Backup diario DB |
+| 0 3 * * * | /home/loviadmin/scripts/backup-database.sh | Backup diario DB |
 | 0 4 * * 0 | find /tmp ... -delete | Limpieza archivos temp semanalmente |
 | 0 5 * * 0 | pm2 restart loviprintdtf | Reinicio semanal PM2 |
 
@@ -585,7 +585,7 @@ du -sh /var/log/* | sort -rh | head -10
 find /var/log/loviprintdtf -name "*.log" -mtime +30 -delete
 
 # 3. Limpiar backups antiguos
-find /root/loviprintDTF/backups -name "*.sql.gz" -mtime +30 -delete
+find /home/loviadmin/projects/loviprintdtf/backups -name "*.sql.gz" -mtime +30 -delete
 
 # 4. Limpiar archivos temporales
 find /tmp -type f -mtime +7 -delete
@@ -757,7 +757,7 @@ pm2 logs loviprintdtf --err
 
 ```bash
 # Verificar configuración SMTP en .env
-cat /root/loviprintDTF/.env | grep SMTP
+cat /home/loviadmin/projects/loviprintdtf/.env | grep SMTP
 
 # Test de conexión SMTP
 curl telnet://smtp.hostinger.com:587
@@ -795,7 +795,7 @@ grep CRON /var/log/syslog | tail -20
 crontab -l
 
 # Ejecutar manualmente para debug
-/root/scripts/monitor-system.sh --verbose
+/home/loviadmin/scripts/monitor-system.sh --verbose
 ```
 
 ## 📚 Referencias

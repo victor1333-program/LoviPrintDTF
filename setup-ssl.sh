@@ -31,7 +31,7 @@ if [ $? -eq 0 ]; then
     echo "✅ Certificado SSL instalado correctamente!"
     echo ""
     echo "Actualizando variables de entorno..."
-    cd /root/loviprintDTF
+    cd /home/loviadmin/projects/loviprintdtf
 
     # Actualizar .env
     sed -i 's|http://157.173.97.116:3000|https://www.loviprintdtf.es|g' .env

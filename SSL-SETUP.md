@@ -38,7 +38,7 @@ dig +short www.loviprintdtf.es
 Una vez que los DNS estén completamente propagados, ejecuta:
 
 ```bash
-cd /root/loviprintDTF
+cd /home/loviadmin/projects/loviprintdtf
 ./setup-ssl.sh
 ```
 
@@ -61,7 +61,7 @@ certbot --nginx -d loviprintdtf.es -d www.loviprintdtf.es
 
 ### 2. Actualizar variables de entorno
 ```bash
-nano /root/loviprintDTF/.env
+nano /home/loviadmin/projects/loviprintdtf/.env
 ```
 
 Cambiar:
