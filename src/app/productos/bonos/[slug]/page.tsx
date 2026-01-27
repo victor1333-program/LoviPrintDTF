@@ -29,6 +29,7 @@ export default function VoucherProductPage() {
   const params = useParams()
   const router = useRouter()
   const [product, setProduct] = useState<ProductWithRelations | null>(null)
+  const [initialShipments, setInitialShipments] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(false)
 
@@ -44,6 +45,8 @@ export default function VoucherProductPage() {
       const foundVoucher = vouchers.find((v: any) => v.slug === params.slug)
 
       if (foundVoucher) {
+        // Guardar envíos incluidos
+        setInitialShipments(foundVoucher.initialShipments || 0)
         // Convertir voucher a formato de producto para compatibilidad
         setProduct({
           id: foundVoucher.id,
@@ -337,6 +340,10 @@ export default function VoucherProductPage() {
                     <p className="text-gray-700">Sí, cada bono incluye envíos gratuitos para que puedas hacer pedidos sin costes adicionales.</p>
                   </div>
                   <div>
+                    <h3 className="font-bold text-lg mb-2 text-purple-900">¿Qué pasa si uso todos los envíos gratuitos?</h3>
+                    <p className="text-gray-700">Si consumes todos los envíos incluidos pero aún te quedan metros, puedes seguir haciendo pedidos sin problema. El sistema detectará que no quedan envíos del bono y solo te cobrará el coste de envío en ese pedido.</p>
+                  </div>
+                  <div>
                     <h3 className="font-bold text-lg mb-2 text-purple-900">¿Cuándo se activa el bono?</h3>
                     <p className="text-gray-700">Se activa automáticamente en tu cuenta tras la confirmación del pago. Lo verás disponible en tu perfil.</p>
                   </div>
@@ -388,7 +395,7 @@ export default function VoucherProductPage() {
                       </li>
                       <li className="flex items-start gap-2 text-gray-700">
                         <Check className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />
-                        <span><strong>Envíos gratis</strong> en todos tus pedidos</span>
+                        <span><strong>Incluye {initialShipments} envíos</strong> en este bono</span>
                       </li>
                       <li className="flex items-start gap-2 text-gray-700">
                         <Check className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />
