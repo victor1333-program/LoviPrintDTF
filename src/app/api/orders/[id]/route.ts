@@ -29,6 +29,15 @@ export async function GET(
             product: true
           }
         },
+        discountCode: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            type: true,
+            value: true
+          }
+        },
         shipment: {
           include: {
             trackingEvents: {
@@ -58,6 +67,15 @@ export async function GET(
           items: {
             include: {
               product: true
+            }
+          },
+          discountCode: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              type: true,
+              value: true
             }
           },
           shipment: {
