@@ -123,18 +123,18 @@ export function FileUpload({ onFileUpload, currentFile, onRemove }: FileUploadPr
     const iconBg = hasWarnings ? 'bg-yellow-100' : 'bg-green-100'
 
     return (
-      <div className={`border-2 ${borderColor} rounded-lg p-6 ${bgColor}`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center`}>
+      <div className={`border-2 ${borderColor} rounded-lg p-4 sm:p-6 ${bgColor}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
               {hasWarnings ? (
-                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               ) : (
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
+                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               )}
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">{currentFile.name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-gray-900 truncate">{currentFile.name}</p>
               <p className="text-sm text-gray-600">
                 {(currentFile.size / (1024 * 1024)).toFixed(2)} MB
                 {currentFile.imageMetadata?.width && currentFile.imageMetadata?.height && (
@@ -155,6 +155,7 @@ export function FileUpload({ onFileUpload, currentFile, onRemove }: FileUploadPr
               size="sm"
               onClick={onRemove}
               type="button"
+              className="flex-shrink-0"
             >
               <X className="h-4 w-4" />
             </Button>

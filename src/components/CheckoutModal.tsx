@@ -731,16 +731,16 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                       Cambiar
                     </button>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-900">{selected.name}</div>
+                  <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 border rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 truncate">{selected.name}</div>
                       {selected.estimatedDays && (
                         <div className="text-xs text-gray-500 mt-0.5">
                           Tiempo estimado: {selected.estimatedDays}
                         </div>
                       )}
                     </div>
-                    <div className={`font-semibold ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
+                    <div className={`font-semibold flex-shrink-0 ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
                       {displayPrice}
                     </div>
                   </div>
@@ -797,7 +797,9 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
             </section>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-2 sticky bottom-0 bg-white">
+            <div
+              className="flex gap-3 pt-3 pb-[env(safe-area-inset-bottom)] sticky bottom-0 bg-white border-t -mx-6 px-6"
+            >
               <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>
                 Cancelar
               </Button>

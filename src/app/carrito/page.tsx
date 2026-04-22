@@ -432,31 +432,31 @@ export default function CarritoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-6">Carrito de Compra</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6">Carrito de Compra</h1>
 
         {/* Banner puntos de fidelidad */}
         {session?.user && availablePoints >= 100 && (
-          <div className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-amber-600" />
+          <div className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-lg p-3 sm:p-4 flex items-start gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-amber-900">
-                Tienes {availablePoints} puntos disponibles ={' '}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-amber-900 text-sm sm:text-base">
+                Tienes {availablePoints} puntos ={' '}
                 <span className="text-amber-700">
                   {formatCurrency(Math.floor(availablePoints / 100) * 5)} de descuento
                 </span>
               </p>
-              <p className="text-sm text-amber-800 mt-0.5">
+              <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
                 Canjéalos al final del carrito antes de pagar.
               </p>
             </div>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Items del carrito */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item: CartItem) => {
@@ -469,12 +469,12 @@ export default function CarritoPage() {
 
               return (
               <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex gap-6">
-                    <div className="w-24 h-24 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex gap-3 sm:gap-6">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       {isVoucher ? (
                         <div className="w-full h-full bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
-                          <Ticket className="h-12 w-12 text-white" />
+                          <Ticket className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
                         </div>
                       ) : item.product.imageUrl ? (
                         <div className="relative w-full h-full">
@@ -482,21 +482,21 @@ export default function CarritoPage() {
                             src={item.product.imageUrl}
                             alt={item.product.name}
                             fill
-                            sizes="96px"
+                            sizes="(max-width: 640px) 80px, 96px"
                             className="object-cover rounded-lg"
                           />
                         </div>
                       ) : (
-                        <span className="text-3xl font-bold text-primary-400">
+                        <span className="text-2xl sm:text-3xl font-bold text-primary-400">
                           {item.product.name.charAt(0)}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg">{displayName}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between gap-2 mb-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-base sm:text-lg truncate">{displayName}</h3>
                           {isVoucher ? (
                             <Badge variant="success" className="mt-1">
                               <Gift className="h-3 w-3 mr-1" />
@@ -510,7 +510,8 @@ export default function CarritoPage() {
                         </div>
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 flex-shrink-0 p-1 -mr-1"
+                          aria-label="Eliminar producto"
                         >
                           <Trash2 className="h-5 w-5" />
                         </button>
@@ -550,16 +551,16 @@ export default function CarritoPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         {isVoucher ? (
                           // Los bonos no permiten cambiar cantidad
                           <div className="flex items-center gap-3">
-                            <Badge variant="default" className="text-base px-4 py-2">
+                            <Badge variant="default" className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2">
                               1 {displayUnit}
                             </Badge>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             {/* Todos los productos usan incrementos de 1 */}
                             <Button
                               variant="outline"
@@ -571,7 +572,7 @@ export default function CarritoPage() {
                               <Minus className="h-4 w-4" />
                             </Button>
 
-                            <span className="font-semibold min-w-[60px] text-center">
+                            <span className="font-semibold min-w-[60px] text-center text-sm sm:text-base">
                               {Number(item.quantity)} {item.product.unit}
                             </span>
 
@@ -588,11 +589,11 @@ export default function CarritoPage() {
 
                         <div className="text-right">
                           {!isVoucher && (
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600">
                               {formatCurrency(item.calculatedPrice?.unitPrice || 0)}/{item.product.unit}
                             </p>
                           )}
-                          <p className="text-xl font-bold text-primary-600">
+                          <p className="text-lg sm:text-xl font-bold text-primary-600">
                             {formatCurrency(item.calculatedPrice?.subtotal || 0)}
                           </p>
                           {isVoucher ? (
@@ -616,9 +617,9 @@ export default function CarritoPage() {
 
           {/* Resumen del pedido */}
           <div>
-            <Card className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-6">Resumen del Pedido</h2>
+            <Card className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+              <CardContent className="p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Resumen del Pedido</h2>
 
                 {/* Bonos de Metros Disponibles */}
                 {cart.meterVouchers?.available && cart.meterVouchers.totalMetersNeeded > 0 && (
