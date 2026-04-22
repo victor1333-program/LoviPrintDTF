@@ -49,12 +49,241 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
 
-        // Obtener metadata del pedido
+        // Obtener metadata del pedido o presupuesto
         const orderId = session.metadata?.orderId
         const orderNumber = session.metadata?.orderNumber
+        const quoteId = session.metadata?.quoteId
 
+        // ===== MANEJO DE PAGOS DE PRESUPUESTOS =====
+        if (quoteId) {
+          console.log(`Processing quote payment: ${quoteId}`)
+
+          try {
+            // 1. Actualizar presupuesto a PAID
+            const quote = await prisma.quote.update({
+              where: { id: quoteId },
+              data: {
+                status: 'PAID',
+                stripePaymentId: session.payment_intent as string,
+              },
+              include: {
+                user: true,
+              },
+            })
+
+            console.log(`Quote ${quote.quoteNumber} marked as PAID`)
+
+            // 2. Convertir automáticamente a Order
+            const { generateOrderNumber } = await import('@/lib/utils')
+
+            const dtfProduct = await prisma.product.findFirst({
+              where: { productType: 'DTF_TEXTILE', isActive: true },
+            })
+
+            if (!dtfProduct) {
+              throw new Error('DTF product not found')
+            }
+
+            const newOrderNumber = generateOrderNumber(false)
+
+            // Calcular puntos de fidelización
+            let pointsEarned = 0
+            if (quote.userId && quote.user) {
+              const user = quote.user
+              const pointMultipliers: Record<string, number> = {
+                BRONZE: 1.0,
+                SILVER: 1.25,
+                GOLD: 1.5,
+                PLATINUM: 2.0,
+              }
+              const multiplier = pointMultipliers[user.loyaltyTier] || 1.0
+              pointsEarned = Math.floor(Number(quote.estimatedTotal) * multiplier)
+            }
+
+            // Crear Order en transacción
+            const newOrder = await prisma.$transaction(async (tx) => {
+              const createdOrder = await tx.order.create({
+                data: {
+                  orderNumber: newOrderNumber,
+                  userId: quote.userId,
+                  customerName: quote.customerName,
+                  customerEmail: quote.customerEmail,
+                  customerPhone: quote.customerPhone,
+                  shippingMethodId: quote.shippingMethodId,
+                  subtotal: Number(quote.subtotal),
+                  discountAmount: 0,
+                  taxAmount: Number(quote.taxAmount),
+                  shippingCost: Number(quote.shippingCost || 0),
+                  totalPrice: Number(quote.estimatedTotal),
+                  metersOrdered: Number(quote.estimatedMeters),
+                  pricePerMeter: Number(quote.pricePerMeter),
+                  designFileUrl: quote.designFileUrl,
+                  designFileName: quote.designFileName,
+                  pointsEarned,
+                  taxExempt: quote.taxExempt || false,
+                  status: 'CONFIRMED',
+                  paymentStatus: 'PAID',
+                  paymentMethod: 'STRIPE',
+                  stripePaymentId: session.payment_intent as string,
+                  notes: quote.customerNotes,
+                  adminNotes: quote.adminNotes,
+                  shippingAddress: quote.shippingAddress as any,
+                },
+                include: {
+                  items: {
+                    include: {
+                      product: true,
+                    },
+                  },
+                },
+              })
+
+              // Crear OrderItem
+              await tx.orderItem.create({
+                data: {
+                  orderId: createdOrder.id,
+                  productId: dtfProduct.id,
+                  productName: `Impresión DTF - ${quote.estimatedMeters}m`,
+                  quantity: Number(quote.estimatedMeters),
+                  unitPrice: Number(quote.pricePerMeter),
+                  subtotal: Number(quote.subtotal),
+                  fileUrl: quote.designFileUrl,
+                  fileName: quote.designFileName,
+                  fileMetadata: quote.fileMetadata as any,
+                  customizations: {
+                    cutting: quote.needsCutting,
+                    cuttingPrice: quote.cuttingPrice ? Number(quote.cuttingPrice) : null,
+                    layout: quote.needsLayout,
+                    layoutPrice: quote.layoutPrice ? Number(quote.layoutPrice) : null,
+                    priority: quote.isPriority,
+                    priorityPrice: quote.priorityPrice ? Number(quote.priorityPrice) : null,
+                  },
+                },
+              })
+
+              // Crear historial de estado
+              await tx.orderStatusHistory.create({
+                data: {
+                  orderId: createdOrder.id,
+                  status: 'CONFIRMED',
+                  notes: `Pedido creado desde presupuesto ${quote.quoteNumber} - Pago confirmado via Stripe`,
+                },
+              })
+
+              // Actualizar Quote con orderId
+              await tx.quote.update({
+                where: { id: quoteId },
+                data: {
+                  orderId: createdOrder.id,
+                  convertedAt: new Date(),
+                },
+              })
+
+              // Actualizar usuario si existe (puntos y tier)
+              if (quote.userId && pointsEarned > 0) {
+                const currentUser = await tx.user.findUnique({
+                  where: { id: quote.userId },
+                  select: { loyaltyPoints: true, totalSpent: true },
+                })
+
+                if (currentUser) {
+                  const newTotalSpent = Number(currentUser.totalSpent) + Number(quote.estimatedTotal)
+                  const newLoyaltyPoints = currentUser.loyaltyPoints + pointsEarned
+
+                  let newTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' = 'BRONZE'
+                  if (newTotalSpent >= 1000) newTier = 'PLATINUM'
+                  else if (newTotalSpent >= 500) newTier = 'GOLD'
+                  else if (newTotalSpent >= 200) newTier = 'SILVER'
+
+                  await tx.user.update({
+                    where: { id: quote.userId },
+                    data: {
+                      loyaltyPoints: newLoyaltyPoints,
+                      totalSpent: newTotalSpent,
+                      loyaltyTier: newTier,
+                    },
+                  })
+
+                  const loyaltyRecord = await tx.loyaltyPoints.findUnique({
+                    where: { userId: quote.userId },
+                  })
+
+                  if (loyaltyRecord) {
+                    await tx.loyaltyPoints.update({
+                      where: { userId: quote.userId },
+                      data: {
+                        totalPoints: { increment: pointsEarned },
+                        availablePoints: { increment: pointsEarned },
+                        lifetimePoints: { increment: pointsEarned },
+                        tier: newTier,
+                      },
+                    })
+
+                    await tx.pointTransaction.create({
+                      data: {
+                        pointsId: loyaltyRecord.id,
+                        points: pointsEarned,
+                        type: 'earned',
+                        description: `Puntos ganados por pedido ${newOrderNumber} (desde presupuesto ${quote.quoteNumber})`,
+                        orderId: createdOrder.id,
+                      },
+                    })
+                  }
+                }
+              }
+
+              return createdOrder
+            })
+
+            console.log(`Quote ${quote.quoteNumber} converted to order ${newOrder.orderNumber}`)
+
+            // Obtener el pedido completo con items para emails
+            const orderWithItems = await prisma.order.findUnique({
+              where: { id: newOrder.id },
+              include: {
+                items: {
+                  include: {
+                    product: true,
+                  },
+                },
+                shippingMethod: true,
+              },
+            })
+
+            // Enviar emails
+            if (orderWithItems) {
+              const { sendOrderConfirmationEmail, sendAdminOrderNotification } = await import('@/lib/email')
+
+              sendOrderConfirmationEmail(orderWithItems).catch(err =>
+                console.error('Error sending order confirmation email from quote:', err)
+              )
+              sendAdminOrderNotification(orderWithItems).catch(err =>
+                console.error('Error sending admin notification email from quote:', err)
+              )
+
+              // Generar factura
+              const orderTotal = parseFloat(orderWithItems.totalPrice.toString())
+              if (orderTotal > 0) {
+                const { createInvoiceForOrder } = await import('@/lib/invoice')
+                createInvoiceForOrder(orderWithItems.id).catch(err =>
+                  console.error('Error generating invoice for quote order:', err)
+                )
+              }
+            }
+
+            console.log(`Payment confirmed for quote ${quote.quoteNumber} -> order ${newOrder.orderNumber}`)
+
+          } catch (error) {
+            console.error('Error processing quote payment:', error)
+          }
+
+          // Salir del case, no procesar como order normal
+          break
+        }
+
+        // ===== MANEJO DE PAGOS DE PEDIDOS NORMALES =====
         if (!orderId) {
-          console.error('No orderId in session metadata')
+          console.error('No orderId or quoteId in session metadata')
           break
         }
 

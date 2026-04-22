@@ -85,6 +85,7 @@ export async function GET(request: Request) {
         customerEmail: order.customerEmail,
         status: order.status,
         createdAt: order.createdAt.toISOString(),
+        totalPrice: order.totalPrice.toString(),
         shippingMethod: order.shippingMethod ? {
           id: order.shippingMethod.id,
           name: order.shippingMethod.name

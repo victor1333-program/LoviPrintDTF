@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { getQuoteStatusText, getQuoteStatusColor } from "@/lib/quotes"
 import QuoteActions from "@/components/admin/QuoteActions"
+import QuoteDownloadButton from "@/components/admin/QuoteDownloadButton"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -268,15 +269,10 @@ export default async function QuoteDetailPage({
                       </p>
                     </div>
                   </div>
-                  <a
-                    href={quote.designFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                    Descargar
-                  </a>
+                  <QuoteDownloadButton
+                    fileUrl={quote.designFileUrl}
+                    fileName={quote.designFileName}
+                  />
                 </div>
               </div>
             </CardContent>

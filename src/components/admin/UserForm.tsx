@@ -234,6 +234,21 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              DNI/NIE/CIF
+            </label>
+            <Input
+              type="text"
+              value={formData.taxId}
+              onChange={(e) => handleInputChange("taxId", e.target.value)}
+              placeholder="Ej: 12345678A, X1234567L, B12345678"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Necesario para la emisión de facturas
+            </p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
             <select
               value={formData.role}
@@ -266,24 +281,13 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           </div>
 
           {formData.isProfessional && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pl-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
                 <Input
                   type="text"
                   value={formData.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  CIF/NIF
-                </label>
-                <Input
-                  type="text"
-                  value={formData.taxId}
-                  onChange={(e) => handleInputChange("taxId", e.target.value)}
                 />
               </div>
 

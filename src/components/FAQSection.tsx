@@ -55,13 +55,13 @@ export function FAQSection() {
       id: 7,
       category: 'bonos',
       question: '¿Cómo funcionan los bonos prepagados?',
-      answer: 'Los bonos son paquetes de metros cuadrados que compras por adelantado con descuento. Por ejemplo, el Bono Starter incluye 10 m² por 150€ (15€/m² vs 18€/m² precio normal). Puedes usar los metros cuando quieras durante el período de validez (6-12 meses según el bono). Ideal si haces pedidos con frecuencia o sabes que vas a necesitar cierta cantidad.'
+      answer: 'Los bonos son paquetes de metros cuadrados que compras por adelantado con descuento. Por ejemplo, el Bono Starter incluye 10 m² por 150€ (15€/m² vs 18€/m² precio normal). Los bonos no caducan, así que puedes usar tus metros cuando quieras sin prisa. Ideal si haces pedidos con frecuencia o sabes que vas a necesitar cierta cantidad.'
     },
     {
       id: 8,
       category: 'bonos',
       question: '¿Los bonos tienen fecha de caducidad?',
-      answer: 'Sí, los bonos tienen validez según el tipo: Bono Starter (10m²) válido 6 meses, Bono Pro (25m²) válido 9 meses, y Bono Business (50m²) válido 12 meses. Recibirás notificaciones antes de que caduque tu bono. Los metros no se pueden transferir ni reembolsar una vez adquiridos.'
+      answer: 'No, nuestros bonos no tienen fecha de caducidad. Una vez que compras un bono, los metros son tuyos para siempre y puedes usarlos cuando lo necesites, sin prisa ni presión. Los metros no se pueden transferir ni reembolsar una vez adquiridos.'
     },
     {
       id: 9,

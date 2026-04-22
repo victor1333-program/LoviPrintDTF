@@ -166,7 +166,7 @@ export async function POST(
 
         // Obtener configuración de servicio GLS del método de envío
         const glsServiceCode = order.shippingMethod?.glsServiceCode || '1' // Courier por defecto
-        const glsTimeFrame = order.shippingMethod?.glsTimeFrame || '19' // Express 19h por defecto
+        const glsTimeFrame = order.shippingMethod?.glsTimeFrame || '18' // Express 19h por defecto (18 = sin franja específica)
 
         // Crear envío en GLS con estructura correcta
         const glsResponse = await glsService.createShipment({
@@ -220,6 +220,8 @@ export async function POST(
             trackingNumber: glsResponse.trackingNumber,
             glsUid: glsResponse.uid,
             glsCodexp: glsResponse.codexp,
+            glsServiceCode: glsServiceCode, // Guardar código de servicio usado
+            glsTimeFrame: glsTimeFrame, // Guardar franja horaria usada
             labelBase64: glsResponse.labelBase64,
             labelFormat: 'PDF',
             status: 'CREATED',

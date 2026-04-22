@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X, FileText } from "lucide-react"
+import { Home, ShoppingCart, Users, Settings, LogOut, Printer, Package2, FileImage, Ticket, Mail, Tag, ListOrdered, Menu, X, FileText, Receipt, Building2 } from "lucide-react"
 import { Button } from "../ui/Button"
 import { useState, useEffect } from "react"
 
@@ -12,8 +12,9 @@ export default function AdminSidebar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [confirmedOrdersCount, setConfirmedOrdersCount] = useState(0)
+  const [prospectAlertsCount, setProspectAlertsCount] = useState(0)
 
-  // Obtener el count de pedidos confirmados
+  // Obtener el count de pedidos confirmados y alertas de prospectos
   useEffect(() => {
     const fetchConfirmedCount = async () => {
       try {
@@ -27,14 +28,31 @@ export default function AdminSidebar() {
       }
     }
 
-    fetchConfirmedCount()
+    const fetchProspectAlerts = async () => {
+      try {
+        const response = await fetch('/api/admin/prospects/alerts/count')
+        if (response.ok) {
+          const data = await response.json()
+          setProspectAlertsCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error al obtener alertas de prospectos:', error)
+      }
+    }
 
-    // Actualizar cada 30 segundos para mantener el badge actualizado
-    const interval = setInterval(fetchConfirmedCount, 30000)
+    fetchConfirmedCount()
+    fetchProspectAlerts()
+
+    // Actualizar cada 30 segundos para mantener los badges actualizados
+    const interval = setInterval(() => {
+      fetchConfirmedCount()
+      fetchProspectAlerts()
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
+  // Menú principal del admin
   const links = [
     {
       href: "/admin",
@@ -58,6 +76,12 @@ export default function AdminSidebar() {
       href: "/admin/presupuestos",
       label: "Presupuestos",
       icon: FileText,
+      badge: null
+    },
+    {
+      href: "/admin/facturas",
+      label: "Facturación",
+      icon: Receipt,
       badge: null
     },
     {
@@ -89,6 +113,12 @@ export default function AdminSidebar() {
       label: "Usuarios",
       icon: Users,
       badge: null
+    },
+    {
+      href: "/admin/prospectos",
+      label: "Prospectos CRM",
+      icon: Building2,
+      badge: prospectAlertsCount > 0 ? prospectAlertsCount : null
     },
     {
       href: "/admin/notificaciones",
@@ -149,6 +179,8 @@ export default function AdminSidebar() {
                   "ml-auto text-xs px-2 py-1 rounded-full font-bold",
                   link.href === "/admin/pedidos"
                     ? "bg-red-500 text-white shadow-lg shadow-red-500/50"
+                    : link.href === "/admin/prospectos"
+                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/50"
                     : "bg-white/20 text-white"
                 )}>
                   {link.badge}

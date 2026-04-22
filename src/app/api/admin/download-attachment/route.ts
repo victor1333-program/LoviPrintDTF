@@ -144,15 +144,78 @@ export async function GET(request: NextRequest) {
           } else {
             console.error('Simple URL also failed with:', simpleResponse.status)
 
-            // Todos los métodos fallaron
-            return NextResponse.json(
-              {
-                error: 'No se pudo descargar el archivo desde Cloudinary. El archivo tiene restricciones de acceso.',
-                details: `Estado: ${simpleResponse.status}`,
-                suggestion: 'Por favor, contacta con el administrador para revisar los permisos del archivo en Cloudinary.'
-              },
-              { status: 500 }
-            )
+            // Método 3: Usar download_archive_url para archivos con restricciones de acceso
+            // Este método genera un ZIP descargable que incluye el archivo original
+            console.log('Trying download_archive_url method for restricted files...')
+
+            try {
+              // Generar URL de descarga de archivo usando la API de Cloudinary
+              const archiveUrl = cloudinary.utils.download_archive_url({
+                public_ids: [publicId],
+                resource_type: resourceType as 'image' | 'raw' | 'video',
+              })
+
+              console.log('Archive download URL generated, downloading...')
+
+              const archiveResponse = await fetch(archiveUrl)
+              console.log('Archive response status:', archiveResponse.status)
+
+              if (archiveResponse.ok) {
+                // Descargar el ZIP
+                const zipBuffer = Buffer.from(await archiveResponse.arrayBuffer())
+                console.log('ZIP downloaded, size:', zipBuffer.length)
+
+                // Extraer el archivo del ZIP usando JSZip o similar
+                // Importamos AdmZip dinámicamente
+                const AdmZip = require('adm-zip')
+                const zip = new AdmZip(zipBuffer)
+                const zipEntries = zip.getEntries()
+
+                // Buscar el archivo en el ZIP
+                let fileEntry = null
+                for (const entry of zipEntries) {
+                  if (!entry.isDirectory) {
+                    fileEntry = entry
+                    break
+                  }
+                }
+
+                if (fileEntry) {
+                  buffer = fileEntry.getData()
+                  console.log('File extracted from ZIP, size:', buffer.length)
+
+                  // Determinar content type basado en la extensión
+                  const ext = path.extname(fileName).toLowerCase()
+                  const mimeTypes: { [key: string]: string } = {
+                    '.pdf': 'application/pdf',
+                    '.png': 'image/png',
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.gif': 'image/gif',
+                    '.svg': 'image/svg+xml',
+                    '.webp': 'image/webp',
+                    '.zip': 'application/zip',
+                  }
+                  contentType = mimeTypes[ext] || 'application/octet-stream'
+                } else {
+                  throw new Error('No se encontró el archivo en el ZIP')
+                }
+              } else {
+                throw new Error(`Archive download failed: ${archiveResponse.status}`)
+              }
+            } catch (archiveError: any) {
+              console.error('Archive download error:', archiveError.message)
+
+              // Todos los métodos fallaron
+              return NextResponse.json(
+                {
+                  error: 'No se pudo descargar el archivo desde Cloudinary. El archivo tiene restricciones de acceso.',
+                  details: `Estado: ${simpleResponse.status}`,
+                  suggestion: 'Por favor, contacta con el administrador para revisar los permisos del archivo en Cloudinary.'
+                },
+                { status: 500 }
+              )
+            }
           }
         } else {
           const blob = await response.blob()

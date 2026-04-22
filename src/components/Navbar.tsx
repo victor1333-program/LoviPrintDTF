@@ -33,48 +33,41 @@ export function Navbar() {
     {
       href: '/productos/transfer-dtf',
       label: 'Transfer DTF',
-      icon: <Printer className="w-4 h-4" />,
-      gradient: 'from-orange-500 to-orange-600',
-      description: 'Impresión DTF'
+      icon: <Printer className="w-5 h-5" />,
+      gradient: 'from-orange-500 to-orange-600'
     },
     {
       href: '/bonos',
       label: 'Bonos',
-      icon: <Ticket className="w-4 h-4" />,
-      gradient: 'from-purple-500 to-purple-600',
-      description: 'Ahorra hasta 33%'
+      icon: <Ticket className="w-5 h-5" />,
+      gradient: 'from-purple-500 to-purple-600'
     },
     {
       label: 'Sublimación',
-      icon: <Droplet className="w-4 h-4" />,
+      icon: <Droplet className="w-5 h-5" />,
       gradient: 'from-cyan-500 to-cyan-600',
-      description: 'Papel de sublimación',
       submenu: [
         {
           href: 'https://www.loviprintdtf.es/productos/papel-de-sublimacion',
-          label: 'Sublimación Metros',
-          description: 'Papel en metros'
+          label: 'Sublimación Metros'
         },
         {
           href: 'https://www.loviprintdtf.es/productos/folio-a4-sublimacion',
-          label: 'Sublimación Folios',
-          description: 'Folios A4'
+          label: 'Sublimación Folios'
         }
       ]
     },
     {
       href: '/faq',
       label: 'FAQ',
-      icon: <HelpCircle className="w-4 h-4" />,
-      gradient: 'from-blue-500 to-blue-600',
-      description: 'Preguntas frecuentes'
+      icon: <HelpCircle className="w-5 h-5" />,
+      gradient: 'from-blue-500 to-blue-600'
     },
     {
       href: '/contacto',
       label: 'Contacto',
-      icon: <Mail className="w-4 h-4" />,
-      gradient: 'from-green-500 to-green-600',
-      description: 'Escríbenos'
+      icon: <Mail className="w-5 h-5" />,
+      gradient: 'from-green-500 to-green-600'
     }
   ]
 
@@ -99,7 +92,7 @@ export function Navbar() {
               {/* Mensajes promocionales */}
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 fill-white animate-pulse hidden sm:inline" />
-                <span className="text-center sm:text-left">Envío 24h en toda España • Bonos con hasta 33% descuento</span>
+                <span className="text-center sm:text-left">Envío 24h en toda España</span>
                 <Zap className="w-4 h-4 fill-white animate-pulse hidden sm:inline" />
               </div>
             </div>
@@ -107,7 +100,7 @@ export function Navbar() {
         </div>
 
         <div className="container mx-auto px-4">
-          <div className="flex h-20 items-center justify-between">
+          <div className="flex h-28 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center group relative">
@@ -137,21 +130,16 @@ export function Navbar() {
                         onMouseLeave={() => setOpenDropdown(null)}
                       >
                         <button
-                          className="group relative px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center gap-2"
+                          className="group relative px-5 py-3 rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center gap-2.5"
                         >
-                          <div className={`p-1.5 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
+                          <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
                             {item.icon}
                           </div>
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
-                                {item.label}
-                              </span>
-                              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${openDropdown === item.label ? 'rotate-180' : ''}`} />
-                            </div>
-                            <span className="text-xs text-gray-500 hidden xl:block">
-                              {item.description}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                              {item.label}
                             </span>
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openDropdown === item.label ? 'rotate-180' : ''}`} />
                           </div>
                           <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></div>
                         </button>
@@ -168,9 +156,6 @@ export function Navbar() {
                                 <div className="font-semibold text-gray-900 text-sm">
                                   {subitem.label}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {subitem.description}
-                                </div>
                               </Link>
                             ))}
                           </div>
@@ -183,20 +168,15 @@ export function Navbar() {
                     <Link
                       key={item.href}
                       href={item.href || '#'}
-                      className="group relative px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                      className="group relative px-5 py-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
                           {item.icon}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
-                            {item.label}
-                          </span>
-                          <span className="text-xs text-gray-500 hidden xl:block">
-                            {item.description}
-                          </span>
-                        </div>
+                        <span className="text-base font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                          {item.label}
+                        </span>
                       </div>
                       <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></div>
                     </Link>
@@ -281,10 +261,7 @@ export function Navbar() {
                           <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white`}>
                             {item.icon}
                           </div>
-                          <div>
-                            <div className="font-semibold text-gray-900">{item.label}</div>
-                            <div className="text-xs text-gray-500">{item.description}</div>
-                          </div>
+                          <div className="font-semibold text-gray-900">{item.label}</div>
                         </div>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openDropdown === item.label ? 'rotate-180' : ''}`} />
                       </button>
@@ -298,7 +275,6 @@ export function Navbar() {
                               className="block p-3 rounded-lg hover:bg-gray-50 transition-all duration-300"
                             >
                               <div className="font-semibold text-gray-900 text-sm">{subitem.label}</div>
-                              <div className="text-xs text-gray-500">{subitem.description}</div>
                             </Link>
                           ))}
                         </div>
@@ -317,10 +293,7 @@ export function Navbar() {
                     <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} text-white`}>
                       {item.icon}
                     </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{item.label}</div>
-                      <div className="text-xs text-gray-500">{item.description}</div>
-                    </div>
+                    <div className="font-semibold text-gray-900">{item.label}</div>
                   </Link>
                 )
               })}

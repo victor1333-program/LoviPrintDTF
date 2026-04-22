@@ -35,6 +35,11 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [selectedVoucherId, setSelectedVoucherId] = useState("")
 
+  // Nuevos estados para creación de pedido
+  const [createOrder, setCreateOrder] = useState(true)
+  const [paymentMethod, setPaymentMethod] = useState<'BIZUM' | 'TRANSFERENCIA' | 'EFECTIVO' | 'CONTRA_REEMBOLSO'>('BIZUM')
+  const [notes, setNotes] = useState("")
+
   useEffect(() => {
     loadVouchers()
   }, [])
@@ -101,6 +106,8 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
         body: JSON.stringify({
           voucherId: selectedVoucherId,
           userId: selectedUser.id,
+          createOrder,
+          ...(createOrder && { paymentMethod, notes }),
         }),
       })
 
@@ -218,6 +225,82 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
                 </div>
               )
             })()}
+          </div>
+        )}
+      </div>
+
+      {/* Opciones de Pedido */}
+      <div className="space-y-4 border-t pt-4">
+        <h3 className="font-semibold text-lg">Opciones de Pedido</h3>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={createOrder}
+            onChange={(e) => setCreateOrder(e.target.checked)}
+            className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          />
+          <span className="text-sm font-medium">Crear pedido y contabilizar en ingresos</span>
+        </label>
+
+        {createOrder && (
+          <div className="space-y-4 pl-6 border-l-2 border-primary-200">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Método de Pago *
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="BIZUM">Bizum</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="CONTRA_REEMBOLSO">Contrareembolso</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notas (opcional)
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ej: Cliente pagó por WhatsApp"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {selectedVoucherId && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                <p className="font-medium text-green-900 mb-2">✓ Se generará un pedido:</p>
+                {(() => {
+                  const voucher = vouchers.find(v => v.id === selectedVoucherId)
+                  if (!voucher) return null
+                  const totalWithIVA = (voucher.price * 1.21).toFixed(2)
+                  return (
+                    <ul className="space-y-1 text-green-700">
+                      <li>• Monto: {totalWithIVA}€ (IVA incluido)</li>
+                      <li>• Se contabilizará en ingresos del mes</li>
+                      <li>• Se otorgarán puntos de fidelidad (+25% bonus)</li>
+                      <li>• No aparecerá en cola de impresión</li>
+                    </ul>
+                  )
+                })()}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!createOrder && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+            <p className="font-medium text-amber-900 mb-1">⚠️ Asignación sin pedido</p>
+            <p className="text-amber-700">
+              El bono se asignará gratis (regalo/compensación). No se generará pedido ni se contabilizará en ingresos.
+            </p>
           </div>
         )}
       </div>

@@ -352,6 +352,10 @@ function generateOrderConfirmationHTML(order: any): string {
                     </p>
                   </div>
 
+                  ${trackingBlockHTML(order)}
+
+                  ${guestSignupCTAHTML(order)}
+
                   <p style="margin: 30px 0 0; color: #6b7280; font-size: 14px; line-height: 1.7; text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb;">
                     Te mantendremos informado del estado de tu pedido por email.<br>
                     ¿Alguna duda? <a href="mailto:info@loviprintdtf.es" style="color: #667eea; text-decoration: none; font-weight: 600;">Contáctanos</a>
@@ -378,6 +382,46 @@ function generateOrderConfirmationHTML(order: any): string {
       </table>
     </body>
     </html>
+  `
+}
+
+function getBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://www.loviprintdtf.es'
+}
+
+function trackingBlockHTML(order: any): string {
+  if (!order.trackingToken) return ''
+  const url = `${getBaseUrl()}/pedido/seguimiento/${order.trackingToken}`
+  return `
+    <div style="margin: 25px 0; padding: 24px; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border-radius: 12px; text-align: center; border: 2px solid #c7d2fe;">
+      <p style="margin: 0 0 8px; color: #4338ca; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+        🔍 Sigue tu pedido en cualquier momento
+      </p>
+      <p style="margin: 0 0 16px; color: #4b5563; font-size: 14px;">
+        Guarda este enlace para consultar el estado sin necesidad de iniciar sesión.
+      </p>
+      <a href="${url}" style="display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 700;">
+        Ver estado de mi pedido
+      </a>
+    </div>
+  `
+}
+
+function guestSignupCTAHTML(order: any): string {
+  if (!order.isGuestOrder) return ''
+  const url = `${getBaseUrl()}/auth/signup?email=${encodeURIComponent(order.customerEmail)}`
+  return `
+    <div style="margin: 25px 0; padding: 20px; background: linear-gradient(to right, #fff7ed, #ffedd5); border-radius: 8px; border-left: 4px solid #ea580c;">
+      <p style="margin: 0 0 8px; color: #9a3412; font-size: 14px; font-weight: 700;">
+        🎁 ¿Creamos tu cuenta?
+      </p>
+      <p style="margin: 0 0 12px; color: #7c2d12; font-size: 13px; line-height: 1.6;">
+        Activa tu cuenta con el mismo email y tendrás tus pedidos, bonos y descuentos en un solo lugar.
+      </p>
+      <a href="${url}" style="display: inline-block; padding: 10px 24px; background-color: #ea580c; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
+        Crear mi cuenta
+      </a>
+    </div>
   `
 }
 

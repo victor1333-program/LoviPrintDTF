@@ -18,6 +18,7 @@ interface QueueOrder {
   createdAt: string
   items: any[]
   isPrioritized: boolean
+  totalPrice: number | string
   shippingMethod: {
     id: string
     name: string
@@ -340,7 +341,7 @@ function OrderCard({
                       </span>
                     </div>
                     <span className="text-lg font-bold text-primary-600">
-                      {formatCurrency(Number(item.subtotal))}
+                      {formatCurrency(Number(order.totalPrice))}
                     </span>
                   </div>
                 </div>
