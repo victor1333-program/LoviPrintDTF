@@ -303,9 +303,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white py-5">
+      <section className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white py-4 sm:py-5">
         <div className="container mx-auto px-4 flex flex-col items-center text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 flex-wrap">
             <Badge className="bg-white text-orange-600 hover:bg-white">
               <Sparkles className="h-3 w-3 mr-1" />
               {product.category?.name}
@@ -317,18 +317,17 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </Badge>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{product.name}</h1>
-          <p className="text-sm sm:text-base text-orange-100 max-w-3xl">{product.shortDescription}</p>
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">{product.name}</h1>
+          <p className="text-xs sm:text-base text-orange-100 max-w-3xl">{product.shortDescription}</p>
         </div>
       </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Product Image & Features */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Product Image */}
-            <Card className="overflow-hidden w-3/4 mx-auto">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 lg:py-12">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+          {/* Product Image - top on mobile, top-left on desktop */}
+          <div className="lg:col-span-2 lg:row-start-1">
+            <Card className="overflow-hidden w-full sm:w-3/4 sm:mx-auto">
               <CardContent className="p-0">
                 <div className="aspect-video bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center relative">
                   {product.imageUrl ? (
@@ -341,18 +340,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       priority
                     />
                   ) : (
-                    <div className="text-orange-300 text-9xl font-bold">
+                    <div className="text-orange-300 text-7xl sm:text-9xl font-bold">
                       {product.name.charAt(0)}
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
+          </div>
 
+          {/* Content Column - features, tabs, reviews */}
+          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-2 space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Características Principales */}
             <Card>
-              <CardContent className="p-8">
-                <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
+              <CardContent className="p-4 sm:p-6 md:p-8">
+                <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
                   <Award className="h-6 w-6 text-orange-600" />
                   Características Principales
                 </h2>
@@ -447,43 +449,43 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('description')}
-                    className={`flex items-center gap-2 px-6 py-4 font-semibold text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'description'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
                     }`}
                   >
-                    <FileText className="h-5 w-5" />
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                     Descripción
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('specs')}
-                    className={`flex items-center gap-2 px-6 py-4 font-semibold text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'specs'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
                     }`}
                   >
-                    <Info className="h-5 w-5" />
+                    <Info className="h-4 w-4 sm:h-5 sm:w-5" />
                     Especificaciones
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('instructions')}
-                    className={`flex items-center gap-2 px-6 py-4 font-semibold text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'instructions'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
                     }`}
                   >
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                     Instrucciones
                   </button>
                 </div>
 
                 {activeTab === 'description' && (
-                <div className="p-8 prose prose-lg max-w-none text-gray-700">
+                <div className="p-4 sm:p-6 md:p-8 prose prose-base sm:prose-lg max-w-none text-gray-700">
                   {product.description ? (
                     <>
                       {product.description.split('\n\n').map((paragraph, idx) => {
@@ -533,7 +535,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 )}
 
                 {activeTab === 'specs' && (
-                <div className="p-8">
+                <div className="p-4 sm:p-6 md:p-8">
                 {product.specifications ? (
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
@@ -589,7 +591,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 )}
 
                 {activeTab === 'instructions' && (
-                <div className="p-8">
+                <div className="p-4 sm:p-6 md:p-8">
                 {product.category?.slug === 'sublimacion' ? (
                   <div className="space-y-4">
                     <div className="flex items-start gap-4">
@@ -660,10 +662,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
             {/* Carrusel de Reseñas de Google */}
             <Card>
-              <CardContent className="p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <CardContent className="p-4 sm:p-6 md:p-8">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3">
                   <div className="flex items-center gap-3">
-                    <svg className="h-8 w-8" viewBox="0 0 48 48">
+                    <svg className="h-7 w-7 sm:h-8 sm:w-8" viewBox="0 0 48 48">
                       <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
                       <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
                       <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
@@ -763,12 +765,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             </Card>
           </div>
 
-          {/* Right Column - Sticky Order Form */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
+          {/* Order Form - second on mobile, sticky right on desktop */}
+          <div className="lg:col-start-3 lg:row-start-1 lg:row-span-2">
+            <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24">
               {/* Precio y Disponibilidad */}
               <Card className="border-2 border-orange-500">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <svg className="h-6 w-6" viewBox="0 0 48 48">
