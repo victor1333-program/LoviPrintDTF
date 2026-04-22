@@ -61,6 +61,9 @@ interface OrderConfirmData {
 
   // Envío
   shippingMethodId?: string | null
+
+  // Notas del cliente
+  notes?: string
 }
 
 export default function ConfirmCartOrderPage() {
@@ -122,6 +125,7 @@ export default function ConfirmCartOrderPage() {
         discountCodeId: orderData.discountCodeId,
         useMeterVouchers: orderData.useMeterVouchers,
         meterVouchersInfo: orderData.meterVouchersInfo,
+        notes: orderData.notes || undefined,
       }
 
       // Solo incluir shippingMethodId si es un valor válido (no vacío)
@@ -150,6 +154,23 @@ export default function ConfirmCartOrderPage() {
       }
 
       const order = await orderRes.json()
+
+      try {
+        const { savePendingPurchase } = await import('@/lib/analytics')
+        savePendingPurchase({
+          transactionId: order.orderNumber,
+          value: orderData.totalPrice,
+          tax: orderData.taxAmount,
+          shipping: orderData.shippingCost,
+          coupon: orderData.voucherId || orderData.discountCodeId,
+          items: orderData.items.map((item: any) => ({
+            item_id: item.productId,
+            item_name: item.productName,
+            price: Number(item.unitPrice),
+            quantity: Number(item.quantity),
+          })),
+        })
+      } catch {}
 
       // Limpiar carrito
       await fetch('/api/cart', { method: 'DELETE' })

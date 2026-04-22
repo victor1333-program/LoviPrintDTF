@@ -1,18 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Badge } from "@/components/ui/Badge"
-import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift } from "lucide-react"
+import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift, Sparkles } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
 import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
 import { AuthModal } from "@/components/AuthModal"
+import { trackBeginCheckout } from "@/lib/analytics"
 
 interface CartItem {
   id: string
@@ -58,6 +60,26 @@ export default function CarritoPage() {
       loadUserPoints()
     }
   }, [session])
+
+  // Reabre el checkout automáticamente si el usuario se acaba de autenticar
+  // después de haber sido interceptado por el gate (flag en sessionStorage).
+  useEffect(() => {
+    if (loading) return
+    if (!session?.user) return
+    if (!cart?.items?.length) return
+
+    let shouldResume = false
+    try {
+      if (window.sessionStorage.getItem('lovi_resume_checkout') === '1') {
+        window.sessionStorage.removeItem('lovi_resume_checkout')
+        shouldResume = true
+      }
+    } catch {}
+
+    if (shouldResume) {
+      setShowCheckoutModal(true)
+    }
+  }, [loading, session, cart])
 
   const loadShippingMethods = async () => {
     try {
@@ -183,15 +205,53 @@ export default function CarritoPage() {
     setPointsDiscount(discount)
   }
 
+  const handleChangeShippingMethod = (newMethodId: string) => {
+    if (newMethodId === selectedShippingMethodId) return
+    const prev = shippingMethods.find(m => m.id === selectedShippingMethodId)
+    const next = shippingMethods.find(m => m.id === newMethodId)
+    setSelectedShippingMethodId(newMethodId)
+
+    if (!next) return
+    const prevPrice = prev?.price ?? 0
+    const diff = next.price - prevPrice
+    if (diff === 0) {
+      toast.success(`Envío actualizado: ${next.name}`)
+    } else if (diff > 0) {
+      toast(`Envío ${next.name} · +${formatCurrency(diff)}`, { icon: '🚚' })
+    } else {
+      toast(`Envío ${next.name} · ${formatCurrency(diff)}`, { icon: '✅' })
+    }
+  }
+
   const openCheckoutModal = () => {
-    // Validar que el usuario esté autenticado
-    if (!session?.user) {
-      toast.error('Debes iniciar sesión para realizar un pedido')
+    // Detectar si el carrito incluye compra de bonos (requiere cuenta real)
+    const hasVoucherPurchase = cart?.items?.some(
+      (item: CartItem) => !!item.customizations?.voucherTemplateId
+    )
+    const usingMeterVouchers = cart?.meterVouchers?.canUseVoucherMeters || cart?.meterVouchers?.canUseVoucherMetersPartially
+
+    if (!session?.user && (hasVoucherPurchase || usingMeterVouchers)) {
+      toast.error(
+        hasVoucherPurchase
+          ? 'Para comprar un bono debes tener una cuenta. Inicia sesión o regístrate.'
+          : 'Debes iniciar sesión para usar tus bonos de metros.'
+      )
+      try {
+        window.sessionStorage.setItem('lovi_resume_checkout', '1')
+      } catch {}
       setShowAuthModal(true)
       return
     }
 
-    // Abrir el modal
+    const items = (cart?.items || []).map((item: CartItem) => ({
+      item_id: item.product.slug || item.product.id,
+      item_name: item.product.name,
+      item_category: item.product.category?.name,
+      price: Number(item.calculatedPrice?.unitPrice || item.product.basePrice || 0),
+      quantity: Number(item.quantity),
+    }))
+    trackBeginCheckout(items, Number(cart?.subtotal || 0))
+
     setShowCheckoutModal(true)
   }
 
@@ -203,7 +263,41 @@ export default function CarritoPage() {
       const useMeterVouchers = cart.meterVouchers?.canUseVoucherMeters || false
 
       // Determinar shippingMethodId válido
-      const validShippingMethodId = checkoutData.shippingMethodId || selectedShippingMethodId
+      let validShippingMethodId = checkoutData.shippingMethodId || selectedShippingMethodId
+
+      // Si aún no hay un método seleccionado, usar el primero disponible
+      if (!validShippingMethodId && shippingMethods.length > 0) {
+        validShippingMethodId = shippingMethods[0].id
+        console.log('⚠️ No había método seleccionado, usando el primero:', shippingMethods[0].name)
+      }
+
+      // RECALCULAR el costo de envío basándose en el método seleccionado
+      const finalSelectedMethod = shippingMethods.find(m => m.id === validShippingMethodId)
+      const finalBaseShippingCost = finalSelectedMethod?.price || 0
+
+      // Verificar condiciones de envío gratis
+      const hasVoucherShipment = cart.meterVouchers?.canUseVoucherShipment || false
+      const hasFreeShippingCode = appliedVoucher?.discountType === 'FREE_SHIPPING'
+      const hasFreeShippingByThreshold = subtotal >= FREE_SHIPPING_THRESHOLD
+
+      // Calcular costo final de envío
+      const finalShippingCost = hasVoucherShipment || hasFreeShippingCode || hasFreeShippingByThreshold ? 0 : finalBaseShippingCost
+
+      // Recalcular totales con el costo de envío correcto
+      const finalTaxableAmount = subtotal - voucherDiscount - pointsDiscount
+      const finalTax = finalTaxableAmount * TAX_RATE
+      const finalTotal = finalTaxableAmount + finalTax + finalShippingCost
+
+      console.log('📦 Recalculando costos de envío:', {
+        validShippingMethodId,
+        finalSelectedMethod: finalSelectedMethod?.name,
+        finalBaseShippingCost,
+        hasVoucherShipment,
+        hasFreeShippingCode,
+        hasFreeShippingByThreshold,
+        finalShippingCost,
+        finalTotal
+      })
 
       // Preparar datos completos del pedido para la página de confirmación
       const orderConfirmData = {
@@ -229,12 +323,12 @@ export default function CarritoPage() {
           customizations: item.customizations || undefined,
         })),
 
-        // Totales
+        // Totales (usar valores recalculados)
         subtotal: subtotal,
         discountAmount: voucherDiscount,
-        taxAmount: tax,
-        shippingCost: shipping,
-        totalPrice: total,
+        taxAmount: finalTax,
+        shippingCost: finalShippingCost,
+        totalPrice: finalTotal,
         pointsUsed: pointsToUse,
         pointsDiscount: pointsDiscount,
 
@@ -249,6 +343,9 @@ export default function CarritoPage() {
 
         // Método de envío
         shippingMethodId: validShippingMethodId || null,
+
+        // Notas adicionales del cliente
+        notes: checkoutData.notes || null,
       }
 
       // Guardar en sessionStorage para la página de confirmación
@@ -337,7 +434,27 @@ export default function CarritoPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Carrito de Compra</h1>
+        <h1 className="text-3xl font-bold mb-6">Carrito de Compra</h1>
+
+        {/* Banner puntos de fidelidad */}
+        {session?.user && availablePoints >= 100 && (
+          <div className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-amber-900">
+                Tienes {availablePoints} puntos disponibles ={' '}
+                <span className="text-amber-700">
+                  {formatCurrency(Math.floor(availablePoints / 100) * 5)} de descuento
+                </span>
+              </p>
+              <p className="text-sm text-amber-800 mt-0.5">
+                Canjéalos al final del carrito antes de pagar.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Items del carrito */}
@@ -360,11 +477,15 @@ export default function CarritoPage() {
                           <Ticket className="h-12 w-12 text-white" />
                         </div>
                       ) : item.product.imageUrl ? (
-                        <img
-                          src={item.product.imageUrl}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={item.product.imageUrl}
+                            alt={item.product.name}
+                            fill
+                            sizes="96px"
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
                       ) : (
                         <span className="text-3xl font-bold text-primary-400">
                           {item.product.name.charAt(0)}
@@ -650,7 +771,7 @@ export default function CarritoPage() {
                         {shippingMethods.map((method) => {
                           // El envío gratis solo aplica a métodos estándar (precio <= 6€)
                           const isStandardShipping = method.price <= 6
-                          const hasFreeShipping = shipping === 0
+                          const hasFreeShipping = hasVoucherShipment || hasFreeShippingCode || hasFreeShippingByThreshold
                           const isFreeForThisMethod = hasFreeShipping && isStandardShipping
                           const methodPrice = isFreeForThisMethod ? 0 : method.price
 
@@ -662,14 +783,14 @@ export default function CarritoPage() {
                                   ? 'border-primary-500 bg-primary-50'
                                   : 'border-gray-200 hover:border-gray-300 bg-white'
                               }`}
-                              onClick={() => setSelectedShippingMethodId(method.id)}
+                              onClick={() => handleChangeShippingMethod(method.id)}
                             >
                               <input
                                 type="radio"
                                 name="shipping-method"
                                 value={method.id}
                                 checked={selectedShippingMethodId === method.id}
-                                onChange={() => setSelectedShippingMethodId(method.id)}
+                                onChange={() => handleChangeShippingMethod(method.id)}
                                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-0.5"
                               />
                               <div className="flex-1 min-w-0">
@@ -767,37 +888,31 @@ export default function CarritoPage() {
                   </div>
                 </div>
 
-                {!session?.user ? (
-                  <div className="space-y-3">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-800 text-center">
-                        Debes iniciar sesión para proceder con el pedido
-                      </p>
-                    </div>
-                    <Button
+                <Button
+                  onClick={openCheckoutModal}
+                  disabled={processingCheckout}
+                  size="lg"
+                  className="w-full"
+                >
+                  {processingCheckout
+                    ? 'Procesando...'
+                    : total === 0
+                      ? 'Confirmar Pedido'
+                      : 'Proceder al Pago'
+                  }
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+
+                {!session?.user && (
+                  <p className="text-xs text-center text-gray-500 mt-3">
+                    ¿Ya tienes cuenta?{' '}
+                    <button
                       onClick={() => setShowAuthModal(true)}
-                      size="lg"
-                      className="w-full"
+                      className="text-primary-600 hover:text-primary-700 font-medium underline"
                     >
-                      Iniciar Sesión
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={openCheckoutModal}
-                    disabled={processingCheckout}
-                    size="lg"
-                    className="w-full"
-                  >
-                    {processingCheckout
-                      ? 'Procesando...'
-                      : total === 0
-                        ? 'Confirmar Pedido'
-                        : 'Proceder al Pago'
-                    }
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </Button>
+                      Inicia sesión
+                    </button>
+                  </p>
                 )}
 
                 <Button
@@ -825,7 +940,7 @@ export default function CarritoPage() {
           shipping: shipping,
           total: total
         }}
-        hasFreeShipping={shipping === 0}
+        hasFreeShipping={hasVoucherShipment || hasFreeShippingCode || hasFreeShippingByThreshold}
         initialShippingMethodId={selectedShippingMethodId}
       />
 
@@ -836,6 +951,11 @@ export default function CarritoPage() {
         onSuccess={() => {
           setShowAuthModal(false)
           loadCart() // Recargar carrito después de iniciar sesión
+        }}
+        allowGuest={!cart?.items?.some((item: CartItem) => !!item.customizations?.voucherTemplateId)}
+        onGuestContinue={() => {
+          setShowAuthModal(false)
+          setShowCheckoutModal(true)
         }}
       />
     </div>

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { street, city, state, postalCode, country } = body
+    const { street, city, state, postalCode, country, isDefault: requestedDefault } = body
 
     // Validaciones
     if (!street || !city || !postalCode || !country) {
@@ -49,8 +49,17 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id },
     })
 
-    // Si es la primera dirección, marcarla como predeterminada
+    // Si es la primera dirección, siempre es la predeterminada.
+    // Si el cliente pidió marcarla como predeterminada, desmarcamos las demás.
     const isFirstAddress = existingAddresses === 0
+    const shouldBeDefault = isFirstAddress || requestedDefault === true
+
+    if (shouldBeDefault && !isFirstAddress) {
+      await prisma.address.updateMany({
+        where: { userId: session.user.id, isDefault: true },
+        data: { isDefault: false },
+      })
+    }
 
     const address = await prisma.address.create({
       data: {
@@ -60,7 +69,7 @@ export async function POST(req: NextRequest) {
         state,
         postalCode,
         country,
-        isDefault: isFirstAddress,
+        isDefault: shouldBeDefault,
       },
     })
 

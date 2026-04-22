@@ -3,10 +3,42 @@ import { uploadToCloudinary } from '@/lib/cloudinary'
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import sharp from 'sharp'
 import { prisma } from '@/lib/prisma'
 import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
 import { sanitizeFileName, generateUniqueFileName, isAllowedExtension, validateMimeTypeMatch } from '@/lib/file-utils'
 import { uploadLogger } from '@/lib/logger'
+
+const MIN_WARN_DPI = 150
+const MIN_WARN_PX = 1000
+
+async function extractQualityInfo(buffer: Buffer, mimeType: string) {
+  if (!['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'].includes(mimeType)) {
+    return { imageMetadata: null, qualityWarnings: [] as string[] }
+  }
+  try {
+    const meta = await sharp(buffer).metadata()
+    const width = meta.width
+    const height = meta.height
+    const dpi = meta.density
+    const warnings: string[] = []
+
+    if (dpi && dpi < MIN_WARN_DPI) {
+      warnings.push(`Resolución baja (${dpi} DPI). Recomendamos 300 DPI para una impresión nítida.`)
+    }
+    if (width && height && Math.min(width, height) < MIN_WARN_PX) {
+      warnings.push(`Dimensiones reducidas (${width}×${height}px). Recomendamos al menos ${MIN_WARN_PX}×${MIN_WARN_PX}px.`)
+    }
+
+    return {
+      imageMetadata: { width, height, dpi },
+      qualityWarnings: warnings,
+    }
+  } catch (error) {
+    uploadLogger.warn('Could not extract image metadata with sharp', { context: { mimeType } })
+    return { imageMetadata: null, qualityWarnings: [] as string[] }
+  }
+}
 
 export async function POST(request: NextRequest) {
   // Aplicar rate limiting para uploads
@@ -108,11 +140,29 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // Validación de calidad (no bloquea, solo avisa)
+    const { imageMetadata, qualityWarnings } = await extractQualityInfo(buffer, file.type)
+
     // Usar Cloudinary si está configurado
     if (storageProvider === 'cloudinary') {
+      // Determinar el resource_type correcto:
+      // - PDFs deben subirse como 'raw' para evitar restricciones de acceso
+      // - Imágenes como 'image'
+      // - Otros archivos como 'raw'
+      let resourceType: 'image' | 'raw' | 'video' | 'auto' = 'auto'
+      const extension = path.extname(file.name).toLowerCase()
+
+      if (extension === '.pdf' || file.type === 'application/pdf') {
+        resourceType = 'raw'
+      } else if (['.psd', '.ai', '.svg'].includes(extension)) {
+        resourceType = 'raw'
+      } else if (['.png', '.jpg', '.jpeg'].includes(extension)) {
+        resourceType = 'image'
+      }
+
       const result = await uploadToCloudinary(buffer, {
         folder,
-        resourceType: 'auto',
+        resourceType,
       })
 
       if (!result.success) {
@@ -120,7 +170,7 @@ export async function POST(request: NextRequest) {
         uploadLogger.warn('Cloudinary upload failed, falling back to local storage', {
           context: { error: result.error }
         })
-        return await uploadToLocal(sanitizedFileName, buffer, file.size)
+        return await uploadToLocal(sanitizedFileName, buffer, file.size, imageMetadata, qualityWarnings)
       }
 
       return NextResponse.json({
@@ -130,11 +180,13 @@ export async function POST(request: NextRequest) {
         fileSize: file.size,
         metadata: result.metadata,
         publicId: result.publicId,
+        imageMetadata,
+        qualityWarnings,
       })
     }
 
     // Almacenamiento local (fallback o por defecto)
-    return await uploadToLocal(sanitizedFileName, buffer, file.size)
+    return await uploadToLocal(sanitizedFileName, buffer, file.size, imageMetadata, qualityWarnings)
 
   } catch (error) {
     uploadLogger.error('Error uploading file', error)
@@ -145,7 +197,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function uploadToLocal(sanitizedFileName: string, buffer: Buffer, fileSize: number) {
+async function uploadToLocal(
+  sanitizedFileName: string,
+  buffer: Buffer,
+  fileSize: number,
+  imageMetadata: { width?: number; height?: number; dpi?: number } | null = null,
+  qualityWarnings: string[] = []
+) {
   // Las validaciones ya se realizaron en el POST handler principal
 
   // Crear directorio si no existe
@@ -177,5 +235,7 @@ async function uploadToLocal(sanitizedFileName: string, buffer: Buffer, fileSize
     fileUrl,
     fileName: sanitizedFileName,
     fileSize,
+    imageMetadata,
+    qualityWarnings,
   })
 }

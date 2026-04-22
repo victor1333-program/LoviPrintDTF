@@ -1,13 +1,64 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Loader2, MapPin, User, Plus, Check, Truck } from 'lucide-react'
+import { Loader2, MapPin, User, Plus, Truck, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency } from '@/lib/utils'
+
+const SPANISH_PROVINCES = [
+  'A Coruña',
+  'Álava',
+  'Albacete',
+  'Alicante',
+  'Almería',
+  'Asturias',
+  'Ávila',
+  'Badajoz',
+  'Barcelona',
+  'Burgos',
+  'Cáceres',
+  'Cádiz',
+  'Cantabria',
+  'Castellón',
+  'Ciudad Real',
+  'Córdoba',
+  'Cuenca',
+  'Girona',
+  'Granada',
+  'Guadalajara',
+  'Gipuzkoa',
+  'Huelva',
+  'Huesca',
+  'Jaén',
+  'La Rioja',
+  'León',
+  'Lleida',
+  'Lugo',
+  'Madrid',
+  'Málaga',
+  'Murcia',
+  'Navarra',
+  'Ourense',
+  'Palencia',
+  'Pontevedra',
+  'Salamanca',
+  'Segovia',
+  'Sevilla',
+  'Soria',
+  'Tarragona',
+  'Teruel',
+  'Toledo',
+  'Valencia',
+  'Valladolid',
+  'Bizkaia',
+  'Zamora',
+  'Zaragoza',
+]
 
 interface Address {
   id: string
@@ -56,12 +107,14 @@ export interface CheckoutData {
     country: string
   }
   shippingMethodId?: string
+  notes?: string
 }
 
 export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFreeShipping = false, initialShippingMethodId }: CheckoutModalProps) {
+  const { data: session } = useSession()
+  const isGuest = !session?.user
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [step, setStep] = useState<'profile' | 'address'>('profile')
 
   // Datos del perfil
   const [name, setName] = useState('')
@@ -90,10 +143,14 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
     postalCode: '',
     country: 'España'
   })
+  const [saveAsDefault, setSaveAsDefault] = useState(false)
 
   // Métodos de envío
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('')
+
+  // Notas adicionales
+  const [notes, setNotes] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -104,38 +161,43 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
   const loadUserData = async () => {
     setLoading(true)
     try {
-      // Cargar datos del usuario
-      const userRes = await fetch('/api/user/me')
-      if (userRes.ok) {
-        const userData = await userRes.json()
-        setName(userData.name || '')
-        setEmail(userData.email || '')
-        setPhone(userData.phone || '')
-        setIsProfessional(userData.isProfessional || false)
-        setCompany(userData.company || '')
-        setTaxId(userData.taxId || '')
-        setBillingStreet(userData.billingStreet || '')
-        setBillingCity(userData.billingCity || '')
-        setBillingState(userData.billingState || '')
-        setBillingPostalCode(userData.billingPostalCode || '')
-      }
-
-      // Cargar direcciones
-      const addressRes = await fetch('/api/user/addresses')
-      if (addressRes.ok) {
-        const addressData = await addressRes.json()
-        setAddresses(addressData)
-
-        // Seleccionar dirección por defecto si existe
-        const defaultAddress = addressData.find((a: Address) => a.isDefault)
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id)
+      if (!isGuest) {
+        // Cargar datos del usuario
+        const userRes = await fetch('/api/user/me')
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setName(userData.name || '')
+          setEmail(userData.email || '')
+          setPhone(userData.phone || '')
+          setIsProfessional(userData.isProfessional || false)
+          setCompany(userData.company || '')
+          setTaxId(userData.taxId || '')
+          setBillingStreet(userData.billingStreet || '')
+          setBillingCity(userData.billingCity || '')
+          setBillingState(userData.billingState || '')
+          setBillingPostalCode(userData.billingPostalCode || '')
         }
 
-        // Si no tiene direcciones, mostrar formulario de nueva dirección
-        if (addressData.length === 0) {
-          setShowNewAddressForm(true)
+        // Cargar direcciones
+        const addressRes = await fetch('/api/user/addresses')
+        if (addressRes.ok) {
+          const addressData = await addressRes.json()
+          setAddresses(addressData)
+
+          // Seleccionar dirección por defecto si existe
+          const defaultAddress = addressData.find((a: Address) => a.isDefault)
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id)
+          }
+
+          // Si no tiene direcciones, mostrar formulario de nueva dirección
+          if (addressData.length === 0) {
+            setShowNewAddressForm(true)
+          }
         }
+      } else {
+        // Modo invitado: sin direcciones previas, mostrar formulario nuevo
+        setShowNewAddressForm(true)
       }
 
       // Cargar métodos de envío siempre (se mostrará u ocultará según hasFreeShipping)
@@ -167,7 +229,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
     }
   }
 
-  const validateProfile = () => {
+  const validateForm = () => {
+    // Datos personales
     if (!name.trim()) {
       toast.error('El nombre es obligatorio')
       return false
@@ -180,6 +243,7 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
       toast.error('El teléfono es obligatorio')
       return false
     }
+    // Datos fiscales (solo si es profesional)
     if (isProfessional) {
       if (!company.trim()) {
         toast.error('La razón social es obligatoria para profesionales')
@@ -190,31 +254,27 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
         return false
       }
       if (!billingStreet.trim()) {
-        toast.error('La dirección de facturación es obligatoria para profesionales')
+        toast.error('La dirección de facturación es obligatoria')
         return false
       }
       if (!billingPostalCode.trim()) {
-        toast.error('El código postal de facturación es obligatorio para profesionales')
+        toast.error('El código postal de facturación es obligatorio')
         return false
       }
       if (!billingCity.trim()) {
-        toast.error('La población de facturación es obligatoria para profesionales')
+        toast.error('La población de facturación es obligatoria')
         return false
       }
       if (!billingState.trim()) {
-        toast.error('La provincia de facturación es obligatoria para profesionales')
+        toast.error('La provincia de facturación es obligatoria')
         return false
       }
     }
-    return true
-  }
-
-  const validateAddress = () => {
+    // Dirección de envío
     if (!showNewAddressForm && !selectedAddressId) {
       toast.error('Selecciona una dirección de envío')
       return false
     }
-
     if (showNewAddressForm) {
       if (!newAddress.street.trim()) {
         toast.error('La calle es obligatoria')
@@ -228,62 +288,57 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
         toast.error('El código postal es obligatorio')
         return false
       }
+      if (!newAddress.state.trim()) {
+        toast.error('Selecciona una provincia')
+        return false
+      }
     }
-
-    // Validar método de envío solo si no hay envío gratis y hay métodos disponibles
+    // Método de envío
     if (!hasFreeShipping && shippingMethods.length > 0 && !selectedShippingMethodId) {
       toast.error('Selecciona un método de envío')
       return false
     }
-
     return true
   }
 
-  const handleContinueToAddress = async () => {
-    if (!validateProfile()) return
-
-    // Guardar datos del perfil si han cambiado
-    try {
-      await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          phone,
-          isProfessional,
-          company: isProfessional ? company : null,
-          taxId: isProfessional ? taxId : null,
-          billingStreet: isProfessional ? billingStreet : null,
-          billingCity: isProfessional ? billingCity : null,
-          billingState: isProfessional ? billingState : null,
-          billingPostalCode: isProfessional ? billingPostalCode : null
-        })
-      })
-
-      setStep('address')
-    } catch (error) {
-      console.error('Error updating profile:', error)
-      toast.error('Error al actualizar el perfil')
-    }
-  }
-
   const handleSubmit = async () => {
-    if (!validateAddress()) return
+    if (!validateForm()) return
 
     setSubmitting(true)
     try {
+      // Guardar perfil si hay sesión
+      if (!isGuest) {
+        await fetch('/api/user/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            phone,
+            isProfessional,
+            company: isProfessional ? company : null,
+            taxId: isProfessional ? taxId : null,
+            billingStreet: isProfessional ? billingStreet : null,
+            billingCity: isProfessional ? billingCity : null,
+            billingState: isProfessional ? billingState : null,
+            billingPostalCode: isProfessional ? billingPostalCode : null
+          })
+        })
+      }
+
       let shippingAddress
 
       if (showNewAddressForm) {
-        // Guardar nueva dirección
-        const res = await fetch('/api/user/addresses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newAddress)
-        })
+        // Solo guardar la dirección si el usuario tiene cuenta
+        if (!isGuest) {
+          const res = await fetch('/api/user/addresses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...newAddress, isDefault: saveAsDefault })
+          })
 
-        if (!res.ok) {
-          throw new Error('Error al guardar la dirección')
+          if (!res.ok) {
+            throw new Error('Error al guardar la dirección')
+          }
         }
 
         shippingAddress = newAddress
@@ -309,7 +364,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
         customerEmail: email,
         customerPhone: phone,
         shippingAddress,
-        shippingMethodId: selectedShippingMethodId && selectedShippingMethodId.trim() !== '' ? selectedShippingMethodId : undefined
+        shippingMethodId: selectedShippingMethodId && selectedShippingMethodId.trim() !== '' ? selectedShippingMethodId : undefined,
+        notes: notes.trim() || undefined,
       })
 
     } catch (error: any) {
@@ -324,9 +380,14 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
-            {step === 'profile' ? 'Confirma tus Datos' : 'Dirección de Envío'}
-          </DialogTitle>
+          <DialogTitle className="text-2xl">Completa tu Pedido</DialogTitle>
+          {!loading && (
+            <p className="text-sm text-gray-600 mt-1">
+              {isGuest
+                ? 'Compra sin registro. Te enviaremos un link por email para seguir tu pedido.'
+                : 'Revisa tus datos y confirma para continuar al pago.'}
+            </p>
+          )}
         </DialogHeader>
 
         {loading ? (
@@ -334,61 +395,27 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
             <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
           </div>
         ) : (
-          <>
-            {/* Step indicator */}
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === 'profile' ? 'bg-primary-600 text-white' : 'bg-green-600 text-white'
-                }`}>
-                  {step === 'address' ? <Check className="h-5 w-5" /> : '1'}
-                </div>
-                <span className={step === 'profile' ? 'font-semibold' : 'text-gray-500'}>
-                  Datos Personales
-                </span>
+          <div className="space-y-6">
+            {/* Sección: Datos personales */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <User className="h-5 w-5 text-primary-600" />
+                <h3 className="font-semibold text-gray-900">Tus datos</h3>
               </div>
 
-              <div className="w-12 h-0.5 bg-gray-300" />
-
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === 'address' ? 'bg-primary-600 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
-                  2
-                </div>
-                <span className={step === 'address' ? 'font-semibold' : 'text-gray-500'}>
-                  Dirección
-                </span>
+              <div>
+                <Label htmlFor="name">Nombre Completo *</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Juan Pérez"
+                  required
+                  autoComplete="name"
+                />
               </div>
-            </div>
 
-            {/* Profile Step */}
-            {step === 'profile' && (
-              <div className="space-y-4">
-                <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-primary-600 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-primary-900 mb-1">
-                        Verifica tus datos
-                      </h3>
-                      <p className="text-sm text-primary-800">
-                        Estos datos se usarán para el envío y comunicaciones del pedido
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="name">Nombre Completo *</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Juan Pérez"
-                  />
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="email">Email *</Label>
                   <Input
@@ -397,12 +424,12 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="correo@ejemplo.com"
-                    disabled
-                    className="bg-gray-50"
+                    disabled={!isGuest}
+                    className={!isGuest ? 'bg-gray-50' : ''}
+                    required
+                    autoComplete="email"
+                    inputMode="email"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    El email no se puede cambiar desde aquí
-                  </p>
                 </div>
 
                 <div>
@@ -413,32 +440,36 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="600123456"
+                    required
+                    autoComplete="tel"
+                    inputMode="tel"
+                    pattern="[0-9+\s\-]{6,20}"
                   />
                 </div>
+              </div>
 
-                {/* Professional checkbox */}
-                <div className="border-t pt-4">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="isProfessional"
-                      checked={isProfessional}
-                      onChange={(e) => setIsProfessional(e.target.checked)}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <Label htmlFor="isProfessional" className="mb-0 cursor-pointer">
-                      ¿Eres profesional? (Requiere factura con datos fiscales)
-                    </Label>
-                  </div>
-                </div>
+              {/* Professional checkbox */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="isProfessional"
+                  checked={isProfessional}
+                  onChange={(e) => setIsProfessional(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <Label htmlFor="isProfessional" className="mb-0 cursor-pointer">
+                  ¿Eres profesional? (Requiere factura con datos fiscales)
+                </Label>
+              </div>
 
-                {/* Professional fields */}
-                {isProfessional && (
-                  <div className="space-y-4 pl-4 border-l-2 border-primary-200 bg-primary-50 p-4 rounded-r-lg">
-                    <p className="text-sm text-primary-800 font-medium mb-3">
-                      Datos fiscales
-                    </p>
+              {/* Professional fields */}
+              {isProfessional && (
+                <div className="space-y-4 pl-4 border-l-2 border-primary-200 bg-primary-50 p-4 rounded-r-lg">
+                  <p className="text-sm text-primary-800 font-medium mb-3">
+                    Datos fiscales
+                  </p>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label htmlFor="company">Razón Social *</Label>
                       <Input
@@ -446,6 +477,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="Mi Empresa S.L."
+                        required={isProfessional}
+                        autoComplete="organization"
                       />
                     </div>
 
@@ -456,94 +489,76 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
                         placeholder="B12345678"
+                        required={isProfessional}
                       />
                     </div>
+                  </div>
 
-                    <div className="pt-4">
-                      <h3 className="font-medium text-gray-900 mb-3">Dirección de Facturación</h3>
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Dirección de Facturación</h4>
 
-                      <div className="space-y-3">
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="billingStreet">Dirección *</Label>
+                        <Input
+                          id="billingStreet"
+                          value={billingStreet}
+                          onChange={(e) => setBillingStreet(e.target.value)}
+                          placeholder="Calle, número, piso, puerta"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label htmlFor="billingStreet">Dirección *</Label>
+                          <Label htmlFor="billingPostalCode">Código Postal *</Label>
                           <Input
-                            id="billingStreet"
-                            value={billingStreet}
-                            onChange={(e) => setBillingStreet(e.target.value)}
-                            placeholder="Calle, número, piso, puerta"
+                            id="billingPostalCode"
+                            value={billingPostalCode}
+                            onChange={(e) => setBillingPostalCode(e.target.value)}
+                            placeholder="28001"
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="billingPostalCode">Código Postal *</Label>
-                            <Input
-                              id="billingPostalCode"
-                              value={billingPostalCode}
-                              onChange={(e) => setBillingPostalCode(e.target.value)}
-                              placeholder="28001"
-                            />
-                          </div>
-
-                          <div>
-                            <Label htmlFor="billingCity">Población *</Label>
-                            <Input
-                              id="billingCity"
-                              value={billingCity}
-                              onChange={(e) => setBillingCity(e.target.value)}
-                              placeholder="Madrid"
-                            />
-                          </div>
-                        </div>
-
                         <div>
-                          <Label htmlFor="billingState">Provincia *</Label>
+                          <Label htmlFor="billingCity">Población *</Label>
                           <Input
-                            id="billingState"
-                            value={billingState}
-                            onChange={(e) => setBillingState(e.target.value)}
+                            id="billingCity"
+                            value={billingCity}
+                            onChange={(e) => setBillingCity(e.target.value)}
                             placeholder="Madrid"
                           />
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                      <p className="text-xs text-blue-800">
-                        💡 La factura se generará con estos datos fiscales
-                      </p>
+                      <div>
+                        <Label htmlFor="billingState">Provincia *</Label>
+                        <Input
+                          id="billingState"
+                          value={billingState}
+                          onChange={(e) => setBillingState(e.target.value)}
+                          placeholder="Madrid"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
 
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={onClose} className="flex-1">
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleContinueToAddress} className="flex-1">
-                    Continuar a Dirección
-                  </Button>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                    <p className="text-xs text-blue-800">
+                      💡 La factura se generará con estos datos fiscales
+                    </p>
+                  </div>
                 </div>
+              )}
+            </section>
+
+            {/* Sección: Dirección de envío */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <MapPin className="h-5 w-5 text-primary-600" />
+                <h3 className="font-semibold text-gray-900">Dirección de envío</h3>
               </div>
-            )}
 
-            {/* Address Step */}
-            {step === 'address' && (
-              <div className="space-y-4">
-                <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-primary-600 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-primary-900 mb-1">
-                        ¿Dónde enviamos tu pedido?
-                      </h3>
-                      <p className="text-sm text-primary-800">
-                        Selecciona una dirección o crea una nueva
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direcciones existentes */}
+              {/* Direcciones existentes */}
                 {addresses.length > 0 && !showNewAddressForm && (
                   <div className="space-y-3">
                     <Label>Tus Direcciones</Label>
@@ -611,6 +626,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                         value={newAddress.street}
                         onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
                         placeholder="Calle Mayor, 123"
+                        required
+                        autoComplete="street-address"
                       />
                     </div>
 
@@ -622,6 +639,8 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                           value={newAddress.city}
                           onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
                           placeholder="Madrid"
+                          required
+                          autoComplete="address-level2"
                         />
                       </div>
 
@@ -632,19 +651,34 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                           value={newAddress.postalCode}
                           onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })}
                           placeholder="28001"
+                          required
+                          autoComplete="postal-code"
+                          inputMode="numeric"
+                          pattern="[0-9]{5}"
+                          maxLength={5}
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="state">Provincia</Label>
-                        <Input
+                        <Label htmlFor="state">Provincia *</Label>
+                        <select
                           id="state"
                           value={newAddress.state}
                           onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                          placeholder="Madrid"
-                        />
+                          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                          <option value="">Selecciona una provincia</option>
+                          {SPANISH_PROVINCES.map((province) => (
+                            <option key={province} value={province}>
+                              {province}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Solo realizamos envíos a provincias peninsulares
+                        </p>
                       </div>
 
                       <div>
@@ -657,131 +691,132 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, orderSummary, hasFre
                         />
                       </div>
                     </div>
+
+                    {!isGuest && addresses.length > 0 && (
+                      <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={saveAsDefault}
+                          onChange={(e) => setSaveAsDefault(e.target.checked)}
+                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">
+                          Usar esta dirección como predeterminada
+                        </span>
+                      </label>
+                    )}
                   </div>
                 )}
+            </section>
 
-                {/* Selección de método de envío */}
-                {shippingMethods.length > 0 && (
-                  <div className="border-t pt-4 mt-6">
-                    <div className="flex items-center gap-2 mb-3">
+            {/* Sección: Método de envío (resumen readonly) */}
+            {shippingMethods.length > 0 && (() => {
+              const selected = shippingMethods.find(m => m.id === selectedShippingMethodId) || shippingMethods[0]
+              const isStandardShipping = selected.price <= 6
+              const isFreeForThisMethod = hasFreeShipping && isStandardShipping
+              const displayPrice = isFreeForThisMethod || selected.price === 0 ? 'GRATIS' : formatCurrency(selected.price)
+
+              return (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b">
+                    <div className="flex items-center gap-2">
                       <Truck className="h-5 w-5 text-primary-600" />
-                      <h4 className="font-semibold">Método de Envío</h4>
+                      <h3 className="font-semibold text-gray-900">Método de envío</h3>
                     </div>
-                    {hasFreeShipping && (
-                      <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm text-green-800 font-medium">
-                          ✓ Tu pedido tiene envío estándar gratis
-                        </p>
-                        <p className="text-xs text-green-700 mt-1">
-                          Puedes elegir envío urgente con coste adicional
-                        </p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      {shippingMethods.map((method) => {
-                        // El envío gratis solo aplica a métodos estándar (precio <= 6€)
-                        const isStandardShipping = method.price <= 6
-                        const isFreeForThisMethod = hasFreeShipping && isStandardShipping
-                        const displayPrice = isFreeForThisMethod ? 'GRATIS' : (method.price === 0 ? 'GRATIS' : formatCurrency(method.price))
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 border rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">{selected.name}</div>
+                      {selected.estimatedDays && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Tiempo estimado: {selected.estimatedDays}
+                        </div>
+                      )}
+                    </div>
+                    <div className={`font-semibold ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
+                      {displayPrice}
+                    </div>
+                  </div>
+                </section>
+              )
+            })()}
 
-                        return (
-                          <div
-                            key={method.id}
-                            className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                              selectedShippingMethodId === method.id
-                                ? 'border-primary-500 bg-primary-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => setSelectedShippingMethodId(method.id)}
-                          >
-                            <input
-                              type="radio"
-                              name="shipping-method"
-                              value={method.id}
-                              checked={selectedShippingMethodId === method.id}
-                              onChange={() => setSelectedShippingMethodId(method.id)}
-                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-1"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <div className="font-medium">{method.name}</div>
-                                <div className={`font-semibold ${isFreeForThisMethod ? 'text-green-600' : 'text-primary-600'}`}>
-                                  {displayPrice}
-                                </div>
-                              </div>
-                              {method.description && (
-                                <div className="text-sm text-gray-600 mt-0.5">
-                                  {method.description}
-                                </div>
-                              )}
-                              {method.estimatedDays && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Tiempo estimado: {method.estimatedDays}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+            {/* Sección: Notas adicionales */}
+            <section className="space-y-2">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <MessageSquare className="h-5 w-5 text-primary-600" />
+                <h3 className="font-semibold text-gray-900">
+                  Notas adicionales <span className="font-normal text-sm text-gray-500">(opcional)</span>
+                </h3>
+              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Instrucciones especiales, fecha preferida de entrega, comentarios sobre el diseño..."
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              />
+              <p className="text-xs text-gray-500 text-right">{notes.length}/500</p>
+            </section>
+
+            {/* Resumen del pedido */}
+            <section className="bg-gray-50 border rounded-lg p-4">
+              <h3 className="font-semibold mb-3">Resumen del pedido</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span>{formatCurrency(orderSummary.subtotal)}</span>
+                </div>
+                {orderSummary.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Descuento</span>
+                    <span>-{formatCurrency(orderSummary.discount)}</span>
                   </div>
                 )}
-
-                {/* Resumen del pedido */}
-                <div className="border-t pt-4 mt-6">
-                  <h4 className="font-semibold mb-3">Resumen del Pedido</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span>{formatCurrency(orderSummary.subtotal)}</span>
-                    </div>
-                    {orderSummary.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Descuento</span>
-                        <span>-{formatCurrency(orderSummary.discount)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">IVA</span>
-                      <span>{formatCurrency(orderSummary.tax)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Envío</span>
-                      <span>{formatCurrency(orderSummary.shipping)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                      <span>Total</span>
-                      <span className="text-primary-600">{formatCurrency(orderSummary.total)}</span>
-                    </div>
-                  </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">IVA</span>
+                  <span>{formatCurrency(orderSummary.tax)}</span>
                 </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep('profile')}
-                    className="flex-1"
-                  >
-                    ← Volver
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="flex-1"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Procesando...
-                      </>
-                    ) : (
-                      'Confirmar y Continuar'
-                    )}
-                  </Button>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Envío</span>
+                  <span>{formatCurrency(orderSummary.shipping)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <span>Total</span>
+                  <span className="text-primary-600">{formatCurrency(orderSummary.total)}</span>
                 </div>
               </div>
-            )}
-          </>
+            </section>
+
+            {/* Botones */}
+            <div className="flex gap-3 pt-2 sticky bottom-0 bg-white">
+              <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex-1"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  'Confirmar y Pagar'
+                )}
+              </Button>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
