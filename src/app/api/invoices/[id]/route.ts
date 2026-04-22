@@ -40,7 +40,7 @@ export async function GET(
 
     // Verificar permisos: admin o dueño del pedido
     const isAdmin = session?.user?.role === 'ADMIN'
-    const isOwner = session?.user?.id === invoice.order.userId
+    const isOwner = invoice.order ? session?.user?.id === invoice.order.userId : false
 
     if (!isAdmin && !isOwner) {
       return NextResponse.json(

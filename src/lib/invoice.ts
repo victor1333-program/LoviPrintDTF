@@ -106,9 +106,9 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
     const companyName = 'LoviPrintDTF'
     const companyOwner = 'Maria Dolores Villena Garcia'
     const companyTaxId = '77598953N'
-    const companyAddress = 'Calle Antonio Lopes del Oro 7\n02400 Hellín (Albacete)'
+    const companyAddress = 'Calle Monecilla 10\n02400 Hellín (Albacete)'
     const companyEmail = 'info@loviprintdtf.es'
-    const companyPhone = '+34 XXX XXX XXX'
+    const companyPhone = '+34 614 051 291'
 
     // Logo - Cargar y verificar de forma segura
     let logoBuffer: Buffer | null = null
@@ -218,47 +218,57 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
     let yPosition = tableTop + 25
     doc.font('Helvetica')
 
-    // Obtener items del pedido
-    const order = invoice.order
-    if (order && order.items) {
-      order.items.forEach((item: any) => {
-        // Descripción del producto
-        let description = item.productName
-        if (item.fileName) {
-          description += `\n  Archivo: ${item.fileName}`
-        }
+    // Obtener items según el tipo de factura
+    let itemsToRender: any[] = []
 
-        // Extras
-        if (item.customizations?.extras) {
-          const extras = item.customizations.extras
-          if (extras.layout) description += '\n  + Maquetación'
-          if (extras.cutting) description += '\n  + Servicio de Corte'
-          if (extras.prioritize) description += '\n  + Priorización'
-        }
-
-        doc.text(description, 50, yPosition, { width: 260 })
-        doc.text(
-          `${Number(item.quantity).toFixed(2)}`,
-          320,
-          yPosition,
-          { width: 60, align: 'center' }
-        )
-        doc.text(
-          `${Number(item.unitPrice).toFixed(2)}€`,
-          380,
-          yPosition,
-          { width: 80, align: 'right' }
-        )
-        doc.text(
-          `${Number(item.subtotal).toFixed(2)}€`,
-          460,
-          yPosition,
-          { width: 85, align: 'right' }
-        )
-
-        yPosition += description.split('\n').length * 15 + 10
-      })
+    if (invoice.type === 'MANUAL' && invoice.items) {
+      // Factura manual: usar items del JSON
+      itemsToRender = invoice.items
+    } else if (invoice.order && invoice.order.items) {
+      // Factura de pedido: usar items del order
+      itemsToRender = invoice.order.items
     }
+
+    // Renderizar items
+    itemsToRender.forEach((item: any) => {
+      // Descripción del producto
+      let description = item.description || item.productName || 'Producto'
+
+      // Para items de pedidos, añadir archivo si existe
+      if (item.fileName) {
+        description += `\n  Archivo: ${item.fileName}`
+      }
+
+      // Extras (solo para items de pedidos)
+      if (item.customizations?.extras) {
+        const extras = item.customizations.extras
+        if (extras.layout) description += '\n  + Maquetación'
+        if (extras.cutting) description += '\n  + Servicio de Corte'
+        if (extras.prioritize) description += '\n  + Priorización'
+      }
+
+      doc.text(description, 50, yPosition, { width: 260 })
+      doc.text(
+        `${Number(item.quantity).toFixed(2)}`,
+        320,
+        yPosition,
+        { width: 60, align: 'center' }
+      )
+      doc.text(
+        `${Number(item.unitPrice).toFixed(2)}€`,
+        380,
+        yPosition,
+        { width: 80, align: 'right' }
+      )
+      doc.text(
+        `${Number(item.subtotal).toFixed(2)}€`,
+        460,
+        yPosition,
+        { width: 85, align: 'right' }
+      )
+
+      yPosition += description.split('\n').length * 15 + 10
+    })
 
     // Línea antes de totales
     yPosition += 10
@@ -384,6 +394,8 @@ export async function createInvoiceForOrder(orderId: string): Promise<any> {
     data: {
       invoiceNumber,
       orderId: order.id,
+      type: 'ORDER',
+      source: 'web',
       customerName: order.customerName,
       customerEmail: order.customerEmail,
       customerPhone: order.customerPhone,
@@ -464,4 +476,139 @@ export async function getInvoicePDF(invoiceId: string): Promise<Buffer> {
   }
 
   return generateInvoicePDF(invoice)
+}
+
+/**
+ * Crea una factura manual sin pedido asociado
+ */
+export async function createManualInvoice(data: any): Promise<any> {
+  try {
+    // 1. Generar número de factura
+    const invoiceNumber = await generateInvoiceNumber()
+
+    // 2. Crear factura en DB
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNumber,
+        type: 'MANUAL',
+        source: 'manual',
+        orderId: null,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        customerTaxId: data.customerTaxId,
+        customerAddress: data.customerAddress,
+        items: data.items,
+        subtotal: data.subtotal,
+        discountAmount: data.discountAmount || 0,
+        taxAmount: data.taxAmount,
+        taxRate: data.taxRate,
+        shippingCost: data.shippingCost || 0,
+        totalPrice: data.totalPrice,
+        issueDate: data.issueDate ? new Date(data.issueDate) : new Date(),
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        notes: data.notes
+      }
+    })
+
+    // 3. Generar PDF
+    const pdfBuffer = await generateInvoicePDF(invoice)
+
+    // 4. Subir a Cloudinary
+    const uploadResult = await uploadToCloudinary(pdfBuffer, {
+      folder: 'invoices',
+      resourceType: 'raw',
+      publicId: `invoice-${invoiceNumber}`,
+      format: 'pdf'
+    })
+
+    // 5. Actualizar con URLs
+    if (uploadResult.success && uploadResult.url) {
+      const updatedInvoice = await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: {
+          pdfUrl: uploadResult.url,
+          pdfPublicId: uploadResult.publicId
+        }
+      })
+      return updatedInvoice
+    }
+
+    return invoice
+  } catch (error) {
+    logger.error('Error creating manual invoice:', error)
+    throw error
+  }
+}
+
+/**
+ * Actualiza una factura manual existente
+ */
+export async function updateManualInvoice(
+  invoiceId: string,
+  data: any
+): Promise<any> {
+  try {
+    // 1. Verificar que existe y es editable
+    const existing = await prisma.invoice.findUnique({
+      where: { id: invoiceId }
+    })
+
+    if (!existing) {
+      throw new Error('Factura no encontrada')
+    }
+
+    if (existing.type !== 'MANUAL') {
+      throw new Error('Solo se pueden editar facturas manuales')
+    }
+
+    // 2. Actualizar datos
+    const updated = await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        customerTaxId: data.customerTaxId,
+        customerAddress: data.customerAddress,
+        items: data.items,
+        subtotal: data.subtotal,
+        discountAmount: data.discountAmount,
+        taxAmount: data.taxAmount,
+        taxRate: data.taxRate,
+        shippingCost: data.shippingCost,
+        totalPrice: data.totalPrice,
+        issueDate: data.issueDate ? new Date(data.issueDate) : undefined,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        notes: data.notes
+      }
+    })
+
+    // 3. Regenerar PDF
+    const pdfBuffer = await generateInvoicePDF(updated)
+
+    // 4. Resubir a Cloudinary
+    const uploadResult = await uploadToCloudinary(pdfBuffer, {
+      folder: 'invoices',
+      resourceType: 'raw',
+      publicId: existing.pdfPublicId || `invoice-${existing.invoiceNumber}`,
+      format: 'pdf'
+    })
+
+    if (uploadResult.success && uploadResult.url) {
+      const finalInvoice = await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          pdfUrl: uploadResult.url,
+          pdfPublicId: uploadResult.publicId
+        }
+      })
+      return finalInvoice
+    }
+
+    return updated
+  } catch (error) {
+    logger.error('Error updating manual invoice:', error)
+    throw error
+  }
 }

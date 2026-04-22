@@ -47,8 +47,8 @@ export async function GET(
 
     // Verificar permisos: admin, dueño del pedido, o mismo email
     const isAdmin = session.user.role === 'ADMIN'
-    const isOwner = session.user.id === invoice.order.userId
-    const sameEmail = session.user.email === invoice.order.customerEmail
+    const isOwner = invoice.order ? session.user.id === invoice.order.userId : false
+    const sameEmail = invoice.order ? session.user.email === invoice.order.customerEmail : session.user.email === invoice.customerEmail
 
     if (!isAdmin && !isOwner && !sameEmail) {
       return NextResponse.json(
