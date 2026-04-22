@@ -24,9 +24,9 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const [cancellingOrder, setCancellingOrder] = useState<string | null>(null)
   const [deletingOrder, setDeletingOrder] = useState<string | null>(null)
 
-  // Filtrar pedidos que están en estado READY (tienen etiqueta lista)
+  // Filtrar pedidos que tienen etiqueta de envío generada
   const ordersWithLabels = orders.filter(order =>
-    order.status === 'READY' && order.shipment?.trackingNumber
+    order.shipment?.trackingNumber && order.shipment?.glsReference
   )
 
   const toggleOrder = (orderId: string) => {
@@ -54,28 +54,38 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     try {
       const orderIds = Array.from(selectedOrders)
 
-      // Abrir cada etiqueta en una nueva pestaña
-      for (const orderId of orderIds) {
-        const order = orders.find(o => o.id === orderId)
-        if (order?.shipment?.trackingNumber) {
-          // Abrir la etiqueta de GLS en una nueva pestaña
-          const response = await fetch(`/api/admin/orders/${order.id}/label`)
-          if (response.ok) {
-            const blob = await response.blob()
-            const url = window.URL.createObjectURL(blob)
-            window.open(url, '_blank')
+      // Llamar al endpoint de etiquetas múltiples
+      const response = await fetch('/api/admin/orders/bulk/labels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderIds }),
+      })
 
-            // Pequeño delay entre aperturas para evitar que el navegador bloquee
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Error al generar las etiquetas')
       }
 
-      // Limpiar selección después de imprimir
+      // Descargar el PDF
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Etiquetas-${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success(`${orderIds.length} etiqueta${orderIds.length > 1 ? 's' : ''} descargada${orderIds.length > 1 ? 's' : ''}`)
+
+      // Limpiar selección después de descargar
       setSelectedOrders(new Set())
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error printing labels:', error)
-      alert('Error al imprimir las etiquetas')
+      toast.error(error.message || 'Error al generar las etiquetas')
     } finally {
       setIsPrinting(false)
     }
@@ -232,8 +242,8 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
               disabled={isPrinting}
               className="flex items-center gap-2"
             >
-              <Printer className="h-4 w-4" />
-              {isPrinting ? 'Imprimiendo...' : `Imprimir ${selectedOrders.size} Etiqueta${selectedOrders.size > 1 ? 's' : ''}`}
+              <Download className="h-4 w-4" />
+              {isPrinting ? 'Generando...' : `Descargar ${selectedOrders.size} Etiqueta${selectedOrders.size > 1 ? 's' : ''}`}
             </Button>
           )}
         </div>
@@ -266,7 +276,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           </thead>
           <tbody>
             {orders.map((order) => {
-              const canSelect = order.status === 'READY' && order.shipment?.trackingNumber
+              const canSelect = order.shipment?.trackingNumber && order.shipment?.glsReference
               const isSelected = selectedOrders.has(order.id)
 
               return (

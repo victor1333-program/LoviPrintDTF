@@ -147,7 +147,14 @@ export default function PedidoDetailPage() {
                 </div>
                 {order.discountAmount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Descuento</span>
+                    <span>
+                      Descuento
+                      {order.discountCode && (
+                        <span className="ml-2 text-sm font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                          {order.discountCode.code}
+                        </span>
+                      )}
+                    </span>
                     <span className="font-semibold">-{formatCurrency(Number(order.discountAmount))}</span>
                   </div>
                 )}
@@ -181,27 +188,33 @@ export default function PedidoDetailPage() {
               <CardTitle>Archivo de Diseño</CardTitle>
             </CardHeader>
             <CardContent>
-              {order.designFileUrl ? (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">{order.designFileName}</p>
-                    <p className="text-sm text-gray-600">Archivo subido por el cliente</p>
+              {(() => {
+                // Buscar archivo en order o en items
+                const fileUrl = order.designFileUrl || order.items?.[0]?.fileUrl
+                const fileName = order.designFileName || order.items?.[0]?.fileName
+
+                return fileUrl ? (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-semibold">{fileName}</p>
+                      <p className="text-sm text-gray-600">Archivo subido por el cliente</p>
+                    </div>
+                    <a
+                      href={fileUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button>
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar
+                      </Button>
+                    </a>
                   </div>
-                  <a
-                    href={order.designFileUrl}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button>
-                      <Download className="h-4 w-4 mr-2" />
-                      Descargar
-                    </Button>
-                  </a>
-                </div>
-              ) : (
-                <p className="text-gray-500">No hay archivo de diseño</p>
-              )}
+                ) : (
+                  <p className="text-gray-500">No hay archivo de diseño</p>
+                )
+              })()}
             </CardContent>
           </Card>
 

@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { prisma } from "@/lib/prisma"
-import { Search } from "lucide-react"
+import { Search, Plus } from "lucide-react"
 import OrdersTable from "@/components/admin/OrdersTable"
 import TrackingUpdateButton from "@/components/admin/TrackingUpdateButton"
+import Link from "next/link"
+import { Button } from "@/components/ui/Button"
 
 // Configurar la página como dinámica (sin caché)
 export const dynamic = 'force-dynamic'
@@ -58,7 +60,15 @@ export default async function PedidosPage() {
             Gestiona todos los pedidos de film DTF
           </p>
         </div>
-        <TrackingUpdateButton />
+        <div className="flex gap-2">
+          <Link href="/admin/pedidos/nuevo">
+            <Button className="bg-green-600 hover:bg-green-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Pedido Manual
+            </Button>
+          </Link>
+          <TrackingUpdateButton />
+        </div>
       </div>
 
       {/* Filtros - TODO: Implementar filtros funcionales */}
