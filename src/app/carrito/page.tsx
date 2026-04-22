@@ -11,6 +11,19 @@ import { Badge } from "@/components/ui/Badge"
 import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift, Sparkles, Truck } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { estimateDeliveryDate, formatDeliveryDate, minutesUntilCutoff } from "@/lib/delivery"
+
+function isImageFileName(fileName?: string): boolean {
+  if (!fileName) return false
+  const ext = fileName.toLowerCase().split('.').pop()
+  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp'
+}
+
+function getCloudinaryThumb(url: string): string {
+  if (url.includes('res.cloudinary.com') && url.includes('/image/upload/')) {
+    return url.replace('/image/upload/', '/image/upload/w_128,h_128,c_fill,q_auto,f_auto/')
+  }
+  return url
+}
 import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
 import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
@@ -519,11 +532,38 @@ export default function CarritoPage() {
                       </div>
 
                       {item.fileName && (
-                        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-3">
+                          {item.fileUrl && isImageFileName(item.fileName) ? (
+                            <a
+                              href={item.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0"
+                              aria-label="Ver diseño en tamaño completo"
+                            >
+                              <img
+                                src={getCloudinaryThumb(item.fileUrl)}
+                                alt={item.fileName}
+                                className="w-14 h-14 rounded border border-blue-300 object-cover bg-white"
+                                loading="lazy"
+                              />
+                            </a>
+                          ) : (
+                            <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium text-blue-900">Diseño adjuntado:</p>
                             <p className="text-xs text-blue-700 truncate">{item.fileName}</p>
+                            {item.fileUrl && (
+                              <a
+                                href={item.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Ver archivo
+                              </a>
+                            )}
                           </div>
                         </div>
                       )}
