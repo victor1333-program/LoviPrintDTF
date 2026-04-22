@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Badge } from "@/components/ui/Badge"
-import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift, Sparkles } from "lucide-react"
+import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift, Sparkles, Truck } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
+import { estimateDeliveryDate, formatDeliveryDate, minutesUntilCutoff } from "@/lib/delivery"
 import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
 import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
@@ -736,6 +737,40 @@ export default function CarritoPage() {
                     />
                   </div>
                 )}
+
+                {/* Fecha estimada de entrega */}
+                {(() => {
+                  const eta = estimateDeliveryDate()
+                  const mins = minutesUntilCutoff()
+                  const urgent = mins > 0 && mins <= 120
+                  return (
+                    <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <Truck className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-primary-900">
+                            Entrega estimada: {formatDeliveryDate(eta)}
+                          </p>
+                          {urgent && (
+                            <p className="text-xs text-orange-700 mt-0.5 font-medium">
+                              ⏰ Pide en los próximos {mins} min para que entre en la producción de hoy
+                            </p>
+                          )}
+                          {!urgent && mins > 0 && (
+                            <p className="text-xs text-primary-700 mt-0.5">
+                              Realizando el pedido hoy antes de las 13:00
+                            </p>
+                          )}
+                          {mins <= 0 && (
+                            <p className="text-xs text-primary-700 mt-0.5">
+                              Entra en producción del próximo día laborable
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Selección de método de envío - SIEMPRE MOSTRAR */}
                 <div className="mb-6">
