@@ -61,7 +61,7 @@ export default function PoliticaPrivacidadPage() {
                   <li>Sistema operativo</li>
                   <li>Páginas visitadas</li>
                   <li>Tiempo de navegación</li>
-                  <li>Cookies (ver nuestra <a href="/politica-cookies" className="text-primary-600 hover:text-primary-700 underline">Política de Cookies</a>)</li>
+                  <li>Cookies (ver nuestra <a href="/cookies" className="text-primary-600 hover:text-primary-700 underline">Política de Cookies</a>)</li>
                 </ul>
               </div>
 

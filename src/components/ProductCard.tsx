@@ -5,6 +5,7 @@ import { Card, CardContent } from "./ui/Card"
 import { Badge } from "./ui/Badge"
 import { Button } from "./ui/Button"
 import { ShoppingCart, Zap } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 
@@ -25,12 +26,14 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <Link href={`/productos/${product.slug}`}>
-        <div className="aspect-video bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+        <div className="relative aspect-video bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
           {product.imageUrl ? (
-            <img
+            <Image
               src={product.imageUrl}
               alt={product.name}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-cover"
             />
           ) : (
             <div className="text-primary-400 text-6xl font-bold">

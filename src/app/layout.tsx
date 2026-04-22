@@ -6,10 +6,11 @@ import { Toaster } from "react-hot-toast"
 import { ConditionalNavbar } from "@/components/ConditionalNavbar"
 import { Providers } from "@/components/Providers"
 import { WhatsAppWidget } from "@/components/WhatsAppWidget"
+import { B2BContactWidget } from "@/components/B2BContactWidget"
 import { ConditionalFooter } from "@/components/ConditionalFooter"
 import { CookieBanner } from "@/components/CookieBanner"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"], display: "swap" })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://loviprintdtf.es'),
@@ -80,7 +81,50 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <script
+        <Script
+          id="consent-default"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              window.gtag = gtag;
+              gtag('consent', 'default', {
+                'ad_storage': 'denied',
+                'ad_user_data': 'denied',
+                'ad_personalization': 'denied',
+                'analytics_storage': 'denied',
+                'personalization_storage': 'denied',
+                'functionality_storage': 'granted',
+                'security_storage': 'granted',
+                'wait_for_update': 500
+              });
+              try {
+                var stored = localStorage.getItem('cookieConsent');
+                var c = null;
+                if (stored) {
+                  c = JSON.parse(stored);
+                } else {
+                  var legacy = localStorage.getItem('cookiesAccepted');
+                  if (legacy === 'true') c = { analytics: true, marketing: true, personalization: true };
+                  else if (legacy === 'false') c = { analytics: false, marketing: false, personalization: false };
+                }
+                if (c) {
+                  gtag('consent', 'update', {
+                    'analytics_storage': c.analytics ? 'granted' : 'denied',
+                    'ad_storage': c.marketing ? 'granted' : 'denied',
+                    'ad_user_data': c.marketing ? 'granted' : 'denied',
+                    'ad_personalization': c.marketing ? 'granted' : 'denied',
+                    'personalization_storage': c.personalization ? 'granted' : 'denied'
+                  });
+                }
+              } catch(e) {}
+            `
+          }}
+        />
+        <Script
+          id="gtm"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -199,6 +243,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <ConditionalFooter />
           <Toaster position="top-right" />
           <WhatsAppWidget />
+          <B2BContactWidget />
           <CookieBanner />
         </Providers>
       </body>

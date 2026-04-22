@@ -1,89 +1,38 @@
-"use client"
-
-import { useState } from 'react'
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Card, CardContent } from "@/components/ui/Card"
 import {
-  Ticket,
   Star,
   CheckCircle2,
   TrendingUp,
   Gift,
   Zap,
   Shield,
-  Clock,
   HelpCircle,
   ArrowRight,
   Sparkles
 } from "lucide-react"
 import Link from "next/link"
 
+export const metadata: Metadata = {
+  title: "Bonos DTF Prepagados - Ahorra hasta 33% | LoviPrintDTF",
+  description: "Compra metros de impresión DTF por adelantado y ahorra hasta un 33%. Bonos sin caducidad, envíos gratis, uso flexible en múltiples pedidos. 25m, 50m y 100m disponibles.",
+  keywords: ["bonos DTF", "bono prepagado DTF", "descuento DTF", "DTF al por mayor", "bonos impresión textil"],
+  alternates: { canonical: "https://loviprintdtf.es/bonos" },
+  openGraph: {
+    title: "Bonos DTF Prepagados - Ahorra hasta 33%",
+    description: "Compra metros por adelantado, úsalos cuando quieras. Sin caducidad.",
+    url: "https://loviprintdtf.es/bonos",
+    type: "website",
+  },
+}
+
 export default function BonosPage() {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>('bono-50')
-
-  const bonos = [
-    {
-      id: 'bono-25',
-      name: 'Bono DTF',
-      metros: 25,
-      price: 190,
-      pricePerMeter: 7.60,
-      savings: 33,
-      slug: 'bono-dtf-25-metros',
-      color: 'from-blue-500 to-blue-600',
-      icon: <Sparkles className="w-8 h-8" />,
-      features: [
-        '25 metros de impresión DTF',
-        'Sin caducidad',
-        'Envíos gratis incluidos',
-        'Uso flexible en múltiples pedidos'
-      ],
-      idealFor: 'Ideal para emprendedores y pequeños proyectos'
-    },
-    {
-      id: 'bono-50',
-      name: 'Bono DTF',
-      metros: 50,
-      price: 375,
-      pricePerMeter: 7.50,
-      savings: 33,
-      slug: 'bono-dtf-50-metros',
-      color: 'from-orange-500 to-orange-600',
-      icon: <Star className="w-8 h-8" />,
-      features: [
-        '50 metros de impresión DTF',
-        'Sin caducidad',
-        'Envíos gratis incluidos',
-        'Uso flexible en múltiples pedidos'
-      ],
-      idealFor: 'Perfecto para negocios en crecimiento',
-      popular: true
-    },
-    {
-      id: 'bono-100',
-      name: 'Bono DTF',
-      metros: 100,
-      price: 725,
-      pricePerMeter: 7.25,
-      savings: 36,
-      slug: 'bono-dtf-100-metros',
-      color: 'from-purple-500 to-purple-600',
-      icon: <TrendingUp className="w-8 h-8" />,
-      features: [
-        '100 metros de impresión DTF',
-        'Sin caducidad',
-        'Envíos gratis incluidos',
-        'Uso flexible en múltiples pedidos'
-      ],
-      idealFor: 'Para empresas con volumen constante'
-    }
-  ]
-
   const faqs = [
     {
       question: '¿Cómo funcionan los bonos?',
-      answer: 'Compras un paquete de metros cuadrados por adelantado y los usas cuando quieras durante el período de validez. Es como tener un saldo prepagado que puedes usar en múltiples pedidos.'
+      answer: 'Compras un paquete de metros cuadrados por adelantado y los usas cuando quieras, sin fecha de caducidad. Es como tener un saldo prepagado permanente que puedes usar en múltiples pedidos.'
     },
     {
       question: '¿Puedo usar el bono en varios pedidos?',
@@ -91,15 +40,15 @@ export default function BonosPage() {
     },
     {
       question: '¿Qué pasa si no uso todos los metros?',
-      answer: 'Los metros no usados antes de la fecha de expiración se pierden. Te enviaremos notificaciones recordándote cuándo caduca tu bono.'
+      answer: 'No te preocupes, los metros no caducan. Puedes usarlos cuando quieras, sin fecha límite. Tus metros estarán siempre disponibles en tu cuenta hasta que los utilices.'
     },
     {
       question: '¿Puedo transferir mi bono a otra persona?',
       answer: 'No, los bonos son personales e intransferibles y están vinculados a tu cuenta.'
     },
     {
-      question: '¿Hay descuentos al renovar un bono?',
-      answer: 'Sí, los bonos Pro y Business incluyen descuentos especiales al renovar antes de que caduquen.'
+      question: '¿Hay descuentos en bonos adicionales?',
+      answer: 'Sí, los bonos Pro y Business incluyen descuentos especiales al comprar bonos adicionales. Contáctanos para más información.'
     }
   ]
 

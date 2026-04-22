@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { Cookie } from 'lucide-react'
+import { ManageCookiesButton } from '@/components/ManageCookiesButton'
 
 export const metadata: Metadata = {
   title: 'Política de Cookies - LoviPrintDTF',
@@ -265,10 +266,20 @@ export default function PoliticaCookiesPage() {
             </section>
 
             <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Gestionar tus preferencias</h2>
+              <p className="text-gray-700 mb-4">
+                Puedes modificar tus preferencias de cookies en cualquier momento desde el siguiente botón:
+              </p>
+              <ManageCookiesButton className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors">
+                Gestionar cookies
+              </ManageCookiesButton>
+            </section>
+
+            <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Más información</h2>
               <p className="text-gray-700 mb-4">
                 Para obtener más información sobre cómo protegemos su privacidad, consulte nuestra{' '}
-                <a href="/politica-privacidad" className="text-primary-600 hover:text-primary-700 underline font-medium">
+                <a href="/privacidad" className="text-primary-600 hover:text-primary-700 underline font-medium">
                   Política de Privacidad
                 </a>.
               </p>

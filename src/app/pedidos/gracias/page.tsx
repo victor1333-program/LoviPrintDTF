@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { CheckCircle, Mail, Package, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { consumePendingPurchase, trackPurchase } from "@/lib/analytics"
 
 function ThankYouContent() {
   const router = useRouter()
@@ -14,25 +15,25 @@ function ThankYouContent() {
   const paymentStatus = searchParams.get('payment')
 
   useEffect(() => {
-    // Aquí se pueden insertar los scripts de tracking
-    // Google Analytics conversion tracking
-    if (typeof window !== 'undefined' && orderNumber) {
-      // Ejemplo de evento de Google Analytics 4
-      if ((window as any).gtag) {
-        (window as any).gtag('event', 'purchase', {
-          transaction_id: orderNumber,
-          // Puedes añadir más parámetros según necesites
-        })
-      }
+    if (typeof window === 'undefined' || !orderNumber) return
 
-      // Aquí puedes añadir tu pixel de Facebook/Meta
-      if ((window as any).fbq) {
-        (window as any).fbq('track', 'Purchase', {
-          order_id: orderNumber,
-        })
-      }
+    const snapshot = consumePendingPurchase(orderNumber)
+    if (snapshot) {
+      trackPurchase(snapshot)
+    } else {
+      trackPurchase({
+        transactionId: orderNumber,
+        value: 0,
+        items: [],
+      })
+    }
 
-      // Aquí puedes añadir otros píxeles de seguimiento
+    if ((window as any).fbq) {
+      (window as any).fbq('track', 'Purchase', {
+        order_id: orderNumber,
+        value: snapshot?.value,
+        currency: 'EUR',
+      })
     }
   }, [orderNumber])
 

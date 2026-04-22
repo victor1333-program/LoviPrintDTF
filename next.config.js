@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/terminos-condiciones', destination: '/terminos', permanent: true },
+      { source: '/politica-privacidad', destination: '/privacidad', permanent: true },
+      { source: '/politica-cookies', destination: '/cookies', permanent: true },
+      { source: '/envios-devoluciones', destination: '/envios', permanent: true },
+    ]
+  },
   // Content Security Policy headers
   async headers() {
     return [
@@ -104,6 +112,11 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '50mb',
     },
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] }
+      : false,
   },
   // Permitir peticiones cross-origin desde el dominio en producción
   allowedDevOrigins: ['www.loviprintdtf.es', 'loviprintdtf.es'],

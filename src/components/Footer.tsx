@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Phone, MapPin, Printer } from 'lucide-react'
+import { ManageCookiesButton } from './ManageCookiesButton'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -56,6 +57,11 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4">Información Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
+                <Link href="/aviso-legal" className="hover:text-primary-400 transition-colors">
+                  Aviso Legal
+                </Link>
+              </li>
+              <li>
                 <Link href="/terminos" className="hover:text-primary-400 transition-colors">
                   Términos y Condiciones
                 </Link>
@@ -74,6 +80,11 @@ export function Footer() {
                 <Link href="/cookies" className="hover:text-primary-400 transition-colors">
                   Política de Cookies
                 </Link>
+              </li>
+              <li>
+                <ManageCookiesButton className="hover:text-primary-400 transition-colors text-left">
+                  Gestionar cookies
+                </ManageCookiesButton>
               </li>
             </ul>
           </div>
