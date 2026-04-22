@@ -7,12 +7,23 @@ import { addToCartSchema } from '@/lib/validations/schemas'
 import { logger } from '@/lib/logger'
 import { sanitizeFileName } from '@/lib/file-utils'
 import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
+import { mergeGuestCartIntoUser } from '@/lib/cart-merge'
 
 // GET - Obtener carrito
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     const sessionId = request.cookies.get('cart_session')?.value
+
+    let clearGuestCookie = false
+    if (session?.user?.id && sessionId) {
+      try {
+        await mergeGuestCartIntoUser(sessionId, session.user.id)
+      } catch (err) {
+        logger.error('Error merging guest cart into user cart', err)
+      }
+      clearGuestCookie = true
+    }
 
     if (!session?.user && !sessionId) {
       return NextResponse.json({ items: [], total: 0 })
@@ -36,7 +47,11 @@ export async function GET(request: NextRequest) {
     })
 
     if (!cart) {
-      return NextResponse.json({ items: [], total: 0 })
+      const emptyResp = NextResponse.json({ items: [], total: 0 })
+      if (clearGuestCookie) {
+        emptyResp.cookies.delete('cart_session')
+      }
+      return emptyResp
     }
 
     // Obtener bonos de metros disponibles si el usuario está autenticado
@@ -208,7 +223,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ...cart,
       items: itemsWithPrices,
       subtotal: finalSubtotal, // Subtotal ajustado si usa bonos
@@ -231,6 +246,12 @@ export async function GET(request: NextRequest) {
         metersToPay,
       },
     })
+
+    if (clearGuestCookie) {
+      response.cookies.delete('cart_session')
+    }
+
+    return response
   } catch (error) {
     logger.error('Error fetching cart', error)
     return NextResponse.json(

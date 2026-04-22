@@ -9,16 +9,29 @@ import { z } from 'zod'
 
 export const emailSchema = z.string().email('Email inválido')
 
-export const phoneSchema = z.string().regex(
-  /^\+?[1-9]\d{1,14}$/,
-  'Número de teléfono inválido'
-).optional()
+/**
+ * Normaliza un teléfono: quita espacios, guiones y paréntesis.
+ * Si son 9 dígitos y empieza por 6/7/8/9, antepone +34 (España).
+ */
+export function normalizePhone(raw: string): string {
+  const cleaned = raw.replace(/[\s\-()\.]/g, '')
+  // Número español de 9 dígitos sin prefijo → añadir +34
+  if (/^[6789]\d{8}$/.test(cleaned)) {
+    return `+34${cleaned}`
+  }
+  return cleaned
+}
+
+export const phoneSchema = z.string()
+  .transform((val) => normalizePhone(val))
+  .refine(
+    (val) => /^\+?[1-9]\d{6,14}$/.test(val),
+    { message: 'Número de teléfono inválido' }
+  )
+  .optional()
 
 export const passwordSchema = z.string()
   .min(8, 'La contraseña debe tener al menos 8 caracteres')
-  .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-  .regex(/[a-z]/, 'Debe contener al menos una minúscula')
-  .regex(/[0-9]/, 'Debe contener al menos un número')
 
 export const idSchema = z.string().cuid('ID inválido')
 
@@ -176,8 +189,7 @@ export const updateOrderStatusSchema = z.object({
 export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  name: z.string().min(2, 'Nombre muy corto').max(200, 'Nombre muy largo').optional(),
-  phone: phoneSchema,
+  name: z.string().trim().min(2, 'Nombre muy corto').max(200, 'Nombre muy largo'),
 })
 
 export const loginSchema = z.object({
@@ -210,6 +222,15 @@ export const purchaseVoucherSchema = z.object({
 
 export const validateVoucherSchema = z.object({
   code: z.string().min(1, 'Código requerido').max(50, 'Código muy largo'),
+})
+
+export const assignVoucherSchema = z.object({
+  voucherId: idSchema,  // ID de la plantilla
+  userId: idSchema,     // ID del usuario
+  // Campos para generar pedido opcionalmente
+  createOrder: z.boolean().default(false),
+  paymentMethod: z.enum(['BIZUM', 'TRANSFERENCIA', 'EFECTIVO', 'CONTRA_REEMBOLSO']).optional(),
+  notes: z.string().max(1000).optional(),
 })
 
 // ==================== PAYMENT SCHEMAS ====================
@@ -278,6 +299,140 @@ export const createVoucherTemplateSchema = z.object({
   isActive: z.boolean().default(true),
 })
 
+// ==================== MANUAL ORDER SCHEMA ====================
+
+export const createManualOrderSchema = z.object({
+  customerName: z.string().min(2, 'Nombre muy corto').max(200, 'Nombre muy largo'),
+  customerEmail: emailSchema,
+  customerPhone: z.string().min(9, 'Teléfono inválido').max(15, 'Teléfono muy largo'),
+
+  metersOrdered: positiveNumberSchema,
+  pricePerMeter: positiveNumberSchema,
+  subtotal: nonNegativeNumberSchema,
+  taxAmount: nonNegativeNumberSchema,
+  shippingCost: nonNegativeNumberSchema,
+  totalPrice: nonNegativeNumberSchema,
+
+  designFileUrl: z.string().url('URL de archivo inválida'),
+  designFileName: z.string().max(255, 'Nombre de archivo muy largo'),
+
+  shippingMethodId: shippingMethodIdSchema,
+  shippingAddress: addressSchema,
+
+  paymentMethod: z.enum(['BIZUM', 'TRANSFERENCIA', 'EFECTIVO', 'CONTRA_REEMBOLSO'], {
+    errorMap: () => ({ message: 'Método de pago inválido' })
+  }),
+
+  notes: z.string().max(1000, 'Notas muy largas').optional(),
+
+  // Campos opcionales para funcionalidades avanzadas
+  associateUserId: z.string().cuid('ID de usuario inválido').optional(), // ID del usuario encontrado para asociar
+  sendConfirmationEmail: z.boolean().optional(), // Si enviar email de confirmación
+
+  // Campos para uso de bonos
+  useVoucher: z.boolean().optional(),
+  voucherIds: z.array(z.string().cuid()).optional(), // Bonos a usar (ordenados FIFO)
+  voucherId: z.string().cuid().optional(), // Bono único a usar (pedidos manuales)
+
+  customizations: z.object({
+    extras: z.object({
+      layout: z.object({
+        selected: z.boolean(),
+        price: z.number().optional()
+      }).optional(),
+      cutting: z.object({
+        selected: z.boolean(),
+        price: z.number().optional()
+      }).optional(),
+      prioritize: z.object({
+        selected: z.boolean(),
+        price: z.number().optional()
+      }).optional(),
+    }).optional()
+  }).optional(),
+})
+
+// ==================== INVOICE SCHEMAS ====================
+
+// Schema para items de factura manual
+export const invoiceItemSchema = z.object({
+  description: z.string().min(1, 'Descripción requerida').max(500, 'Descripción muy larga'),
+  quantity: positiveNumberSchema,
+  unitPrice: positiveNumberSchema,
+  subtotal: nonNegativeNumberSchema
+})
+
+// Schema para crear factura manual
+export const createManualInvoiceSchema = z.object({
+  // Datos del cliente
+  customerName: z.string().min(2, 'Nombre muy corto').max(200, 'Nombre muy largo'),
+  customerEmail: emailSchema,
+  customerPhone: phoneSchema.optional(),
+  customerTaxId: z.string().max(20, 'NIF/CIF muy largo').optional(),
+  customerAddress: z.object({
+    street: z.string().max(200).optional(),
+    city: z.string().max(100).optional(),
+    postalCode: z.string().max(10).optional(),
+    state: z.string().max(100).optional(),
+    country: z.string().max(100).optional()
+  }).optional(),
+
+  // Items
+  items: z.array(invoiceItemSchema).min(1, 'Debe haber al menos un item'),
+
+  // Importes
+  subtotal: nonNegativeNumberSchema,
+  discountAmount: nonNegativeNumberSchema.optional(),
+  taxRate: z.number().min(0).max(100, 'IVA debe estar entre 0 y 100'),
+  taxAmount: nonNegativeNumberSchema,
+  shippingCost: nonNegativeNumberSchema.optional(),
+  totalPrice: nonNegativeNumberSchema,
+
+  // Metadatos
+  issueDate: z.string().datetime().optional(),
+  dueDate: z.string().datetime().optional(),
+  notes: z.string().max(1000, 'Notas muy largas').optional()
+})
+
+export const updateManualInvoiceSchema = createManualInvoiceSchema.partial()
+
+export const sendInvoiceEmailSchema = z.object({
+  recipientEmail: emailSchema.optional(),
+  message: z.string().max(1000, 'Mensaje muy largo').optional()
+})
+
+// ==================== PROSPECT CRM SCHEMAS ====================
+
+export const prospectSourceEnum = z.enum(['LLAMADA_FRIA', 'REFERIDO', 'WEB', 'RRSS'])
+export const prospectStatusEnum = z.enum(['VERDE', 'AMARILLO', 'ROJO'])
+
+export const createProspectSchema = z.object({
+  empresa: z.string().min(1, 'Empresa requerida').max(200, 'Empresa muy larga'),
+  contacto: z.string().min(1, 'Contacto requerido').max(200, 'Contacto muy largo'),
+  telefono: z.string().max(20, 'Teléfono muy largo').optional(),
+  ciudad: z.string().max(100, 'Ciudad muy larga').optional(),
+  provincia: z.string().max(100, 'Provincia muy larga').optional(),
+  canalEntrada: prospectSourceEnum,
+  estado: prospectStatusEnum.optional(),
+  notaClave: z.string().max(500, 'Nota muy larga').optional(),
+  proximaAccion: z.string().max(500, 'Acción muy larga').optional(),
+  fechaProximaAccion: z.string().datetime().optional().nullable(),
+  historialInicial: z.string().max(2000, 'Historial muy largo').optional()
+})
+
+export const updateProspectSchema = createProspectSchema.partial()
+
+export const addProspectHistorySchema = z.object({
+  texto: z.string().min(1, 'Texto requerido').max(2000, 'Texto muy largo')
+})
+
+export const markProspectDoneSchema = z.object({
+  resultado: z.string().min(1, 'Resultado requerido').max(2000, 'Resultado muy largo'),
+  nuevaProximaAccion: z.string().max(500, 'Acción muy larga').optional(),
+  nuevaFechaProximaAccion: z.string().datetime().optional().nullable(),
+  nuevoEstado: prospectStatusEnum.optional()
+})
+
 // ==================== HELPER TYPES ====================
 
 export type AddToCartInput = z.infer<typeof addToCartSchema>
@@ -294,3 +449,15 @@ export type CreateProductInput = z.infer<typeof createProductSchema>
 export type UpdateProductInput = z.infer<typeof updateProductSchema>
 export type CreateDiscountCodeInput = z.infer<typeof createDiscountCodeSchema>
 export type CreateVoucherTemplateInput = z.infer<typeof createVoucherTemplateSchema>
+export type AssignVoucherInput = z.infer<typeof assignVoucherSchema>
+export type CreateManualOrderInput = z.infer<typeof createManualOrderSchema>
+export type InvoiceItemInput = z.infer<typeof invoiceItemSchema>
+export type CreateManualInvoiceInput = z.infer<typeof createManualInvoiceSchema>
+export type UpdateManualInvoiceInput = z.infer<typeof updateManualInvoiceSchema>
+export type SendInvoiceEmailInput = z.infer<typeof sendInvoiceEmailSchema>
+
+// Prospect CRM Types
+export type CreateProspectInput = z.infer<typeof createProspectSchema>
+export type UpdateProspectInput = z.infer<typeof updateProspectSchema>
+export type AddProspectHistoryInput = z.infer<typeof addProspectHistorySchema>
+export type MarkProspectDoneInput = z.infer<typeof markProspectDoneSchema>

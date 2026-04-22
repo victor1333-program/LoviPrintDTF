@@ -1,14 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { generateOrderNumber } from '@/lib/utils'
 import { validatePointsUsage } from '@/lib/loyalty'
 import { logger } from '@/lib/logger'
-import { createCheckoutOrderSchema, createRegularOrderSchema } from '@/lib/validations/schemas'
+import { createCheckoutOrderSchema, createRegularOrderSchema, normalizePhone } from '@/lib/validations/schemas'
 import { z } from 'zod'
 import { sanitizeFileName } from '@/lib/file-utils'
 import { getRateLimitIdentifier, applyRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit'
+
+/**
+ * Resuelve el userId para una orden. Si hay sesión, devuelve su id.
+ * Si no hay sesión, busca/crea un User con isGuest=true por email.
+ * Devuelve { userId, isGuest, blocked } — blocked es un mensaje de error si no se permite.
+ */
+async function resolveOrderUser(
+  sessionUserId: string | undefined,
+  customerEmail: string,
+  customerName: string,
+  customerPhone: string | undefined | null
+): Promise<{ userId: string; isGuest: boolean; error?: string }> {
+  if (sessionUserId) {
+    return { userId: sessionUserId, isGuest: false }
+  }
+
+  const normalizedEmail = customerEmail.toLowerCase().trim()
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, isGuest: true, password: true },
+  })
+
+  if (existing) {
+    // Si el email tiene cuenta real, pedir login
+    if (!existing.isGuest && existing.password) {
+      return {
+        userId: '',
+        isGuest: false,
+        error: 'Este email ya tiene una cuenta. Inicia sesión para continuar.',
+      }
+    }
+    return { userId: existing.id, isGuest: true }
+  }
+
+  const created = await prisma.user.create({
+    data: {
+      email: normalizedEmail,
+      name: customerName,
+      phone: customerPhone || null,
+      isGuest: true,
+      role: 'CUSTOMER',
+    },
+    select: { id: true },
+  })
+  return { userId: created.id, isGuest: true }
+}
+
+function generateTrackingToken(): string {
+  return crypto.randomBytes(24).toString('hex')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,6 +175,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Normalizar teléfono (añadir +34 si es español sin prefijo)
+      phone = normalizePhone(phone)
+
       // Si el usuario está autenticado y saveProfile es true, actualizar su perfil
       if (session?.user && saveProfile) {
         await prisma.user.update({
@@ -188,6 +242,29 @@ export async function POST(request: NextRequest) {
       const orderStatus = isPaidWithVoucher ? 'CONFIRMED' : 'PENDING'
       const paymentStatus = isPaidWithVoucher ? 'PAID' : 'PENDING'
 
+      // Guests no pueden pagar con bonos (no tienen bonos asignados)
+      if (!session?.user && voucherCode) {
+        return NextResponse.json(
+          { error: 'Debes iniciar sesión para usar un bono' },
+          { status: 401 }
+        )
+      }
+
+      // Resolver usuario (crear guest si no hay sesión)
+      const userResolution = await resolveOrderUser(
+        session?.user?.id,
+        email,
+        name,
+        phone
+      )
+      if (userResolution.error) {
+        return NextResponse.json(
+          { error: userResolution.error, requiresLogin: true },
+          { status: 409 }
+        )
+      }
+      const trackingToken = generateTrackingToken()
+
       // Crear el pedido
       orderData = await prisma.$transaction(async (tx) => {
         const order = await tx.order.create({
@@ -196,8 +273,11 @@ export async function POST(request: NextRequest) {
             customerName: name,
             customerEmail: email,
             customerPhone: phone,
-            userId: session?.user?.id || null,
-            voucherId: discountCodeId || null,
+            userId: userResolution.userId,
+            isGuestOrder: userResolution.isGuest,
+            trackingToken,
+            voucherId: null, // Los bonos se manejan por separado
+            discountCodeId: discountCodeId || null,
             shippingMethodId: shippingMethodId || null,
             subtotal: parseFloat(subtotal.toString()),
             discountAmount: parseFloat((discountAmount || 0).toString()),
@@ -236,6 +316,26 @@ export async function POST(request: NextRequest) {
             },
           },
         })
+
+        // Si usó código de descuento, incrementar contador de uso
+        if (discountCodeId) {
+          await tx.discountCode.update({
+            where: { id: discountCodeId },
+            data: {
+              usageCount: { increment: 1 }
+            }
+          })
+
+          // Crear registro de uso del código de descuento
+          await tx.discountCodeUsage.create({
+            data: {
+              discountCodeId: discountCodeId,
+              userId: userResolution.userId,
+              orderId: order.id,
+              discountAmount: parseFloat((discountAmount || 0).toString())
+            }
+          })
+        }
 
         // Si usó bono de metros, descontarlos
         if (voucherCode && session?.user) {
@@ -323,13 +423,47 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Normalizar teléfono si está presente
+      if (customerPhone) {
+        customerPhone = normalizePhone(customerPhone)
+      }
+
       // Detectar si algún item es un bono (por customizations.voucherTemplateId)
       const isVoucherOrder = items.some((item: any) => {
         const customizations = item.customizations
         return !!customizations?.voucherTemplateId
       })
 
-      let userId: string | undefined
+      // Los bonos requieren cuenta real (no invitado)
+      if (isVoucherOrder && !session?.user?.id) {
+        return NextResponse.json(
+          { error: 'Debes tener una cuenta para comprar bonos. Inicia sesión o regístrate.', requiresLogin: true },
+          { status: 401 }
+        )
+      }
+
+      // Usar bonos de metros también requiere sesión
+      if (useMeterVouchers && !session?.user?.id) {
+        return NextResponse.json(
+          { error: 'Debes iniciar sesión para usar bonos de metros', requiresLogin: true },
+          { status: 401 }
+        )
+      }
+
+      // Resolver usuario (crear guest si no hay sesión)
+      const userResolution = await resolveOrderUser(
+        session?.user?.id,
+        customerEmail,
+        customerName,
+        customerPhone
+      )
+      if (userResolution.error) {
+        return NextResponse.json(
+          { error: userResolution.error, requiresLogin: true },
+          { status: 409 }
+        )
+      }
+      const userId: string = userResolution.userId
 
       // Si se están usando puntos, validar
       if (pointsUsed > 0) {
@@ -339,8 +473,6 @@ export async function POST(request: NextRequest) {
             { status: 401 }
           )
         }
-
-        userId = session.user.id
 
         const user = await prisma.user.findUnique({
           where: { id: userId },
@@ -369,6 +501,7 @@ export async function POST(request: NextRequest) {
       }
 
       const orderNumber = generateOrderNumber(isVoucherOrder)
+      const trackingToken = generateTrackingToken()
 
       // Usar una transacción para crear el pedido
       orderData = await prisma.$transaction(async (tx) => {
@@ -384,7 +517,9 @@ export async function POST(request: NextRequest) {
             customerName,
             customerEmail,
             customerPhone: customerPhone || null,
-            userId: userId || null,
+            userId: userId,
+            isGuestOrder: userResolution.isGuest,
+            trackingToken,
             voucherId: voucherId || null,
             shippingMethodId: shippingMethodId || null,
             subtotal: parseFloat(subtotal),

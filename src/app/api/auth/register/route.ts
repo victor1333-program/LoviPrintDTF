@@ -27,14 +27,15 @@ export async function POST(req: NextRequest) {
       return validation.error
     }
 
-    const { email, password } = validation.data
+    const { email, password, name } = validation.data
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     })
 
-    if (existingUser) {
+    // Si existe una cuenta real (con password y no-guest), rechazar
+    if (existingUser && !existingUser.isGuest && existingUser.password) {
       return NextResponse.json(
         { error: 'Este email ya está registrado' },
         { status: 400 }
@@ -48,25 +49,48 @@ export async function POST(req: NextRequest) {
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 horas
 
-    // Crear el usuario
-    const user = await prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        name: email.split('@')[0], // Usar parte del email temporalmente
-        phone: '', // Se completará después
-        emailVerified: null,
-        verificationToken,
-        verificationExpires,
-        role: 'CUSTOMER',
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
-    })
+    let user
+    if (existingUser && existingUser.isGuest) {
+      // Convertir usuario invitado en cuenta real — conserva historial de pedidos
+      user = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          password: hashedPassword,
+          name,
+          isGuest: false,
+          emailVerified: null,
+          verificationToken,
+          verificationExpires,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      })
+      logger.info(`Guest account claimed and activated: ${email}`)
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          name,
+          phone: '', // Se completará después
+          taxId: null, // Se completará después
+          emailVerified: null,
+          verificationToken,
+          verificationExpires,
+          role: 'CUSTOMER',
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      })
+    }
 
     // Construir URL de verificación
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.loviprintdtf.es'
