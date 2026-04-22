@@ -70,6 +70,7 @@ model User {
   loyaltyTier          LoyaltyTier @default(BRONZE) // Tier de fidelidad
   verificationToken    String? // Token de verificación de email
   verificationExpires  DateTime? // Fecha de expiración del token
+  isGuest              Boolean     @default(false) // Usuario creado desde checkout sin registro
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
@@ -380,7 +381,10 @@ model Order {
   shippingAddress   Json?
   trackingNumber    String?
   trackingUrl       String?
+  trackingToken     String?       @unique // Token para seguimiento público sin login
+  isGuestOrder      Boolean       @default(false) // Pedido realizado por usuario invitado
   estimatedDelivery DateTime?
+  source            String        @default("web") // "web" | "whatsapp" | "manual"
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
@@ -400,6 +404,7 @@ model Order {
   @@index([customerEmail])
   @@index([createdAt])
   @@index([shippingMethodId])
+  @@index([trackingToken])
   @@map("orders")
 }
 
@@ -530,7 +535,7 @@ model Quote {
 model Invoice {
   id            String @id @default(cuid())
   invoiceNumber String @unique // Formato: FAC-YYYY-NNNNN
-  orderId       String @unique
+  orderId       String? @unique // Opcional para facturas manuales
 
   // Datos del cliente
   customerName    String
@@ -545,6 +550,9 @@ model Invoice {
   companyAddress String  @default("Calle Ejemplo, 123, 28001 Madrid")
   companyPhone   String?
   companyEmail   String?
+
+  // Items de la factura (para facturas manuales sin pedido)
+  items Json? // Array de items para facturas manuales
 
   // Importes
   subtotal       Decimal @db.Decimal(10, 2)
@@ -563,16 +571,28 @@ model Invoice {
   dueDate   DateTime? // Fecha de vencimiento (para facturas a crédito)
   notes     String?   @db.Text
 
+  // Tipo de factura
+  type   InvoiceType @default(ORDER) // ORDER | MANUAL | QUOTE
+  source String      @default("web") // web | whatsapp | manual
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([invoiceNumber])
   @@index([orderId])
   @@index([customerEmail])
   @@index([issueDate])
+  @@index([type])
   @@map("invoices")
+}
+
+// Enum para tipo de factura
+enum InvoiceType {
+  ORDER  // Factura generada desde un pedido
+  MANUAL // Factura creada manualmente (WhatsApp)
+  QUOTE  // Factura generada desde un presupuesto (futuro)
 }
 
 // Configuración del sistema
@@ -834,4 +854,61 @@ enum QuoteStatus {
   PAID // Cliente ha pagado (se convierte en Order)
   EXPIRED // Presupuesto caducado
   CANCELLED // Cancelado por admin o cliente
+}
+
+// ==================== CRM PROSPECTOS B2B ====================
+
+// Canal de entrada del prospecto
+enum ProspectSource {
+  LLAMADA_FRIA // Llamada en frío
+  REFERIDO // Referido por otro cliente
+  WEB // Contacto desde la web
+  RRSS // Redes sociales
+}
+
+// Estado del prospecto (semáforo)
+enum ProspectStatus {
+  VERDE // Prospecto caliente/activo
+  AMARILLO // Seguimiento necesario
+  ROJO // Prospecto frío/perdido
+}
+
+// Prospectos B2B
+model Prospect {
+  id                  String          @id @default(cuid())
+  empresa             String // Nombre de la empresa
+  contacto            String // Nombre del contacto principal
+  telefono            String? // Teléfono de contacto
+  ciudad              String? // Ciudad
+  provincia           String? // Provincia
+  canalEntrada        ProspectSource // Canal por el que llegó
+  estado              ProspectStatus  @default(VERDE)
+  notaClave           String? // Lo más importante que dijeron
+  fechaPrimerContacto DateTime        @default(now())
+  proximaAccion       String? // Qué hay que hacer
+  fechaProximaAccion  DateTime? // Cuándo hay que hacerlo
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  historial ProspectHistory[]
+
+  @@index([estado])
+  @@index([fechaProximaAccion])
+  @@index([canalEntrada])
+  @@index([createdAt])
+  @@map("prospects")
+}
+
+// Historial de contactos con el prospecto
+model ProspectHistory {
+  id         String   @id @default(cuid())
+  prospectId String
+  texto      String   @db.Text // Descripción de la acción/contacto
+  createdAt  DateTime @default(now())
+
+  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@index([prospectId])
+  @@index([createdAt])
+  @@map("prospect_history")
 }
