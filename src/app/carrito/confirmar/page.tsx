@@ -147,10 +147,38 @@ export default function ConfirmCartOrderPage() {
         const errorData = await orderRes.json()
         console.error('Order creation error:', errorData)
         if (errorData.details) {
-          const detailsStr = errorData.details.map((d: any) => `${d.path}: ${d.message}`).join(', ')
-          throw new Error(`${errorData.error || 'Error al crear el pedido'} (${detailsStr})`)
+          const fieldLabels: Record<string, string> = {
+            customerName: 'Nombre',
+            customerEmail: 'Email',
+            customerPhone: 'Teléfono',
+            'shippingAddress.street': 'Dirección',
+            'shippingAddress.city': 'Ciudad',
+            'shippingAddress.state': 'Provincia',
+            'shippingAddress.postalCode': 'Código postal',
+            'shippingAddress.country': 'País',
+            items: 'Productos',
+            subtotal: 'Subtotal',
+            totalPrice: 'Total',
+            shippingCost: 'Coste de envío',
+            taxAmount: 'IVA',
+            shippingMethodId: 'Método de envío',
+          }
+          const translateMsg = (m: string) => {
+            const low = m.toLowerCase()
+            if (low === 'required' || low.includes('is required')) return 'es obligatorio'
+            if (low.includes('invalid email')) return 'no tiene un formato válido'
+            if (low.includes('too small') || low.includes('must contain at least')) return 'es demasiado corto'
+            return m
+          }
+          const friendly = errorData.details
+            .map((d: any) => {
+              const label = fieldLabels[d.path] || d.path
+              return `${label} ${translateMsg(d.message)}`
+            })
+            .join('. ')
+          throw new Error(`Revisa tus datos: ${friendly}`)
         }
-        throw new Error(errorData.error || 'Error al crear el pedido')
+        throw new Error(errorData.error || 'No hemos podido crear el pedido. Intenta de nuevo o contáctanos.')
       }
 
       const order = await orderRes.json()
@@ -227,7 +255,10 @@ export default function ConfirmCartOrderPage() {
 
       if (!checkoutRes.ok) {
         const errorData = await checkoutRes.json()
-        throw new Error(errorData.error || 'Error al procesar el pago')
+        throw new Error(
+          errorData.error ||
+            'No hemos podido iniciar el pago. Tu pedido se ha guardado: contacta con nosotros por WhatsApp y lo resolvemos.'
+        )
       }
 
       const { url } = await checkoutRes.json()
@@ -240,7 +271,9 @@ export default function ConfirmCartOrderPage() {
 
     } catch (error: any) {
       console.error('Error:', error)
-      toast.error(error.message || 'Error al procesar el pedido. Inténtalo de nuevo.')
+      toast.error(error.message || 'Error al procesar el pedido. Inténtalo de nuevo.', {
+        duration: 8000,
+      })
       setProcessing(false)
       setLoading(false)
     }
