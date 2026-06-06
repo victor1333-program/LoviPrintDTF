@@ -516,7 +516,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Enviar email específico según el tipo de pedido
-        const { sendVoucherPurchaseEmail, sendAdminOrderNotification } = await import('@/lib/email')
+        const { sendVoucherPurchaseEmail, sendAdminOrderNotification, sendOrderConfirmationEmail } = await import('@/lib/email')
 
         if (createdVouchers.length > 0) {
           // Es una compra de bono - enviar email especial de activación
@@ -525,6 +525,11 @@ export async function POST(request: NextRequest) {
               console.error('Error sending voucher purchase email:', err)
             )
           }
+        } else {
+          // Pedido normal - enviar confirmación estándar al cliente
+          sendOrderConfirmationEmail(updatedOrder).catch(err =>
+            console.error('Error sending order confirmation email:', err)
+          )
         }
 
         // Enviar email de notificación al admin ahora que el pago está confirmado

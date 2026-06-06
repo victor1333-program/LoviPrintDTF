@@ -100,7 +100,7 @@ export function TestimonialsSection() {
   const currentTestimonial = testimonials[currentIndex]
 
   return (
-    <section className="py-20 bg-gradient-to-br from-primary-50 via-white to-primary-50">
+    <section className="py-10 sm:py-16 lg:py-20 bg-gradient-to-br from-primary-50 via-white to-primary-50">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">

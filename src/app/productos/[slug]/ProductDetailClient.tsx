@@ -324,9 +324,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
       {/* Main Content */}
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 lg:py-12">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Product Image - top on mobile, top-left on desktop */}
-          <div className="lg:col-span-2 lg:row-start-1">
+          <div className="col-span-1 lg:col-span-2 lg:row-start-1">
             <Card className="overflow-hidden w-full sm:w-3/4 sm:mx-auto">
               <CardContent className="p-0">
                 <div className="aspect-video bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center relative">
@@ -349,8 +349,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             </Card>
           </div>
 
-          {/* Content Column - features, tabs, reviews */}
-          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-2 space-y-4 sm:space-y-6 lg:space-y-8">
+          {/* Content Column - features, tabs, reviews (last on mobile) */}
+          <div className="order-last col-span-1 space-y-4 sm:space-y-6 lg:order-none lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:space-y-8">
             {/* Características Principales */}
             <Card>
               <CardContent className="p-4 sm:p-6 md:p-8">
@@ -449,7 +449,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('description')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'description'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -461,7 +461,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('specs')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'specs'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -473,7 +473,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('instructions')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'instructions'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -710,7 +710,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </div>
                 </div>
 
-                <div className="overflow-hidden">
+                <div className="relative overflow-hidden">
                   <div
                     className="flex transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${reviewIndex * 100}%)` }}
@@ -766,7 +766,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
 
           {/* Order Form - second on mobile, sticky right on desktop */}
-          <div className="lg:col-start-3 lg:row-start-1 lg:row-span-2">
+          <div className="col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2">
             <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24">
               {/* Precio y Disponibilidad */}
               <Card className="border-2 border-orange-500">
@@ -802,8 +802,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   {/* Tabla de Precios */}
                   {product.priceRanges && product.priceRanges.length > 0 && (
                     <div className="mb-4">
-                      <h3 className="font-semibold mb-3 text-sm">Descuentos por volumen</h3>
-                      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${product.priceRanges.length}, minmax(0, 1fr))` }}>
+                      <h3 className="font-semibold mb-2 sm:mb-3 text-sm">Descuentos por volumen</h3>
+                      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
                         {product.priceRanges.map((range) => {
                           const isActive = quantity >= Number(range.fromQty) && (!range.toQty || quantity <= Number(range.toQty))
                           return (
@@ -841,7 +841,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           type="button"
                           variant="outline"
                           onClick={() => setQuantity(Math.max(Number(product.minQuantity), quantity - 1))}
-                          className="w-9 h-11 p-0 rounded-r-none border-r-0"
+                          className="w-11 h-11 p-0 rounded-r-none border-r-0"
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -860,7 +860,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           type="button"
                           variant="outline"
                           onClick={() => setQuantity(Math.min(Number(product.maxQuantity), quantity + 1))}
-                          className="w-9 h-11 p-0 rounded-l-none border-l-0"
+                          className="w-11 h-11 p-0 rounded-l-none border-l-0"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -1085,7 +1085,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               {/* Banner de Bonos */}
               {product.category?.slug !== 'sublimacion' && (
                 <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-start gap-3 mb-3">
                       <Sparkles className="h-6 w-6 flex-shrink-0" />
                       <div>

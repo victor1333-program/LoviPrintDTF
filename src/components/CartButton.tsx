@@ -40,10 +40,10 @@ export function CartButton() {
   }
 
   return (
-    <Link href="/carrito">
-      <Button variant="outline" size="sm" className="relative hover:bg-orange-50 hover:border-orange-300 transition-colors">
-        <ShoppingCart className="h-4 w-4 mr-2" />
-        <div className="flex flex-col items-start">
+    <Link href="/carrito" aria-label="Carrito">
+      <Button variant="outline" size="sm" className="relative min-h-[44px] px-3 hover:bg-orange-50 hover:border-orange-300 transition-colors">
+        <ShoppingCart className="h-5 w-5 sm:h-4 sm:w-4 sm:mr-2" />
+        <div className="hidden sm:flex flex-col items-start">
           <span className="text-xs font-medium">Carrito</span>
           {itemCount > 0 && (
             <span className="text-xs text-gray-600">
