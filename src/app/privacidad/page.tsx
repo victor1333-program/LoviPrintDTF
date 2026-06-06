@@ -23,8 +23,9 @@ export default function PoliticaPrivacidadPage() {
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Responsable:</strong> Maria Dolores Villena Garcia</li>
                   <li><strong>NIF:</strong> 77598953N</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, Hellín (Albacete)</li>
+                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
                   <li><strong>Sitio web:</strong> www.loviprintdtf.es</li>
                 </ul>
               </div>
@@ -133,13 +134,19 @@ export default function PoliticaPrivacidadPage() {
                 Sus datos personales podrán ser comunicados a:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 ml-4">
-                <li><strong>Proveedores de servicios:</strong> Empresas de hosting, pasarelas de pago (Stripe), empresas de mensajería</li>
+                <li><strong>Proveedores de servicios:</strong> Empresas de hosting, pasarela de pagos (Stripe), empresa de mensajería (GLS)</li>
+                <li>
+                  <strong>Servicios analíticos:</strong> Google Analytics y Microsoft Clarity, que recogen datos de
+                  navegación de forma agregada y anónima para ayudarnos a entender cómo se usa el sitio web y mejorarlo.
+                  Estos servicios solo se activan si has aceptado las cookies analíticas en el banner de consentimiento.
+                </li>
                 <li><strong>Administraciones públicas:</strong> Cuando sea legalmente obligatorio (Hacienda, etc.)</li>
                 <li><strong>Entidades financieras:</strong> Para la gestión de pagos y devoluciones</li>
               </ul>
               <p className="text-gray-700 mb-4">
                 No se realizarán transferencias internacionales de datos fuera del Espacio Económico Europeo, salvo las
-                necesarias para el funcionamiento de servicios como Stripe (que cuenta con las garantías adecuadas).
+                necesarias para el funcionamiento de servicios como Stripe, Google y Microsoft (que cuentan con las
+                garantías adecuadas).
               </p>
             </section>
 
@@ -203,7 +210,8 @@ export default function PoliticaPrivacidadPage() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, Hellín (Albacete)</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
+                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                 </ul>
               </div>
             </section>

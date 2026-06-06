@@ -107,16 +107,13 @@ export default function EnviosDevolucionesPage() {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Empresas de Mensajería</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Empresa de Mensajería</h3>
                 <p className="text-gray-700 mb-4">
-                  Trabajamos con las principales empresas de mensajería en España para garantizar un servicio
-                  rápido y seguro:
+                  Todos nuestros envíos se realizan a través de <strong>GLS</strong>, que nos permite ofrecer
+                  un servicio rápido y con seguimiento en tiempo real en toda España. Cuando tu pedido salga
+                  de nuestras instalaciones recibirás por email el número de seguimiento de GLS para que
+                  puedas consultar el estado del envío en cualquier momento.
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 ml-4">
-                  <li>SEUR</li>
-                  <li>MRW</li>
-                  <li>Correos Express</li>
-                </ul>
               </div>
             </section>
 
@@ -151,24 +148,34 @@ export default function EnviosDevolucionesPage() {
                   Excepciones al Derecho de Desistimiento
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  No se aceptarán devoluciones en los siguientes casos:
+                  El artículo 103.c) del Real Decreto Legislativo 1/2007, de 16 de noviembre, por el que se
+                  aprueba el texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios,
+                  excluye del derecho de desistimiento aquellos bienes confeccionados conforme a las
+                  especificaciones del consumidor o claramente personalizados. Por la propia naturaleza del
+                  servicio, esto se aplica a la mayoría de nuestros pedidos:
                 </p>
                 <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg">
                   <ul className="list-disc list-inside space-y-2 text-orange-900 ml-4">
                     <li>
-                      <strong>Productos personalizados:</strong> Transferencias DTF con diseños personalizados
-                      o hechos a medida según tus especificaciones
+                      <strong>Transferencias DTF personalizadas:</strong> al imprimirse a medida a partir
+                      del diseño que tú nos envías, no podemos aceptar su devolución por desistimiento.
+                      Sí garantizamos que llegue en perfecto estado &mdash; ver más abajo.
                     </li>
                     <li>
-                      <strong>Bonos prepagados:</strong> Los bonos ya adquiridos no son reembolsables,
-                      aunque pueden utilizarse en cualquier momento sin caducidad
+                      <strong>Bonos prepagados:</strong> los bonos ya adquiridos no son reembolsables,
+                      aunque pueden utilizarse en cualquier momento y no caducan.
                     </li>
                     <li>
-                      <strong>Productos precintados no aptos para devolución:</strong> Por razones de higiene
-                      o protección de la salud, si se ha roto el precinto
+                      <strong>Pedidos en producción:</strong> una vez iniciada la impresión en máquina,
+                      no es posible cancelar ni desistir del pedido.
                     </li>
                   </ul>
                 </div>
+                <p className="text-gray-700 mt-4">
+                  Si tienes dudas antes de comprar (sobre el color, el tamaño o el tipo de tejido al que
+                  vas a aplicar el DTF) contáctanos y te ayudamos. Preferimos resolverlas antes que tengas
+                  un producto en casa que no sea lo que esperabas.
+                </p>
               </div>
 
               <div className="mb-8">
@@ -265,6 +272,7 @@ export default function EnviosDevolucionesPage() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
                   <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                   <li><strong>Horario de atención:</strong> Lunes a Viernes, 10:00 - 13:30 y 17:30 - 20:30 | Sábados, 10:00 - 13:30</li>
                 </ul>

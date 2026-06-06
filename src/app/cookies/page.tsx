@@ -304,6 +304,7 @@ export default function PoliticaCookiesPage() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
                   <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                 </ul>
               </div>

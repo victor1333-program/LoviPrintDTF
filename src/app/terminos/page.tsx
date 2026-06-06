@@ -28,8 +28,9 @@ export default function TerminosPage() {
                 <ul className="list-none mt-2 space-y-1 text-gray-700">
                   <li><strong>Nombre:</strong> Maria Dolores Villena Garcia</li>
                   <li><strong>NIF:</strong> 77598953N</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, Hellín (Albacete)</li>
+                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
                 </ul>
               </div>
             </section>
@@ -130,15 +131,31 @@ export default function TerminosPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Derecho de Desistimiento</h2>
               <p className="text-gray-700 mb-4">
-                Conforme a la legislación española, el cliente dispone de un plazo de 14 días naturales desde la
-                recepción del producto para desistir del contrato sin necesidad de justificación.
+                Como consumidor o usuaria, dispones de un plazo de 14 días naturales desde la recepción del
+                producto para desistir del contrato sin necesidad de justificación, conforme al Real Decreto
+                Legislativo 1/2007, de 16 de noviembre, por el que se aprueba el texto refundido de la Ley
+                General para la Defensa de los Consumidores y Usuarios.
               </p>
               <p className="text-gray-700 mb-4">
-                <strong>Excepciones:</strong> No se aplicará el derecho de desistimiento a:
+                <strong>Importante &mdash; productos personalizados:</strong> el artículo 103.c) del RDL 1/2007
+                excluye del derecho de desistimiento aquellos bienes confeccionados conforme a las
+                especificaciones del consumidor o claramente personalizados. Por la propia naturaleza del
+                servicio, las transferencias DTF se imprimen a medida a partir del diseño que tú nos envías,
+                por lo que <strong>no es posible aceptar la devolución de un trabajo personalizado</strong>.
+                Sabemos que esto puede generar dudas, así que si tienes cualquier consulta antes de comprar
+                contáctanos y te ayudamos a confirmar que el resultado va a ser el que esperas.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Esta excepción <strong>no afecta</strong> a tu derecho a recibir un producto en perfecto estado:
+                si llega defectuoso o no se corresponde con lo que pediste, lo reimprimimos o te devolvemos el
+                importe (ver sección 9. Garantía y Responsabilidad).
+              </p>
+              <p className="text-gray-700 mb-4">
+                Otras excepciones aplicables a nuestro servicio:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 ml-4">
-                <li>Productos personalizados o hechos a medida según especificaciones del cliente</li>
-                <li>Bonos prepagados ya utilizados parcial o totalmente</li>
+                <li>Bonos prepagados ya utilizados parcial o totalmente.</li>
+                <li>Pedidos en producción cuya impresión ya se haya iniciado en máquina.</li>
               </ul>
             </section>
 
@@ -197,7 +214,8 @@ export default function TerminosPage() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, Hellín (Albacete)</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
+                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                 </ul>
               </div>
             </section>
