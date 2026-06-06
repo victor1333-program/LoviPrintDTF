@@ -4,6 +4,7 @@ import { uploadToCloudinary } from './cloudinary'
 import path from 'path'
 import fs from 'fs'
 import { logger } from './logger'
+import { BUSINESS, formatAddressMultiLine } from './business-info'
 
 /**
  * Formatea el nombre del cliente para que se muestre correctamente
@@ -102,13 +103,13 @@ export async function generateInvoicePDF(invoice: any): Promise<Buffer> {
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.on('error', reject)
 
-    // Datos de la empresa
-    const companyName = 'LoviPrintDTF'
-    const companyOwner = 'Maria Dolores Villena Garcia'
-    const companyTaxId = '77598953N'
-    const companyAddress = 'Calle Monecilla 10\n02400 Hellín (Albacete)'
-    const companyEmail = 'info@loviprintdtf.es'
-    const companyPhone = '+34 614 051 291'
+    // Datos de la empresa (dirección FISCAL - obligatoria en facturas)
+    const companyName = BUSINESS.commercialName
+    const companyOwner = BUSINESS.legalName
+    const companyTaxId = BUSINESS.nif
+    const companyAddress = formatAddressMultiLine(BUSINESS.fiscalAddress)
+    const companyEmail = BUSINESS.email
+    const companyPhone = BUSINESS.phone
 
     // Logo - Cargar y verificar de forma segura
     let logoBuffer: Buffer | null = null

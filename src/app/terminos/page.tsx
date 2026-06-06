@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { BUSINESS, formatAddressOneLine } from '@/lib/business-info'
 
 export const metadata: Metadata = {
   title: 'Términos y Condiciones - LoviPrintDTF',
@@ -20,17 +21,17 @@ export default function TerminosPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Información General</h2>
               <p className="text-gray-700 mb-4">
-                El presente documento establece los Términos y Condiciones de uso del sitio web www.loviprintdtf.es,
-                propiedad de Maria Dolores Villena Garcia (en adelante, "LoviPrintDTF").
+                El presente documento establece los Términos y Condiciones de uso del sitio web {BUSINESS.website},
+                propiedad de {BUSINESS.legalName} (en adelante, "{BUSINESS.commercialName}").
               </p>
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
                 <p className="font-semibold text-gray-900">Datos del titular:</p>
                 <ul className="list-none mt-2 space-y-1 text-gray-700">
-                  <li><strong>Nombre:</strong> Maria Dolores Villena Garcia</li>
-                  <li><strong>NIF:</strong> 77598953N</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
-                  <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
+                  <li><strong>Nombre:</strong> {BUSINESS.legalName}</li>
+                  <li><strong>NIF:</strong> {BUSINESS.nif}</li>
+                  <li><strong>Domicilio fiscal:</strong> {formatAddressOneLine(BUSINESS.fiscalAddress)}</li>
+                  <li><strong>Email:</strong> {BUSINESS.email}</li>
+                  <li><strong>Teléfono:</strong> {BUSINESS.phone}</li>
                 </ul>
               </div>
             </section>
@@ -213,9 +214,10 @@ export default function TerminosPage() {
               </p>
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
-                  <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
+                  <li><strong>Email:</strong> {BUSINESS.email}</li>
+                  <li><strong>Teléfono:</strong> {BUSINESS.phone}</li>
+                  <li><strong>Dirección fiscal:</strong> {formatAddressOneLine(BUSINESS.fiscalAddress)}</li>
+                  <li><strong>Tienda física:</strong> {formatAddressOneLine(BUSINESS.physicalAddress)}</li>
                 </ul>
               </div>
             </section>

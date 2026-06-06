@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { Truck, Package, RotateCcw, Clock, MapPin, CheckCircle2, AlertCircle } from 'lucide-react'
+import { BUSINESS, formatAddressOneLine } from '@/lib/business-info'
 
 export const metadata: Metadata = {
   title: 'Envíos y Devoluciones - LoviPrintDTF',
@@ -224,10 +225,10 @@ export default function EnviosDevolucionesPage() {
                         Envía el producto a la siguiente dirección:
                       </p>
                       <div className="bg-gray-100 p-3 rounded-lg mt-2 text-sm">
-                        <p className="font-semibold">LoviPrintDTF</p>
-                        <p>Maria Dolores Villena Garcia</p>
-                        <p>Calle Antonio Lopes del Oro 7</p>
-                        <p>02400 Hellín (Albacete)</p>
+                        <p className="font-semibold">{BUSINESS.commercialName}</p>
+                        <p>{BUSINESS.legalName}</p>
+                        <p>{BUSINESS.physicalAddress.street}</p>
+                        <p>{BUSINESS.physicalAddress.postalCode} {BUSINESS.physicalAddress.city} ({BUSINESS.physicalAddress.province})</p>
                       </div>
                     </div>
                   </div>
@@ -275,9 +276,9 @@ export default function EnviosDevolucionesPage() {
               </p>
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
-                  <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
+                  <li><strong>Email:</strong> {BUSINESS.email}</li>
+                  <li><strong>Teléfono:</strong> {BUSINESS.phone}</li>
+                  <li><strong>Tienda física:</strong> {formatAddressOneLine(BUSINESS.physicalAddress)}</li>
                   <li><strong>Horario de atención:</strong> Lunes a Viernes, 10:00 - 13:30 y 17:30 - 20:30 | Sábados, 10:00 - 13:30</li>
                 </ul>
               </div>

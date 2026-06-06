@@ -8,6 +8,7 @@ import {
   formatInternationalMobile,
 } from '@/lib/utils/spanish-provinces'
 import { sendEmail } from '@/lib/email'
+import { BUSINESS } from '@/lib/business-info'
 
 /**
  * POST /api/admin/print-queue/[id]/printed
@@ -107,9 +108,9 @@ export async function POST(
               <p>Hola ${order.customerName},</p>
               <p>Tu pedido <strong>${order.orderNumber}</strong> ya está listo para recoger en nuestra tienda.</p>
               <p><strong>Dirección:</strong><br>
-              Lovilike - Hellín<br>
-              Calle Antonio Lopez del Oro, 7<br>
-              02400 Hellín, Albacete</p>
+              ${BUSINESS.commercialName} - ${BUSINESS.physicalAddress.city}<br>
+              ${BUSINESS.physicalAddress.street}<br>
+              ${BUSINESS.physicalAddress.postalCode} ${BUSINESS.physicalAddress.city}, ${BUSINESS.physicalAddress.province}</p>
               <p><a href="https://maps.app.goo.gl/VZ7n3FCfmJKZKQUq7">Ver en Google Maps</a></p>
             `
           })

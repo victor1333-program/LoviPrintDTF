@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Cookie } from 'lucide-react'
 import { ManageCookiesButton } from '@/components/ManageCookiesButton'
+import { BUSINESS, formatAddressOneLine } from '@/lib/business-info'
 
 export const metadata: Metadata = {
   title: 'Política de Cookies - LoviPrintDTF',
@@ -303,9 +304,10 @@ export default function PoliticaCookiesPage() {
               </p>
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
-                  <li><strong>Email:</strong> info@loviprintdtf.es</li>
-                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
-                  <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
+                  <li><strong>Email:</strong> {BUSINESS.email}</li>
+                  <li><strong>Teléfono:</strong> {BUSINESS.phone}</li>
+                  <li><strong>Dirección fiscal:</strong> {formatAddressOneLine(BUSINESS.fiscalAddress)}</li>
+                  <li><strong>Tienda física:</strong> {formatAddressOneLine(BUSINESS.physicalAddress)}</li>
                 </ul>
               </div>
             </section>

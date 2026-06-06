@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { BUSINESS, formatAddressOneLine } from "@/lib/business-info"
 
 export const metadata: Metadata = {
   title: "Aviso Legal - LoviPrintDTF",
@@ -34,34 +35,36 @@ export default function AvisoLegalPage() {
               <div className="bg-gray-100 p-6 rounded-lg mb-4">
                 <ul className="list-none space-y-2 text-gray-700">
                   <li>
-                    <strong>Titular:</strong> María Dolores Villena García
+                    <strong>Titular:</strong> {BUSINESS.legalName}
                   </li>
                   <li>
-                    <strong>Nombre comercial:</strong> LoviPrintDTF
+                    <strong>Nombre comercial:</strong> {BUSINESS.commercialName}
                   </li>
                   <li>
-                    <strong>NIF:</strong> 77598953N
+                    <strong>NIF:</strong> {BUSINESS.nif}
                   </li>
                   <li>
-                    <strong>Domicilio:</strong> Calle Antonio López del Oro 7, 02400
-                    Hellín (Albacete), España
+                    <strong>Domicilio fiscal:</strong> {formatAddressOneLine(BUSINESS.fiscalAddress)}, {BUSINESS.fiscalAddress.country}
+                  </li>
+                  <li>
+                    <strong>Tienda física (atención al cliente):</strong> {formatAddressOneLine(BUSINESS.physicalAddress)}, {BUSINESS.physicalAddress.country}
                   </li>
                   <li>
                     <strong>Correo electrónico:</strong>{" "}
                     <a
-                      href="mailto:info@loviprintdtf.es"
+                      href={`mailto:${BUSINESS.email}`}
                       className="text-primary-600 hover:text-primary-700 underline"
                     >
-                      info@loviprintdtf.es
+                      {BUSINESS.email}
                     </a>
                   </li>
                   <li>
                     <strong>Teléfono:</strong>{" "}
                     <a
-                      href="tel:+34614051291"
+                      href={`tel:${BUSINESS.phoneE164}`}
                       className="text-primary-600 hover:text-primary-700 underline"
                     >
-                      +34 614 051 291
+                      {BUSINESS.phone}
                     </a>
                   </li>
                   <li>
@@ -79,7 +82,7 @@ export default function AvisoLegalPage() {
               <p className="text-gray-700 mb-4">
                 El presente aviso legal regula el uso del sitio web{" "}
                 <strong>www.loviprintdtf.es</strong> (en adelante, el "Sitio Web"), del que
-                es titular María Dolores Villena García. La navegación por el Sitio Web
+                es titular {BUSINESS.legalName}. La navegación por el Sitio Web
                 atribuye la condición de Usuario e implica la aceptación plena y sin
                 reservas de todas las disposiciones incluidas en este aviso legal, que
                 pueden sufrir modificaciones.

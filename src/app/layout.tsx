@@ -10,6 +10,7 @@ import { B2BContactWidget } from "@/components/B2BContactWidget"
 import { ConditionalFooter } from "@/components/ConditionalFooter"
 import { CookieBanner } from "@/components/CookieBanner"
 import { ClarityAnalytics } from "@/components/analytics/ClarityAnalytics"
+import { BUSINESS } from "@/lib/business-info"
 
 const inter = Inter({ subsets: ["latin"], display: "swap" })
 
@@ -156,14 +157,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Bonos prepagados sin caducidad.",
               "@id": "https://loviprintdtf.es",
               "url": "https://loviprintdtf.es",
-              "telephone": "+34614051291",
-              "email": "info@loviprintdtf.es",
+              "telephone": BUSINESS.phoneE164,
+              "email": BUSINESS.email,
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Calle Antonio López del Oro 7",
-                "addressLocality": "Hellín",
-                "addressRegion": "Albacete",
-                "postalCode": "02400",
+                "streetAddress": BUSINESS.physicalAddress.street,
+                "addressLocality": BUSINESS.physicalAddress.city,
+                "addressRegion": BUSINESS.physicalAddress.province,
+                "postalCode": BUSINESS.physicalAddress.postalCode,
                 "addressCountry": "ES"
               },
               "geo": {
@@ -211,14 +212,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               "url": "https://loviprintdtf.es",
               "logo": "https://loviprintdtf.es/logo.png",
               "description": "DTF de máxima calidad para textil. DTF Rápido con entrega en 24-48h. Especialistas en impresión DTF profesional desde Hellín, Albacete.",
-              "email": "info@loviprintdtf.es",
-              "telephone": "+34614051291",
+              "email": BUSINESS.email,
+              "telephone": BUSINESS.phoneE164,
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Calle Antonio López del Oro 7",
-                "addressLocality": "Hellín",
-                "addressRegion": "Albacete",
-                "postalCode": "02400",
+                "streetAddress": BUSINESS.physicalAddress.street,
+                "addressLocality": BUSINESS.physicalAddress.city,
+                "addressRegion": BUSINESS.physicalAddress.province,
+                "postalCode": BUSINESS.physicalAddress.postalCode,
                 "addressCountry": "ES"
               },
               "sameAs": [
