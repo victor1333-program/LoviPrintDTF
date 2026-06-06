@@ -62,6 +62,9 @@ export function saveConsent(consent: Omit<ConsentCategories, "necessary" | "time
     localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(full))
   } catch {}
   applyConsent(full)
+  try {
+    window.dispatchEvent(new Event("lovi:consent-changed"))
+  } catch {}
 }
 
 export function applyConsent(c: ConsentCategories) {

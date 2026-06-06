@@ -141,7 +141,7 @@ export function CookieBanner() {
 
               <CategoryRow
                 title="Cookies analíticas"
-                description="Nos permiten medir el uso del sitio (Google Analytics) para mejorar nuestros servicios. Anónimas y agregadas."
+                description="Nos permiten medir el uso del sitio (Google Analytics) y entender cómo navegan los usuarios mediante mapas de calor y grabaciones anónimas de sesión (Microsoft Clarity), para mejorar nuestros servicios."
                 checked={prefs.analytics}
                 onChange={(v) => setPrefs({ ...prefs, analytics: v })}
               />

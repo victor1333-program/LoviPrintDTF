@@ -9,6 +9,7 @@ import { WhatsAppWidget } from "@/components/WhatsAppWidget"
 import { B2BContactWidget } from "@/components/B2BContactWidget"
 import { ConditionalFooter } from "@/components/ConditionalFooter"
 import { CookieBanner } from "@/components/CookieBanner"
+import { ClarityAnalytics } from "@/components/analytics/ClarityAnalytics"
 
 const inter = Inter({ subsets: ["latin"], display: "swap" })
 
@@ -245,6 +246,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <WhatsAppWidget />
           <B2BContactWidget />
           <CookieBanner />
+          <ClarityAnalytics />
         </Providers>
       </body>
     </html>
