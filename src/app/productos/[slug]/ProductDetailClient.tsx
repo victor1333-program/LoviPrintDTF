@@ -265,6 +265,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       })
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({} as any))
         trackAddToCart({
           item_id: product.slug,
           item_name: product.name,
@@ -272,10 +273,55 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           price: priceCalc.unitPrice,
           quantity,
         })
-        toast.success('Producto agregado al carrito')
         // Disparar evento para actualizar el botón del carrito
         window.dispatchEvent(new Event('cartUpdated'))
-        router.push('/carrito')
+
+        if (data?.merged) {
+          // Ya había unidades del mismo producto en el carrito: avisar
+          // claramente al cliente con un toast persistente y dejarle decidir
+          // si va al carrito o sigue comprando, en lugar de redirigir solo.
+          const unit = data.productUnit || 'm'
+          const added = Number(data.addedQty ?? quantity)
+          const prev = Number(data.previousQty ?? 0)
+          const total = Number(data.newTotalQty ?? added + prev)
+          toast.custom((t) => (
+            <div
+              className={`${t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'} transition-all duration-200 max-w-sm w-full bg-white border-2 border-orange-500 rounded-xl shadow-2xl pointer-events-auto`}
+              role="status"
+            >
+              <div className="p-4">
+                <p className="text-sm font-semibold text-gray-900">
+                  Has añadido {added}{unit} de {data.productName || product.name}.
+                </p>
+                <p className="text-sm text-gray-700 mt-1">
+                  Tu carrito ahora tiene <strong>{total}{unit}</strong> de este producto (antes tenías {prev}{unit}).
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.dismiss(t.id)
+                      router.push('/carrito')
+                    }}
+                    className="flex-1 inline-flex items-center justify-center rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-3 py-2 min-h-[40px]"
+                  >
+                    Ver carrito
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toast.dismiss(t.id)}
+                    className="flex-1 inline-flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold px-3 py-2 min-h-[40px]"
+                  >
+                    Seguir comprando
+                  </button>
+                </div>
+              </div>
+            </div>
+          ), { duration: 15000, position: 'top-center' })
+        } else {
+          toast.success('Producto agregado al carrito')
+          router.push('/carrito')
+        }
       } else {
         toast.error('Error al agregar al carrito')
       }
@@ -324,9 +370,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
       {/* Main Content */}
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 lg:py-12">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Product Image - top on mobile, top-left on desktop */}
-          <div className="lg:col-span-2 lg:row-start-1">
+          <div className="col-span-1 lg:col-span-2 lg:row-start-1">
             <Card className="overflow-hidden w-full sm:w-3/4 sm:mx-auto">
               <CardContent className="p-0">
                 <div className="aspect-video bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center relative">
@@ -349,8 +395,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             </Card>
           </div>
 
-          {/* Content Column - features, tabs, reviews */}
-          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-2 space-y-4 sm:space-y-6 lg:space-y-8">
+          {/* Content Column - features, tabs, reviews (last on mobile) */}
+          <div className="order-last col-span-1 space-y-4 sm:space-y-6 lg:order-none lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:space-y-8">
             {/* Características Principales */}
             <Card>
               <CardContent className="p-4 sm:p-6 md:p-8">
@@ -449,7 +495,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('description')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'description'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -461,7 +507,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('specs')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'specs'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -473,7 +519,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="button"
                     onClick={() => setActiveTab('instructions')}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 min-h-[44px] font-semibold text-xs sm:text-base whitespace-nowrap transition-all border-b-2 ${
                       activeTab === 'instructions'
                         ? 'border-orange-600 text-orange-600 bg-orange-50'
                         : 'border-transparent text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -710,7 +756,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </div>
                 </div>
 
-                <div className="overflow-hidden">
+                <div className="relative overflow-hidden">
                   <div
                     className="flex transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${reviewIndex * 100}%)` }}
@@ -766,7 +812,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
 
           {/* Order Form - second on mobile, sticky right on desktop */}
-          <div className="lg:col-start-3 lg:row-start-1 lg:row-span-2">
+          <div className="col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2">
             <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24">
               {/* Precio y Disponibilidad */}
               <Card className="border-2 border-orange-500">
@@ -799,29 +845,32 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     </div>
                   </div>
 
-                  {/* Tabla de Precios */}
+                  {/* Tabla de Precios: lista vertical en móvil, grid compacto en sm+ */}
                   {product.priceRanges && product.priceRanges.length > 0 && (
                     <div className="mb-4">
-                      <h3 className="font-semibold mb-3 text-sm">Descuentos por volumen</h3>
-                      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${product.priceRanges.length}, minmax(0, 1fr))` }}>
+                      <h3 className="font-semibold mb-2 sm:mb-3 text-sm">Descuentos por volumen</h3>
+                      <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5">
                         {product.priceRanges.map((range) => {
                           const isActive = quantity >= Number(range.fromQty) && (!range.toQty || quantity <= Number(range.toQty))
+                          const rangeLabel = range.toQty
+                            ? `${Number(range.fromQty)} - ${Number(range.toQty)} m`
+                            : `${Number(range.fromQty)}+ m`
                           return (
                             <button
                               key={range.id}
                               type="button"
                               onClick={() => setQuantity(Number(range.fromQty))}
-                              className={`rounded-lg p-1.5 text-center transition border-2 ${
+                              className={`rounded-lg border-2 transition flex items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:items-center sm:justify-center sm:gap-0.5 sm:p-1.5 sm:text-center ${
                                 isActive
                                   ? 'bg-orange-500 text-white border-orange-600 shadow-md'
                                   : 'bg-orange-50 text-orange-900 border-orange-200 hover:bg-orange-100'
                               }`}
                             >
-                              <div className="text-[10px] font-semibold leading-tight">
-                                {Number(range.fromQty)}{range.toQty ? `-${Number(range.toQty)}` : '+'}
+                              <div className="text-sm font-semibold leading-tight sm:text-[10px]">
+                                {rangeLabel}
                               </div>
-                              <div className="text-xs font-bold mt-0.5 whitespace-nowrap">
-                                {formatCurrency(Number(range.price))}
+                              <div className="text-sm font-bold whitespace-nowrap sm:text-xs sm:mt-0.5">
+                                {formatCurrency(Number(range.price))}/m
                               </div>
                             </button>
                           )
@@ -832,16 +881,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
                   {/* Cantidad + Comprar */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Repeticiones de tu Archivo
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Metros
                     </label>
+                    {product.slug === 'transfer-dtf' && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Cada metro mide 58 cm de ancho × 100 cm de largo
+                      </p>
+                    )}
                     <div className="flex items-center gap-2">
                       <div className="flex items-center flex-shrink-0">
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setQuantity(Math.max(Number(product.minQuantity), quantity - 1))}
-                          className="w-9 h-11 p-0 rounded-r-none border-r-0"
+                          className="w-11 h-11 p-0 rounded-r-none border-r-0"
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -860,7 +914,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           type="button"
                           variant="outline"
                           onClick={() => setQuantity(Math.min(Number(product.maxQuantity), quantity + 1))}
-                          className="w-9 h-11 p-0 rounded-l-none border-l-0"
+                          className="w-11 h-11 p-0 rounded-l-none border-l-0"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -1085,7 +1139,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               {/* Banner de Bonos */}
               {product.category?.slug !== 'sublimacion' && (
                 <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-start gap-3 mb-3">
                       <Sparkles className="h-6 w-6 flex-shrink-0" />
                       <div>

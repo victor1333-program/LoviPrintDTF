@@ -57,7 +57,7 @@ export default function BonosPage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-orange-600 via-orange-700 to-orange-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="container mx-auto px-4 py-20 md:py-28 relative">
+        <div className="container mx-auto px-4 py-10 sm:py-16 md:py-28 relative">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="warning" className="mb-6 bg-orange-400 text-white">
               <Gift className="h-3 w-3 mr-1" />
@@ -87,7 +87,7 @@ export default function BonosPage() {
             </div>
 
             {/* Benefits Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 sm:mt-12">
               <div className="relative bg-white rounded-xl p-6 shadow-2xl hover:shadow-orange-400/50 transition-all duration-300 hover:scale-105 cursor-pointer group overflow-hidden border-2 border-orange-300/50 hover:border-orange-400">
                 {/* Efecto de brillo en los bordes */}
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-300"></div>
@@ -157,7 +157,7 @@ export default function BonosPage() {
       </section>
 
       {/* Bonos Cards */}
-      <section id="bonos" className="py-20 bg-white">
+      <section id="bonos" className="py-10 sm:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge variant="warning" className="mb-4">
@@ -324,7 +324,7 @@ export default function BonosPage() {
       </section>
 
       {/* How it Works */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
+      <section className="py-10 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500 rounded-full blur-3xl"></div>
@@ -395,7 +395,7 @@ export default function BonosPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-10 sm:py-16 lg:py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
@@ -431,7 +431,7 @@ export default function BonosPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
+      <section className="py-10 sm:py-16 lg:py-20 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <Shield className="w-16 h-16 mx-auto mb-6 opacity-90" />

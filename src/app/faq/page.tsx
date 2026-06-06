@@ -109,7 +109,7 @@ const faqs: FAQItem[] = [
     id: 15,
     category: "envios",
     question: "¿Cuánto cuesta el envío?",
-    answer: "El envío tiene un coste de 5.95€ para península. Los pedidos superiores a 100€ tienen envío gratuito. Para Baleares, Canarias, Ceuta y Melilla, el coste puede variar. Envíos internacionales disponibles bajo consulta."
+    answer: "El envío estándar 24/48h tiene un coste de 6,00€ para península (IVA incluido). Los pedidos superiores a 100€ tienen envío gratuito. También disponible envío urgente 24h por 12,00€. Para Baleares, Canarias, Ceuta y Melilla el plazo y el coste pueden variar. Envíos internacionales disponibles bajo consulta."
   },
   {
     id: 16,

@@ -79,6 +79,7 @@ export default function PoliticaCookiesPage() {
                   </p>
                   <ul className="list-disc list-inside text-sm text-green-700 ml-4 space-y-1">
                     <li><strong>Google Analytics:</strong> Analiza el comportamiento de los usuarios en el sitio</li>
+                    <li><strong>Microsoft Clarity:</strong> Mapas de calor y grabaciones anónimas de sesión para entender cómo navegan los usuarios</li>
                     <li><strong>Métricas de rendimiento:</strong> Mide los tiempos de carga y el rendimiento técnico</li>
                   </ul>
                   <p className="text-sm text-green-700 mt-2">
@@ -146,6 +147,20 @@ export default function PoliticaCookiesPage() {
                       </td>
                     </tr>
                     <tr className="bg-gray-50">
+                      <td className="px-4 py-3 text-gray-700 font-medium">Microsoft Clarity</td>
+                      <td className="px-4 py-3 text-gray-700">Mapas de calor y grabaciones anónimas de sesión</td>
+                      <td className="px-4 py-3 text-gray-700">
+                        <a
+                          href="https://privacy.microsoft.com/privacystatement"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-700 underline"
+                        >
+                          Política de Microsoft
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
                       <td className="px-4 py-3 text-gray-700 font-medium">Stripe</td>
                       <td className="px-4 py-3 text-gray-700">Procesamiento de pagos</td>
                       <td className="px-4 py-3 text-gray-700">
@@ -289,6 +304,7 @@ export default function PoliticaCookiesPage() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <ul className="list-none space-y-1 text-gray-700">
                   <li><strong>Email:</strong> info@loviprintdtf.es</li>
+                  <li><strong>Teléfono:</strong> +34 614 051 291</li>
                   <li><strong>Dirección:</strong> Calle Antonio Lopes del Oro 7, 02400 Hellín (Albacete)</li>
                 </ul>
               </div>

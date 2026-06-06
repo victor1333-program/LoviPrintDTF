@@ -43,22 +43,22 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="container mx-auto px-4 py-24 md:py-32 relative">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto px-4 py-10 sm:py-16 md:py-32 relative">
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-12 items-center">
             <div>
-              <Badge variant="warning" className="mb-4 bg-primary-400 text-white">
+              <Badge variant="warning" className="mb-3 sm:mb-4 bg-primary-400 text-white">
                 <Sparkles className="h-3 w-3 mr-1" />
                 LoviPrintDTF - Tecnología de Vanguardia
               </Badge>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-6 leading-tight">
                 Impresión DTF
                 <span className="block text-primary-200">Profesional</span>
               </h1>
-              <p className="text-xl text-primary-100 mb-8">
+              <p className="text-base sm:text-xl text-primary-100 mb-4 sm:mb-8">
                 Transferencias DTF de máxima calidad para textil. Desde Hellín, Albacete.
                 Precios por volumen, entrega 24-48h y bonos prepagados disponibles.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-8">
                 <Link href="/productos/transfer-dtf">
                   <Button size="lg" className="bg-white text-primary-700 hover:bg-gray-100 w-full sm:w-auto">
                     Comprar DTF
@@ -101,7 +101,7 @@ export default async function HomePage() {
           </div>
 
           {/* Features Cards - Ancho completo */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 sm:mt-12 lg:mt-20">
             <div className="relative bg-white rounded-xl p-6 shadow-2xl hover:shadow-orange-400/50 transition-all duration-300 hover:scale-105 cursor-pointer group overflow-hidden border-2 border-orange-300/50 hover:border-orange-400">
               {/* Efecto de brillo en los bordes */}
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-300"></div>

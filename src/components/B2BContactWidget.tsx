@@ -105,7 +105,7 @@ export function B2BContactWidget() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl transition-all hover:scale-105 flex items-center gap-3 pl-4 pr-5 py-3.5 sm:pl-5 sm:pr-6 sm:py-4"
+        className="group bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-0 p-3.5 sm:gap-3 sm:pl-5 sm:pr-6 sm:py-4"
         aria-label="Contacto para empresas"
       >
         {isOpen ? (
@@ -113,7 +113,7 @@ export function B2BContactWidget() {
         ) : (
           <Building2 className="h-6 w-6 flex-shrink-0" />
         )}
-        <span className="font-semibold text-sm sm:text-base whitespace-nowrap">
+        <span className="hidden sm:inline font-semibold text-sm sm:text-base whitespace-nowrap">
           {isOpen ? "Cerrar" : "Si eres empresa, Contáctanos"}
         </span>
       </button>

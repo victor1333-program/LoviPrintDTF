@@ -75,13 +75,13 @@ export function Navbar() {
     <>
       <header className="border-b bg-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         {/* Banner superior */}
-        <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 text-white py-2">
+        <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 text-white py-1 sm:py-2">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center gap-3 text-sm font-medium flex-wrap">
+            <div className="flex items-center justify-center gap-3 text-xs sm:text-sm font-medium flex-wrap">
               {/* Teléfono */}
               <a
                 href="tel:+34614051291"
-                className="flex items-center gap-1.5 hover:text-orange-100 transition-colors group"
+                className="flex items-center gap-1.5 py-2.5 hover:text-orange-100 transition-colors group"
               >
                 <Phone className="w-4 h-4 group-hover:animate-bounce" />
                 <span className="font-semibold">+34 614 051 291</span>
@@ -100,12 +100,12 @@ export function Navbar() {
         </div>
 
         <div className="container mx-auto px-4">
-          <div className="flex h-28 items-center justify-between">
+          <div className="flex h-16 items-center justify-between sm:h-20 lg:h-28">
             {/* Logo */}
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center group relative">
-                <div className="absolute -left-4 -top-2 w-48 h-20 sm:w-64 sm:h-24 bg-gradient-to-br from-white to-gray-50 rounded-full shadow-2xl group-hover:shadow-orange-500/50 transition-all duration-300 group-hover:scale-105 border-4 border-orange-500/20"></div>
-                <div className="relative h-16 w-40 sm:h-20 sm:w-56 z-10 transition-all duration-300 group-hover:scale-105 pl-4">
+                <div className="absolute -left-2 -top-1 w-32 h-12 sm:-left-4 sm:-top-2 sm:w-48 sm:h-20 lg:w-64 lg:h-24 bg-gradient-to-br from-white to-gray-50 rounded-full shadow-2xl group-hover:shadow-orange-500/50 transition-all duration-300 group-hover:scale-105 border-4 border-orange-500/20"></div>
+                <div className="relative h-10 w-28 sm:h-16 sm:w-40 lg:h-20 lg:w-56 z-10 transition-all duration-300 group-hover:scale-105 pl-2 sm:pl-4">
                   <Image
                     src="/logo.png"
                     alt="LoviPrintDTF - Impresión DTF"
@@ -191,14 +191,14 @@ export function Navbar() {
 
               {session?.user ? (
                 <>
-                  <Link href="/cuenta" className="hidden md:block">
+                  <Link href="/cuenta" className="hidden lg:block">
                     <Button variant="outline" size="sm" className="hover:bg-orange-50 hover:border-orange-300 transition-colors">
                       <User className="h-4 w-4 mr-2" />
                       Mi Cuenta
                     </Button>
                   </Link>
                   {session.user.role === 'ADMIN' && (
-                    <Link href="/admin" className="hidden md:block">
+                    <Link href="/admin" className="hidden lg:block">
                       <Button variant="ghost" size="sm" className="hover:bg-purple-50 hover:text-purple-600 transition-colors">
                         <LayoutDashboard className="h-4 w-4 mr-2" />
                         Admin
@@ -210,7 +210,7 @@ export function Navbar() {
                     size="sm"
                     onClick={() => signOut({ callbackUrl: '/' })}
                     title="Cerrar sesión"
-                    className="hover:bg-red-50 hover:text-red-600 transition-colors hidden md:flex"
+                    className="hover:bg-red-50 hover:text-red-600 transition-colors hidden lg:flex"
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>
@@ -219,7 +219,7 @@ export function Navbar() {
                 <Button
                   size="sm"
                   onClick={() => setShowAuthModal(true)}
-                  className="hidden md:flex bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="hidden lg:flex bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <User className="h-4 w-4 mr-2" />
                   Iniciar Sesión
@@ -227,25 +227,27 @@ export function Navbar() {
               )}
 
               {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden"
+                className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-gray-700 hover:bg-gray-100 transition-colors lg:hidden"
+                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-6 w-6" />
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t bg-white shadow-lg">
+          <div id="mobile-menu" className="lg:hidden border-t bg-white shadow-lg">
             <div className="container mx-auto px-4 py-4 space-y-2">
               {menuItems.map((item) => {
                 const hasSubmenu = 'submenu' in item && item.submenu
