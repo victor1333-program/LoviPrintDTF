@@ -360,27 +360,33 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    let merged = false
+    let previousQty = 0
+    let newTotalQty = Number(quantity)
+
     if (existingItem) {
       // Actualizar cantidad del item existente (solo para items sin archivos)
-      const newQuantity = Number(existingItem.quantity) + Number(quantity)
+      previousQty = Number(existingItem.quantity)
+      newTotalQty = previousQty + Number(quantity)
+      merged = true
 
       let newPriceCalc
       if (!product.priceRanges || product.priceRanges.length === 0) {
         const unitPrice = Number(product.basePrice)
         newPriceCalc = {
           unitPrice,
-          subtotal: unitPrice * newQuantity,
+          subtotal: unitPrice * newTotalQty,
           discountPct: 0,
           discountAmount: 0,
         }
       } else {
-        newPriceCalc = calculateUnitPrice(newQuantity, product.priceRanges)
+        newPriceCalc = calculateUnitPrice(newTotalQty, product.priceRanges)
       }
 
       await prisma.cartItem.update({
         where: { id: existingItem.id },
         data: {
-          quantity: newQuantity,
+          quantity: newTotalQty,
           unitPrice: newPriceCalc.unitPrice,
         },
       })
@@ -401,7 +407,15 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const response = NextResponse.json({ success: true })
+    const response = NextResponse.json({
+      success: true,
+      merged,
+      productName: product.name,
+      productUnit: product.unit,
+      previousQty,
+      addedQty: Number(quantity),
+      newTotalQty,
+    })
 
     // Establecer cookie de sesión si no hay usuario autenticado
     if (!session?.user && sessionId) {

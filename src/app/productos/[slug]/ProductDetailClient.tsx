@@ -265,6 +265,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       })
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({} as any))
         trackAddToCart({
           item_id: product.slug,
           item_name: product.name,
@@ -272,10 +273,55 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           price: priceCalc.unitPrice,
           quantity,
         })
-        toast.success('Producto agregado al carrito')
         // Disparar evento para actualizar el botón del carrito
         window.dispatchEvent(new Event('cartUpdated'))
-        router.push('/carrito')
+
+        if (data?.merged) {
+          // Ya había unidades del mismo producto en el carrito: avisar
+          // claramente al cliente con un toast persistente y dejarle decidir
+          // si va al carrito o sigue comprando, en lugar de redirigir solo.
+          const unit = data.productUnit || 'm'
+          const added = Number(data.addedQty ?? quantity)
+          const prev = Number(data.previousQty ?? 0)
+          const total = Number(data.newTotalQty ?? added + prev)
+          toast.custom((t) => (
+            <div
+              className={`${t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'} transition-all duration-200 max-w-sm w-full bg-white border-2 border-orange-500 rounded-xl shadow-2xl pointer-events-auto`}
+              role="status"
+            >
+              <div className="p-4">
+                <p className="text-sm font-semibold text-gray-900">
+                  Has añadido {added}{unit} de {data.productName || product.name}.
+                </p>
+                <p className="text-sm text-gray-700 mt-1">
+                  Tu carrito ahora tiene <strong>{total}{unit}</strong> de este producto (antes tenías {prev}{unit}).
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.dismiss(t.id)
+                      router.push('/carrito')
+                    }}
+                    className="flex-1 inline-flex items-center justify-center rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-3 py-2 min-h-[40px]"
+                  >
+                    Ver carrito
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toast.dismiss(t.id)}
+                    className="flex-1 inline-flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold px-3 py-2 min-h-[40px]"
+                  >
+                    Seguir comprando
+                  </button>
+                </div>
+              </div>
+            </div>
+          ), { duration: 15000, position: 'top-center' })
+        } else {
+          toast.success('Producto agregado al carrito')
+          router.push('/carrito')
+        }
       } else {
         toast.error('Error al agregar al carrito')
       }
