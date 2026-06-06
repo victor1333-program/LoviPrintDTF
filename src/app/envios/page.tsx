@@ -58,21 +58,25 @@ export default function EnviosDevolucionesPage() {
                   <table className="min-w-full border border-gray-200 rounded-lg">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Importe del Pedido</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Coste de Envío</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Modalidad</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Plazo</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Coste</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       <tr>
-                        <td className="px-4 py-3 text-gray-700">Menos de 50€</td>
-                        <td className="px-4 py-3 text-gray-700">6,50€ (IVA incluido)</td>
+                        <td className="px-4 py-3 text-gray-700">Envío estándar</td>
+                        <td className="px-4 py-3 text-gray-700">24/48h</td>
+                        <td className="px-4 py-3 text-gray-700">6,00€ (IVA incluido)</td>
                       </tr>
                       <tr className="bg-gray-50">
-                        <td className="px-4 py-3 text-gray-700">Entre 50€ y 100€</td>
-                        <td className="px-4 py-3 text-gray-700">4,95€ (IVA incluido)</td>
+                        <td className="px-4 py-3 text-gray-700">Envío urgente</td>
+                        <td className="px-4 py-3 text-gray-700">24h</td>
+                        <td className="px-4 py-3 text-gray-700">12,00€ (IVA incluido)</td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-green-700">Más de 100€</td>
+                        <td className="px-4 py-3 font-semibold text-green-700">Pedidos &gt; 100€</td>
+                        <td className="px-4 py-3 font-semibold text-green-700">24/48h</td>
                         <td className="px-4 py-3 font-semibold text-green-700">GRATIS</td>
                       </tr>
                     </tbody>
@@ -81,7 +85,7 @@ export default function EnviosDevolucionesPage() {
                 <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mt-4">
                   <p className="flex items-center gap-2 text-green-800 font-medium">
                     <CheckCircle2 className="w-5 h-5" />
-                    ¡Envío gratis en pedidos superiores a 100€!
+                    ¡Envío estándar gratis en pedidos superiores a 100€!
                   </p>
                 </div>
               </div>
