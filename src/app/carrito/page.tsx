@@ -28,7 +28,7 @@ import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
 import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
 import { AuthModal } from "@/components/AuthModal"
-import { trackBeginCheckout } from "@/lib/analytics"
+import { trackBeginCheckout, trackViewCart, trackAddShippingInfo } from "@/lib/analytics"
 
 interface CartItem {
   id: string
@@ -66,6 +66,7 @@ export default function CarritoPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('')
+  const [viewCartFired, setViewCartFired] = useState(false)
 
   useEffect(() => {
     loadCart()
@@ -74,6 +75,20 @@ export default function CarritoPage() {
       loadUserPoints()
     }
   }, [session])
+
+  useEffect(() => {
+    if (viewCartFired) return
+    if (!cart?.items?.length) return
+    const items = cart.items.map((item: CartItem) => ({
+      item_id: item.product.slug || item.product.id,
+      item_name: item.product.name,
+      item_category: item.product.category?.name,
+      price: Number(item.calculatedPrice?.unitPrice || item.product.basePrice || 0),
+      quantity: Number(item.quantity),
+    }))
+    trackViewCart(items, Number(cart.subtotal || 0))
+    setViewCartFired(true)
+  }, [cart, viewCartFired])
 
   // Reabre el checkout automáticamente si el usuario se acaba de autenticar
   // después de haber sido interceptado por el gate (flag en sessionStorage).
@@ -234,6 +249,17 @@ export default function CarritoPage() {
       toast(`Envío ${next.name} · +${formatCurrency(diff)}`, { icon: '🚚' })
     } else {
       toast(`Envío ${next.name} · ${formatCurrency(diff)}`, { icon: '✅' })
+    }
+
+    if (cart?.items?.length) {
+      const items = cart.items.map((item: CartItem) => ({
+        item_id: item.product.slug || item.product.id,
+        item_name: item.product.name,
+        item_category: item.product.category?.name,
+        price: Number(item.calculatedPrice?.unitPrice || item.product.basePrice || 0),
+        quantity: Number(item.quantity),
+      }))
+      trackAddShippingInfo(items, Number(cart.subtotal || 0), next.name)
     }
   }
 

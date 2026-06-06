@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
+import { BUSINESS, formatAddressOneLine } from '@/lib/business-info'
 
 // Mapeo de asuntos para el email
 const subjectMap: Record<string, string> = {
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
         <a href="https://www.loviprintdtf.es" style="color: #f97316; text-decoration: none;">www.loviprintdtf.es</a>
       </p>
       <p style="margin: 0;">
-        Calle Antonio Lopes del Oro 7, Hellín, Albacete
+        ${formatAddressOneLine(BUSINESS.physicalAddress)}
       </p>
     </div>
   </div>

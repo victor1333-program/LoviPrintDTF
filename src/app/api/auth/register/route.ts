@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { validateRequest } from '@/lib/validations/validate'
 import { registerSchema } from '@/lib/validations/schemas'
 import { logger } from '@/lib/logger'
+import { BUSINESS, formatAddressOneLine } from '@/lib/business-info'
 
 export async function POST(req: NextRequest) {
   // Aplicar rate limiting para prevenir ataques de fuerza bruta
@@ -191,7 +192,7 @@ function generateEmailConfirmationHTML(email: string, verificationUrl: string): 
             © ${new Date().getFullYear()} LoviPrintDTF. Todos los derechos reservados.
           </p>
           <p style="font-size: 12px; color: #999;">
-            Calle Antonio Lopes del Oro 7, Hellín (Albacete)
+            ${formatAddressOneLine(BUSINESS.physicalAddress)}
           </p>
         </div>
       </div>

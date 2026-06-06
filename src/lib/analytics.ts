@@ -1,3 +1,5 @@
+import { getStoredConsent } from "./consent"
+
 declare global {
   interface Window {
     dataLayer: any[]
@@ -13,11 +15,25 @@ interface GA4Item {
   item_variant?: string
 }
 
+// Gating centralizado: si el usuario no ha aceptado analytics, NINGÚN evento
+// llega al dataLayer. Cubre los 7 wrappers (y cualquiera futuro) desde un solo
+// punto, evitando que se nos olvide chequear consent en algún helper concreto.
+function canTrack(): boolean {
+  if (typeof window === "undefined") return false
+  return getStoredConsent()?.analytics === true
+}
+
 function push(event: string, payload: Record<string, any>) {
-  if (typeof window === "undefined") return
+  if (!canTrack()) return
   window.dataLayer = window.dataLayer || []
   window.dataLayer.push({ ecommerce: null })
   window.dataLayer.push({ event, ecommerce: payload })
+}
+
+function pushRaw(payload: Record<string, any>) {
+  if (!canTrack()) return
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push(payload)
 }
 
 export function trackViewItem(item: GA4Item) {
@@ -36,10 +52,44 @@ export function trackAddToCart(item: GA4Item) {
   })
 }
 
+export function trackViewCart(items: GA4Item[], value: number) {
+  push("view_cart", {
+    currency: "EUR",
+    value,
+    items,
+  })
+}
+
 export function trackBeginCheckout(items: GA4Item[], value: number) {
   push("begin_checkout", {
     currency: "EUR",
     value,
+    items,
+  })
+}
+
+export function trackAddShippingInfo(
+  items: GA4Item[],
+  value: number,
+  shippingTier: string,
+) {
+  push("add_shipping_info", {
+    currency: "EUR",
+    value,
+    shipping_tier: shippingTier,
+    items,
+  })
+}
+
+export function trackAddPaymentInfo(
+  items: GA4Item[],
+  value: number,
+  paymentType: string,
+) {
+  push("add_payment_info", {
+    currency: "EUR",
+    value,
+    payment_type: paymentType,
     items,
   })
 }
@@ -64,9 +114,7 @@ export function trackPurchase(params: {
 }
 
 export function trackGenerateLead(source: string, value?: number) {
-  if (typeof window === "undefined") return
-  window.dataLayer = window.dataLayer || []
-  window.dataLayer.push({
+  pushRaw({
     event: "generate_lead",
     lead_source: source,
     value: value ?? 0,

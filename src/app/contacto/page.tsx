@@ -14,6 +14,7 @@ import {
   MessageCircle
 } from "lucide-react"
 import toast from "react-hot-toast"
+import { BUSINESS, formatAddressOneLine } from "@/lib/business-info"
 
 export default function ContactoPage() {
   const [formData, setFormData] = useState({
@@ -85,8 +86,8 @@ export default function ContactoPage() {
     },
     {
       icon: <MapPin className="w-6 h-6" />,
-      title: 'Dirección',
-      value: 'Calle Antonio Lopes del Oro 7, Hellín, Albacete',
+      title: 'Tienda física',
+      value: `${BUSINESS.physicalAddress.street}, ${BUSINESS.physicalAddress.city}, ${BUSINESS.physicalAddress.province}`,
       link: 'https://maps.app.goo.gl/xFaTPNsGpKBAb6Ku6',
       color: 'from-red-500 to-red-600'
     },
@@ -142,6 +143,16 @@ export default function ContactoPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Información legal del titular */}
+          <div className="max-w-6xl mx-auto mt-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-600">
+              <strong className="text-gray-900">Dirección fiscal del titular:</strong>{" "}
+              {BUSINESS.legalName} (NIF {BUSINESS.nif}) — {formatAddressOneLine(BUSINESS.fiscalAddress)}.
+              Esta dirección figura en facturas y documentos legales. Para visitas
+              y recogidas, acude a la tienda física en {BUSINESS.physicalAddress.street}.
+            </div>
           </div>
         </div>
       </section>
