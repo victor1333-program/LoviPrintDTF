@@ -799,29 +799,32 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     </div>
                   </div>
 
-                  {/* Tabla de Precios */}
+                  {/* Tabla de Precios: lista vertical en móvil, grid compacto en sm+ */}
                   {product.priceRanges && product.priceRanges.length > 0 && (
                     <div className="mb-4">
                       <h3 className="font-semibold mb-2 sm:mb-3 text-sm">Descuentos por volumen</h3>
-                      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
+                      <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5">
                         {product.priceRanges.map((range) => {
                           const isActive = quantity >= Number(range.fromQty) && (!range.toQty || quantity <= Number(range.toQty))
+                          const rangeLabel = range.toQty
+                            ? `${Number(range.fromQty)} - ${Number(range.toQty)} m`
+                            : `${Number(range.fromQty)}+ m`
                           return (
                             <button
                               key={range.id}
                               type="button"
                               onClick={() => setQuantity(Number(range.fromQty))}
-                              className={`rounded-lg p-1.5 text-center transition border-2 ${
+                              className={`rounded-lg border-2 transition flex items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:items-center sm:justify-center sm:gap-0.5 sm:p-1.5 sm:text-center ${
                                 isActive
                                   ? 'bg-orange-500 text-white border-orange-600 shadow-md'
                                   : 'bg-orange-50 text-orange-900 border-orange-200 hover:bg-orange-100'
                               }`}
                             >
-                              <div className="text-[10px] font-semibold leading-tight">
-                                {Number(range.fromQty)}{range.toQty ? `-${Number(range.toQty)}` : '+'}
+                              <div className="text-sm font-semibold leading-tight sm:text-[10px]">
+                                {rangeLabel}
                               </div>
-                              <div className="text-xs font-bold mt-0.5 whitespace-nowrap">
-                                {formatCurrency(Number(range.price))}
+                              <div className="text-sm font-bold whitespace-nowrap sm:text-xs sm:mt-0.5">
+                                {formatCurrency(Number(range.price))}/m
                               </div>
                             </button>
                           )
