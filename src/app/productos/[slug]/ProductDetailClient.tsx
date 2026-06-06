@@ -835,9 +835,14 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
                   {/* Cantidad + Comprar */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Repeticiones de tu Archivo
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Metros
                     </label>
+                    {product.slug === 'transfer-dtf' && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Cada metro mide 58 cm de ancho × 100 cm de largo
+                      </p>
+                    )}
                     <div className="flex items-center gap-2">
                       <div className="flex items-center flex-shrink-0">
                         <Button
