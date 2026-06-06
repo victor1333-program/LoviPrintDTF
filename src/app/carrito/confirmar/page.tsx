@@ -183,21 +183,30 @@ export default function ConfirmCartOrderPage() {
 
       const order = await orderRes.json()
 
+      const ga4Items = orderData.items.map((item: any) => ({
+        item_id: item.productId,
+        item_name: item.productName,
+        price: Number(item.unitPrice),
+        quantity: Number(item.quantity),
+      }))
+
       try {
-        const { savePendingPurchase } = await import('@/lib/analytics')
+        const { savePendingPurchase, trackAddPaymentInfo } = await import('@/lib/analytics')
         savePendingPurchase({
           transactionId: order.orderNumber,
           value: orderData.totalPrice,
           tax: orderData.taxAmount,
           shipping: orderData.shippingCost,
           coupon: orderData.voucherId || orderData.discountCodeId,
-          items: orderData.items.map((item: any) => ({
-            item_id: item.productId,
-            item_name: item.productName,
-            price: Number(item.unitPrice),
-            quantity: Number(item.quantity),
-          })),
+          items: ga4Items,
         })
+
+        // add_payment_info: el usuario ha confirmado el pedido y va a entrar
+        // en la pasarela (Stripe) o a confirmar pedido gratuito por bonos.
+        const paymentType = orderData.totalPrice === 0 || orderData.useMeterVouchers
+          ? 'voucher'
+          : 'stripe'
+        trackAddPaymentInfo(ga4Items, orderData.totalPrice, paymentType)
       } catch {}
 
       // Limpiar carrito
