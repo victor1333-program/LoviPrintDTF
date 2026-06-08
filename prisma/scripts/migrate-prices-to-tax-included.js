@@ -4,6 +4,7 @@
  * Qué hace:
  *  - Divide Product.basePrice por 1.21
  *  - Divide PriceRange.price por 1.21
+ *  - Divide Voucher.price (plantillas de bono del admin) por 1.21
  *  - Ajusta setting `free_shipping_threshold` a 82.64 (= 100€ IVA incl.)
  *  - Marca flag `prices_are_tax_included = true` para que sea idempotente
  *
@@ -55,6 +56,9 @@ async function main() {
   const products = await prisma.product.findMany({
     include: { priceRanges: true },
   })
+  const vouchers = await prisma.voucher.findMany({
+    where: { isTemplate: true },
+  })
   const settings = await prisma.setting.findMany({
     where: { key: { in: ['free_shipping_threshold', 'shipping_cost'] } },
   })
@@ -66,7 +70,7 @@ async function main() {
     if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true })
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     const backupPath = path.join(backupDir, `prices-pre-iva-migration-${stamp}.json`)
-    fs.writeFileSync(backupPath, JSON.stringify({ products, settings, shippingMethods }, null, 2))
+    fs.writeFileSync(backupPath, JSON.stringify({ products, vouchers, settings, shippingMethods }, null, 2))
     console.log(`💾 Backup guardado en ${backupPath}\n`)
   }
 
@@ -93,6 +97,14 @@ async function main() {
     }
   }
 
+  for (const v of vouchers) {
+    const before = Number(v.price)
+    const after = round2(before / DIVISOR)
+    const displayed = round2(after * DIVISOR)
+    console.log(formatRow(`🎟️  ${v.name} (voucher.price)`, before, after, displayed))
+    changes.push({ type: 'voucher', id: v.id, newPrice: after })
+  }
+
   const thresholdSetting = settings.find((s) => s.key === 'free_shipping_threshold')
   const oldThreshold = thresholdSetting ? Number(thresholdSetting.value) : 100
   console.log(formatRow(`⚙️  free_shipping_threshold`, oldThreshold, 82.64, 100))
@@ -116,6 +128,11 @@ async function main() {
       .filter((c) => c.type === 'priceRange')
       .map((c) =>
         prisma.priceRange.update({ where: { id: c.id }, data: { price: c.newPrice } }),
+      ),
+    ...changes
+      .filter((c) => c.type === 'voucher')
+      .map((c) =>
+        prisma.voucher.update({ where: { id: c.id }, data: { price: c.newPrice } }),
       ),
     prisma.setting.upsert({
       where: { key: 'free_shipping_threshold' },

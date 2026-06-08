@@ -9,7 +9,7 @@ import { VoucherForm } from "@/components/admin/VoucherForm"
 import { AssignVoucherForm } from "@/components/admin/AssignVoucherForm"
 import { EditAssignedVoucherForm } from "@/components/admin/EditAssignedVoucherForm"
 import { Plus, UserPlus, Edit, Trash2 } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatPriceWithTax } from "@/lib/utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import toast from "react-hot-toast"
@@ -240,6 +240,9 @@ export default function AdminBonosPage() {
                             <td className="px-6 py-4 text-sm">{voucher.initialShipments}</td>
                             <td className="px-6 py-4 text-sm font-semibold text-primary-600">
                               {formatCurrency(voucher.price)}
+                              <div className="text-xs font-normal text-gray-500">
+                                {formatPriceWithTax(voucher.price)} IVA incl.
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <Badge variant={voucher.isActive ? 'success' : 'default'}>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
+import { formatPriceWithTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 
 interface Product {
@@ -206,7 +207,7 @@ export function VoucherForm({ voucher, onSuccess, onCancel }: VoucherFormProps) 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Precio del Bono (€) *
+              Precio del Bono (€) * <span className="text-xs text-gray-500">(sin IVA)</span>
             </label>
             <Input
               type="number"
@@ -217,7 +218,12 @@ export function VoucherForm({ voucher, onSuccess, onCancel }: VoucherFormProps) 
               required
             />
             <p className="mt-1 text-sm text-gray-500">
-              Precio que pagará el cliente al comprar el bono
+              Precio base sin IVA. El cliente verá{' '}
+              {formData.price && !isNaN(parseFloat(formData.price)) ? (
+                <strong>{formatPriceWithTax(parseFloat(formData.price))} IVA incl.</strong>
+              ) : (
+                '—'
+              )}
             </p>
           </div>
 
