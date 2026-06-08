@@ -14,6 +14,7 @@ import Link from "next/link"
 import { FAQSection } from "@/components/FAQSection"
 import { OrderProcessSection } from "@/components/OrderProcessSection"
 import { GoogleReviewsSection } from "@/components/GoogleReviewsSection"
+import { B2CB2BSegmentSection } from "@/components/home/B2CB2BSegmentSection"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
 
@@ -495,6 +496,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Segmentación B2C / B2B */}
+      <B2CB2BSegmentSection />
 
       {/* Reseñas de Google */}
       <GoogleReviewsSection />
