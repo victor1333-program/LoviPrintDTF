@@ -13,6 +13,7 @@ import {
 import Link from "next/link"
 import { FAQSection } from "@/components/FAQSection"
 import { OrderProcessSection } from "@/components/OrderProcessSection"
+import { GoogleReviewsSection } from "@/components/GoogleReviewsSection"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
 
@@ -494,6 +495,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Reseñas de Google */}
+      <GoogleReviewsSection />
 
       {/* Proceso de Pedido */}
       <OrderProcessSection />
