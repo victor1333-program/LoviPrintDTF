@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Plus, Trash2 } from "lucide-react"
 import { ProductWithRelations } from "@/types"
-import { formatPriceWithTax } from "@/lib/utils"
+import { formatCurrency, withTax, withoutTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 
 interface Category {
@@ -44,13 +44,15 @@ const UNITS = [
 export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  // Convención: en el formulario admin se trabaja con precios CON IVA.
+  // Al cargar desde BD multiplicamos por 1.21; al enviar dividimos por 1.21.
   const [formData, setFormData] = useState({
     name: product?.name || "",
     slug: product?.slug || "",
     description: product?.description || "",
     shortDescription: product?.shortDescription || "",
     categoryId: product?.categoryId || "",
-    basePrice: product?.basePrice?.toString() || "",
+    basePrice: product ? withTax(Number(product.basePrice)).toFixed(2) : "",
     unit: product?.unit || "metros",
     minQuantity: product?.minQuantity?.toString() || "0.5",
     maxQuantity: product?.maxQuantity?.toString() || "100",
@@ -64,7 +66,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     product?.priceRanges?.map(range => ({
       fromQty: range.fromQty.toString(),
       toQty: range.toQty?.toString() || "",
-      price: range.price.toString(),
+      price: withTax(Number(range.price)).toFixed(2),
       discountPct: range.discountPct?.toString() || "",
     })) || []
   )
@@ -140,10 +142,12 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     try {
       const productType = getProductTypeFromCategory(formData.categoryId)
 
+      // El admin trabaja con precios CON IVA. Los convertimos a sin IVA
+      // antes de enviar al backend, que es la convención de almacenamiento.
       const payload = {
         ...formData,
         productType,
-        basePrice: parseFloat(formData.basePrice),
+        basePrice: withoutTax(parseFloat(formData.basePrice)),
         minQuantity: parseFloat(formData.minQuantity),
         maxQuantity: parseFloat(formData.maxQuantity),
         priceRanges: priceRanges
@@ -151,7 +155,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           .map(range => ({
             fromQty: parseFloat(range.fromQty),
             toQty: range.toQty ? parseFloat(range.toQty) : null,
-            price: parseFloat(range.price),
+            price: withoutTax(parseFloat(range.price)),
             discountPct: range.discountPct ? parseFloat(range.discountPct) : null,
           })),
       }
@@ -276,7 +280,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Precio Base * <span className="text-xs text-gray-500">(sin IVA)</span>
+              Precio Base * <span className="text-xs text-gray-500">(IVA incluido)</span>
             </label>
             <Input
               type="number"
@@ -288,7 +292,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             />
             {formData.basePrice && !isNaN(parseFloat(formData.basePrice)) && (
               <p className="text-xs text-gray-500 mt-1">
-                Cliente verá {formatPriceWithTax(parseFloat(formData.basePrice))} IVA incl.
+                Se guardará {formatCurrency(withoutTax(parseFloat(formData.basePrice)))} sin IVA (desglose en factura)
               </p>
             )}
           </div>
@@ -395,10 +399,10 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Precio <span className="text-gray-500">(sin IVA)</span>
+                      Precio <span className="text-gray-500">(IVA incl.)</span>
                       {range.price && !isNaN(parseFloat(range.price.toString())) && (
                         <span className="text-gray-400 ml-1">
-                          → {formatPriceWithTax(parseFloat(range.price.toString()))} IVA incl.
+                          → {formatCurrency(withoutTax(parseFloat(range.price.toString())))} sin IVA
                         </span>
                       )}
                     </label>

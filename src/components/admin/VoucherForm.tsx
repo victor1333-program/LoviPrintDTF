@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
-import { formatPriceWithTax } from "@/lib/utils"
+import { formatCurrency, withTax, withoutTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 
 interface Product {
@@ -35,12 +35,14 @@ interface VoucherFormProps {
 export function VoucherForm({ voucher, onSuccess, onCancel }: VoucherFormProps) {
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  // Convención: el formulario admin trabaja con precios CON IVA.
+  // Al cargar desde BD multiplicamos por 1.21; al enviar dividimos por 1.21.
   const [formData, setFormData] = useState({
     name: voucher?.name || "",
     slug: voucher?.slug || "",
     description: voucher?.description || "",
     imageUrl: voucher?.imageUrl || "",
-    price: voucher?.price?.toString() || "",
+    price: voucher ? withTax(Number(voucher.price)).toFixed(2) : "",
     productId: voucher?.productId || "",
     initialMeters: voucher?.initialMeters?.toString() || "",
     initialShipments: voucher?.initialShipments?.toString() || "2",
@@ -84,12 +86,13 @@ export function VoucherForm({ voucher, onSuccess, onCancel }: VoucherFormProps) 
     setLoading(true)
 
     try {
+      // El admin trabaja con precio CON IVA; convertimos a sin IVA al guardar.
       const payload = {
         name: formData.name,
         slug: formData.slug,
         description: formData.description,
         imageUrl: formData.imageUrl || null,
-        price: parseFloat(formData.price),
+        price: withoutTax(parseFloat(formData.price)),
         productId: formData.productId || null,
         initialMeters: parseFloat(formData.initialMeters),
         remainingMeters: parseFloat(formData.initialMeters),
@@ -207,23 +210,24 @@ export function VoucherForm({ voucher, onSuccess, onCancel }: VoucherFormProps) 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Precio del Bono (€) * <span className="text-xs text-gray-500">(sin IVA)</span>
+              Precio del Bono (€) * <span className="text-xs text-gray-500">(IVA incluido)</span>
             </label>
             <Input
               type="number"
               step="0.01"
               value={formData.price}
               onChange={(e) => handleInputChange('price', e.target.value)}
-              placeholder="500.00"
+              placeholder="190.00"
               required
             />
             <p className="mt-1 text-sm text-gray-500">
-              Precio base sin IVA. El cliente verá{' '}
+              Precio final que paga el cliente. Se guardará{' '}
               {formData.price && !isNaN(parseFloat(formData.price)) ? (
-                <strong>{formatPriceWithTax(parseFloat(formData.price))} IVA incl.</strong>
+                <strong>{formatCurrency(withoutTax(parseFloat(formData.price)))} sin IVA</strong>
               ) : (
                 '—'
-              )}
+              )}{' '}
+              (desglose en factura).
             </p>
           </div>
 

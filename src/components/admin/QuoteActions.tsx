@@ -500,7 +500,7 @@ export default function QuoteActions({ quote }: { quote: Quote }) {
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    ℹ️ Envío GRATIS en pedidos superiores a 100€ (sin IVA)
+                    ℹ️ Envío GRATIS en pedidos superiores a 100€ (IVA incl.)
                   </p>
                 </div>
 

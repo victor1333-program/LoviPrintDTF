@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { Search } from "lucide-react"
+import { formatPriceWithTax, withTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 
 interface Voucher {
@@ -201,7 +202,7 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
             <option value="">Seleccionar bono</option>
             {vouchers.map(voucher => (
               <option key={voucher.id} value={voucher.id}>
-                {voucher.name} - {voucher.initialMeters}m - {voucher.price}€
+                {voucher.name} - {voucher.initialMeters}m - {formatPriceWithTax(voucher.price)}
               </option>
             ))}
           </select>
@@ -221,7 +222,7 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
                   <p className="font-medium text-blue-900">{voucher.name}</p>
                   <p className="text-blue-700">Metros: {voucher.initialMeters}</p>
                   <p className="text-blue-700">Envíos incluidos: {voucher.initialShipments}</p>
-                  <p className="text-blue-700">Precio: {voucher.price}€</p>
+                  <p className="text-blue-700">Precio: {formatPriceWithTax(voucher.price)} <span className="text-xs">(IVA incl.)</span></p>
                 </div>
               )
             })()}
@@ -280,7 +281,7 @@ export function AssignVoucherForm({ onSuccess, onCancel }: AssignVoucherFormProp
                 {(() => {
                   const voucher = vouchers.find(v => v.id === selectedVoucherId)
                   if (!voucher) return null
-                  const totalWithIVA = (voucher.price * 1.21).toFixed(2)
+                  const totalWithIVA = withTax(voucher.price).toFixed(2)
                   return (
                     <ul className="space-y-1 text-green-700">
                       <li>• Monto: {totalWithIVA}€ (IVA incluido)</li>

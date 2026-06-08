@@ -25,6 +25,14 @@ export function withTax(amountWithoutTax: number): number {
   return amountWithoutTax * TAX_MULTIPLIER
 }
 
+// Inverso de withTax: dado un precio CON IVA (el que escribe el admin),
+// devuelve el precio SIN IVA redondeado a 2 decimales (el que se guarda
+// en BD). Pasa la prueba ida-y-vuelta cuando el número con IVA tiene
+// expresión decimal exacta: 11 → 9.09; 375 → 309.92; etc.
+export function withoutTax(amountWithTax: number): number {
+  return Math.round((amountWithTax / TAX_MULTIPLIER) * 100) / 100
+}
+
 export function formatPriceWithTax(amountWithoutTax: number): string {
   return formatCurrency(withTax(amountWithoutTax))
 }

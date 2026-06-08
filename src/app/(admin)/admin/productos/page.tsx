@@ -196,12 +196,12 @@ export default function AdminProductosPage() {
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Precio Base (sin IVA):</p>
+                        <p className="text-sm text-gray-600 mb-2">Precio Base (IVA incl.):</p>
                         <p className="text-xl font-bold text-primary-600">
-                          {formatCurrency(Number(product.basePrice))} / {product.unit}
+                          {formatPriceWithTax(Number(product.basePrice))} / {product.unit}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Cliente verá {formatPriceWithTax(Number(product.basePrice))} IVA incl.
+                          {formatCurrency(Number(product.basePrice))} sin IVA en BD
                         </p>
                       </div>
 
@@ -215,9 +215,9 @@ export default function AdminProductosPage() {
                               <p key={range.id} className="text-sm text-gray-700">
                                 {Number(range.fromQty)}
                                 {range.toQty ? ` - ${Number(range.toQty)}` : '+'}
-                                {' '}{product.unit}: {formatCurrency(Number(range.price))}
+                                {' '}{product.unit}: {formatPriceWithTax(Number(range.price))}
                                 <span className="text-xs text-gray-500 ml-1">
-                                  ({formatPriceWithTax(Number(range.price))} IVA incl.)
+                                  ({formatCurrency(Number(range.price))} sin IVA)
                                 </span>
                                 {range.discountPct && Number(range.discountPct) > 0 && (
                                   <Badge variant="success" className="ml-2 text-xs">

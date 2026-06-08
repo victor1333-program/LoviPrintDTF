@@ -239,9 +239,9 @@ export default function AdminBonosPage() {
                             <td className="px-6 py-4 text-sm font-semibold">{voucher.initialMeters}m</td>
                             <td className="px-6 py-4 text-sm">{voucher.initialShipments}</td>
                             <td className="px-6 py-4 text-sm font-semibold text-primary-600">
-                              {formatCurrency(voucher.price)}
+                              {formatPriceWithTax(voucher.price)}
                               <div className="text-xs font-normal text-gray-500">
-                                {formatPriceWithTax(voucher.price)} IVA incl.
+                                {formatCurrency(voucher.price)} sin IVA
                               </div>
                             </td>
                             <td className="px-6 py-4">
