@@ -76,7 +76,7 @@ export default async function HomePage() {
                   <span className="hidden sm:inline"> · </span>IVA no incluido
                 </span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <Link href="/productos/transfer-dtf">
                   <Button size="lg" className="bg-white text-primary-700 hover:bg-gray-100 w-full sm:w-auto">
                     Comprar DTF
@@ -89,6 +89,12 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               </div>
+              <Link
+                href="/calculadora-dtf"
+                className="md:hidden inline-block text-sm font-semibold text-white/90 underline underline-offset-4 hover:text-white mb-4"
+              >
+                ¿No sabes cuántos metros necesitas? Calcúlalo →
+              </Link>
             </div>
 
             <div className="hidden md:block">
@@ -113,6 +119,12 @@ export default async function HomePage() {
                       <span className="text-gray-900 font-medium">Bonos prepagados sin caducidad</span>
                     </div>
                   </div>
+                  <Link
+                    href="/calculadora-dtf"
+                    className="mt-6 block text-center text-sm font-semibold text-primary-700 hover:text-primary-800 border-t border-gray-100 pt-4"
+                  >
+                    ¿No sabes cuántos metros necesitas? Calcúlalo →
+                  </Link>
                 </div>
               </div>
             </div>

@@ -789,6 +789,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     </div>
                   </div>
 
+                  <a
+                    href="/calculadora-dtf"
+                    className="block mb-4 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100 transition-colors"
+                  >
+                    ¿No sabes cuántos metros necesitas? <span className="font-semibold underline">Usa nuestra calculadora →</span>
+                  </a>
+
                   {/* Tabla de Precios: lista vertical en móvil, grid compacto en sm+ */}
                   {product.priceRanges && product.priceRanges.length > 0 && (
                     <div className="mb-4">
