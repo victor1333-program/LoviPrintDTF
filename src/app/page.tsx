@@ -33,6 +33,13 @@ export default async function HomePage() {
   const priceRanges = transferDTF?.priceRanges || []
   const basePrice = Number(transferDTF?.basePrice || 15)
 
+  // Precio mínimo por metro (fuente única: PriceRange en DB, mismo dataset que
+  // alimenta la sección "Precios por Volumen"). Si la BD se actualiza, el hero
+  // se actualiza solo. Fallback al basePrice si no hay tramos cargados.
+  const fromPricePerMeter = priceRanges.length > 0
+    ? Math.min(...priceRanges.map((r) => Number(r.price)))
+    : basePrice
+
   // Calcular porcentaje de ahorro respecto al precio base
   const calculateSavings = (price: number) => {
     return Math.round(((basePrice - price) / basePrice) * 100)
@@ -54,10 +61,19 @@ export default async function HomePage() {
                 Impresión DTF
                 <span className="block text-primary-200">Profesional</span>
               </h1>
-              <p className="text-base sm:text-xl text-primary-100 mb-4 sm:mb-8">
+              <p className="text-base sm:text-xl text-primary-100 mb-4 sm:mb-6">
                 Transferencias DTF de máxima calidad para textil. Desde Hellín, Albacete.
                 Precios por volumen, entrega 24-48h y bonos prepagados disponibles.
               </p>
+              <div className="inline-flex items-center gap-2 sm:gap-3 rounded-full bg-white/15 backdrop-blur px-4 py-2 ring-1 ring-white/25 mb-4 sm:mb-6">
+                <span className="text-xl sm:text-2xl font-bold text-white">
+                  Desde {formatCurrency(fromPricePerMeter)}/m
+                </span>
+                <span className="text-[11px] sm:text-xs text-primary-100 leading-tight">
+                  según volumen<br className="sm:hidden" />
+                  <span className="hidden sm:inline"> · </span>IVA no incluido
+                </span>
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-8">
                 <Link href="/productos/transfer-dtf">
                   <Button size="lg" className="bg-white text-primary-700 hover:bg-gray-100 w-full sm:w-auto">
