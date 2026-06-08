@@ -2,29 +2,33 @@
 
 Cosas que no he tocado en este sprint pero conviene tener en el radar.
 
-## 1. Stripe Checkout sigue limitado a `card`
+## 1. Métodos de pago alineados entre UI y Stripe Checkout
 
-La V1 de los iconos de pago muestra Visa, Mastercard, Apple Pay, Google Pay y
-Bizum en footer y en `/carrito`. Esto fue una decisión consciente para
-preparar la UI a los métodos que están a punto de habilitarse.
+El `PaymentMethodsBadge` (footer y `/carrito`) muestra **6 métodos** que ya
+están activos en el dashboard de Stripe:
 
-**Estado real de la pasarela hoy:**
-- `src/lib/stripe.ts` y `src/app/api/payments/create-checkout/route.ts` crean la
-  sesión sin `payment_method_types` ni `automatic_payment_methods`. Stripe usa
-  el default del dashboard. Conviene confirmar en el panel de Stripe qué
-  métodos están realmente activos: tarjeta, Apple Pay y Google Pay vienen
-  juntos; Bizum hay que habilitarlo explícito.
-- Bizum en la tienda online aún no existe. Si un cliente entra desde el footer
-  creyendo que puede pagar con Bizum y no aparece en checkout, abandona.
+- Visa
+- Mastercard
+- Apple Pay
+- Google Pay
+- Bizum
+- Link by Stripe
 
-**Riesgo:** los iconos prometen métodos que checkout puede no ofrecer todavía.
+`src/lib/stripe.ts` y `src/app/api/payments/create-checkout/route.ts` crean la
+sesión sin `payment_method_types` hardcoded, así que respetan los métodos
+activados en el dashboard. UI y pasarela están en sync — no hay falsa
+expectativa.
 
-**Sugerencia próximo sprint:**
-1. Activar Bizum en el dashboard de Stripe (España, requiere validación
-   adicional del comercio).
-2. Confirmar Apple Pay / Google Pay activos para el dominio.
-3. Si algo no se va a activar en el corto plazo, retirar su icono de
-   `PaymentMethodsBadge`.
+**Decisiones explícitas tomadas durante el sprint:**
+- **AMEX**: descartado. Uso marginal en el mercado español B2B/B2C de DTF.
+- **Transferencia**: descartada en el flujo público. Se mantiene solo en el
+  flujo B2B / presupuestos admin, no en el checkout estándar.
+- **Amazon Pay**: desactivado en el dashboard de Stripe. No mostrado.
+
+**Verificación visual:** el icono de Link usa SVG inline con el wordmark
+"link" en blanco sobre fondo verde corporativo (#00D66F). Si en el futuro
+queréis fidelidad de marca total, considerar `react-payment-icons` o asset
+oficial descargado del press kit de Stripe.
 
 ## 2. Helper `buildWhatsAppUrl` creado pero usado solo en lo nuevo
 
@@ -66,11 +70,10 @@ Si en el futuro se quiere una V3 visual (configurador de gang sheet con
 preview, cálculo real), partir de cero — la lógica del viejo no es reusable
 para ese caso.
 
-## 5. Cambios externos en `stripe.ts` y `route.ts` durante el sprint
+## 5. Stripe Checkout abierto al dashboard
 
-Durante el sprint apareció una modificación menor en working tree en
-`src/lib/stripe.ts` y `src/app/api/payments/create-checkout/route.ts` (quitar
-la línea `payment_method_types: ['card']`). No formaba parte de ninguna de
-las 5 tareas y se dejó sin commitear en la rama del sprint. Si fueron cambios
-intencionales del entorno de desarrollo (linter, autosave del editor), conviene
-commitearlos aparte con su propio mensaje y contexto.
+Durante el sprint se eliminó el `payment_method_types: ['card']` hardcoded en
+`src/lib/stripe.ts` y `src/app/api/payments/create-checkout/route.ts`.
+Stripe Checkout pasa a usar los métodos activos en el dashboard, que el
+usuario ya configuró: Bizum, Apple Pay, Google Pay y Link (Amazon Pay
+desactivado). Commit `f38d4f7`.

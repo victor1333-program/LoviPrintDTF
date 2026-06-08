@@ -93,12 +93,33 @@ function GooglePayIcon() {
   )
 }
 
+function LinkIcon() {
+  return (
+    <svg viewBox="0 0 48 32" className="h-full w-auto" aria-label="Link by Stripe">
+      <rect width="48" height="32" rx="4" fill="#00D66F" />
+      <text
+        x="24"
+        y="20"
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif"
+        fontWeight="700"
+        fontSize="11"
+        fill="#011E0F"
+        letterSpacing="-0.3"
+      >
+        link
+      </text>
+    </svg>
+  )
+}
+
 const METHODS = [
   { key: "visa", label: "Visa", Icon: VisaIcon },
   { key: "mastercard", label: "Mastercard", Icon: MastercardIcon },
   { key: "applepay", label: "Apple Pay", Icon: ApplePayIcon },
   { key: "googlepay", label: "Google Pay", Icon: GooglePayIcon },
   { key: "bizum", label: "Bizum", Icon: BizumIcon },
+  { key: "link", label: "Link by Stripe", Icon: LinkIcon },
 ] as const
 
 export function PaymentMethodsBadge({
