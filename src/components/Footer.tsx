@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Phone, MapPin, Printer } from 'lucide-react'
 import { ManageCookiesButton } from './ManageCookiesButton'
+import { PaymentMethodsBadge } from './PaymentMethodsBadge'
 import { BUSINESS } from '@/lib/business-info'
 
 export function Footer() {
@@ -114,8 +115,14 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Métodos de pago */}
+        <div className="border-t border-gray-800 mt-8 pt-6">
+          <p className="text-xs text-gray-400 mb-3 text-center sm:text-left">Métodos de pago</p>
+          <PaymentMethodsBadge />
+        </div>
+
         {/* Barra Inferior */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+        <div className="border-t border-gray-800 mt-6 pt-6 text-sm text-center">
           <p>
             © {currentYear} LoviPrintDTF
           </p>

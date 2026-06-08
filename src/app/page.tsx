@@ -13,6 +13,8 @@ import {
 import Link from "next/link"
 import { FAQSection } from "@/components/FAQSection"
 import { OrderProcessSection } from "@/components/OrderProcessSection"
+import { GoogleReviewsSection } from "@/components/GoogleReviewsSection"
+import { B2CB2BSegmentSection } from "@/components/home/B2CB2BSegmentSection"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
 
@@ -32,6 +34,13 @@ export default async function HomePage() {
 
   const priceRanges = transferDTF?.priceRanges || []
   const basePrice = Number(transferDTF?.basePrice || 15)
+
+  // Precio mínimo por metro (fuente única: PriceRange en DB, mismo dataset que
+  // alimenta la sección "Precios por Volumen"). Si la BD se actualiza, el hero
+  // se actualiza solo. Fallback al basePrice si no hay tramos cargados.
+  const fromPricePerMeter = priceRanges.length > 0
+    ? Math.min(...priceRanges.map((r) => Number(r.price)))
+    : basePrice
 
   // Calcular porcentaje de ahorro respecto al precio base
   const calculateSavings = (price: number) => {
@@ -54,11 +63,20 @@ export default async function HomePage() {
                 Impresión DTF
                 <span className="block text-primary-200">Profesional</span>
               </h1>
-              <p className="text-base sm:text-xl text-primary-100 mb-4 sm:mb-8">
+              <p className="text-base sm:text-xl text-primary-100 mb-4 sm:mb-6">
                 Transferencias DTF de máxima calidad para textil. Desde Hellín, Albacete.
                 Precios por volumen, entrega 24-48h y bonos prepagados disponibles.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-8">
+              <div className="inline-flex items-center gap-2 sm:gap-3 rounded-full bg-white/15 backdrop-blur px-4 py-2 ring-1 ring-white/25 mb-4 sm:mb-6">
+                <span className="text-xl sm:text-2xl font-bold text-white">
+                  Desde {formatCurrency(fromPricePerMeter)}/m
+                </span>
+                <span className="text-[11px] sm:text-xs text-primary-100 leading-tight">
+                  según volumen<br className="sm:hidden" />
+                  <span className="hidden sm:inline"> · </span>IVA no incluido
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <Link href="/productos/transfer-dtf">
                   <Button size="lg" className="bg-white text-primary-700 hover:bg-gray-100 w-full sm:w-auto">
                     Comprar DTF
@@ -71,6 +89,12 @@ export default async function HomePage() {
                   </Button>
                 </Link>
               </div>
+              <Link
+                href="/calculadora-dtf"
+                className="md:hidden inline-block text-sm font-semibold text-white/90 underline underline-offset-4 hover:text-white mb-4"
+              >
+                ¿No sabes cuántos metros necesitas? Calcúlalo →
+              </Link>
             </div>
 
             <div className="hidden md:block">
@@ -95,6 +119,12 @@ export default async function HomePage() {
                       <span className="text-gray-900 font-medium">Bonos prepagados sin caducidad</span>
                     </div>
                   </div>
+                  <Link
+                    href="/calculadora-dtf"
+                    className="mt-6 block text-center text-sm font-semibold text-primary-700 hover:text-primary-800 border-t border-gray-100 pt-4"
+                  >
+                    ¿No sabes cuántos metros necesitas? Calcúlalo →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -478,6 +508,12 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Segmentación B2C / B2B */}
+      <B2CB2BSegmentSection />
+
+      {/* Reseñas de Google */}
+      <GoogleReviewsSection />
 
       {/* Proceso de Pedido */}
       <OrderProcessSection />

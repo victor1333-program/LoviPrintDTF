@@ -133,7 +133,6 @@ export async function createCheckoutSession({
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
       success_url: successUrl,

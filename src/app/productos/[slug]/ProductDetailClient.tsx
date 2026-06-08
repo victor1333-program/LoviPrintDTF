@@ -36,6 +36,7 @@ import { formatCurrency } from "@/lib/utils"
 import { calculateUnitPrice } from "@/lib/pricing"
 import { FileUpload } from "@/components/FileUpload"
 import { trackViewItem, trackAddToCart } from "@/lib/analytics"
+import { googleReviews } from "@/data/google-reviews"
 import toast from "react-hot-toast"
 
 interface UploadedFileData {
@@ -64,64 +65,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [uploadMethod, setUploadMethod] = useState<'now' | 'later' | null>(null)
   const [reviewIndex, setReviewIndex] = useState(0)
 
-  const reviews = [
-    {
-      name: "María García",
-      initials: "MG",
-      color: "bg-orange-500",
-      rating: 5,
-      date: "hace 2 semanas",
-      text: "Calidad excelente, los colores salen súper vibrantes y el acabado es perfecto. Pedí 5 metros y llegaron en 24h. Repetiré seguro."
-    },
-    {
-      name: "Carlos Rodríguez",
-      initials: "CR",
-      color: "bg-blue-500",
-      rating: 5,
-      date: "hace 1 mes",
-      text: "Llevo pidiéndoles DTF para mi tienda desde hace meses. Servicio impecable y los transfers aguantan perfectamente los lavados."
-    },
-    {
-      name: "Ana Martínez",
-      initials: "AM",
-      color: "bg-purple-500",
-      rating: 5,
-      date: "hace 3 semanas",
-      text: "Muy profesionales. Tenía dudas con la maquetación y me ayudaron por WhatsApp en minutos. El resultado, espectacular."
-    },
-    {
-      name: "Javier López",
-      initials: "JL",
-      color: "bg-green-500",
-      rating: 4,
-      date: "hace 2 meses",
-      text: "Buena calidad y precio competitivo. La entrega fue rapidísima, en 48h estaba en mi taller. Solo pondría 5 estrellas si hubiera más descuentos por volumen."
-    },
-    {
-      name: "Laura Sánchez",
-      initials: "LS",
-      color: "bg-pink-500",
-      rating: 5,
-      date: "hace 1 semana",
-      text: "Primer pedido y encantada. El fondo blanco queda perfecto y la aplicación con la plancha casera funcionó a la primera siguiendo las instrucciones."
-    },
-    {
-      name: "Pedro Ruiz",
-      initials: "PR",
-      color: "bg-red-500",
-      rating: 5,
-      date: "hace 3 meses",
-      text: "Como profesional del textil, puedo decir que la calidad del DTF de LoviPrint está al nivel de las mejores imprentas. 100% recomendado."
-    },
-    {
-      name: "Sandra Fernández",
-      initials: "SF",
-      color: "bg-cyan-500",
-      rating: 5,
-      date: "hace 4 días",
-      text: "Perfecto para mi pequeña marca de ropa. Atención cercana, precios justos y los diseños salen tal cual los mando. Muy satisfecha."
-    },
-  ]
+  const reviews = googleReviews
 
   // Tabla de precios de extras según metros
   const EXTRAS_PRICING: Record<number, { prioritize: number; layout: number; cutting: number }> = {
@@ -844,6 +788,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       </div>
                     </div>
                   </div>
+
+                  <a
+                    href="/calculadora-dtf"
+                    className="block mb-4 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100 transition-colors"
+                  >
+                    ¿No sabes cuántos metros necesitas? <span className="font-semibold underline">Usa nuestra calculadora →</span>
+                  </a>
 
                   {/* Tabla de Precios: lista vertical en móvil, grid compacto en sm+ */}
                   {product.priceRanges && product.priceRanges.length > 0 && (
