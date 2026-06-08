@@ -1,5 +1,3 @@
-import { Landmark } from "lucide-react"
-
 interface PaymentMethodsBadgeProps {
   variant?: "footer" | "checkout"
   className?: string
@@ -29,26 +27,6 @@ function MastercardIcon() {
         fill="#FF5F00"
         d="M24 10.6a7 7 0 0 1 0 10.8 7 7 0 0 1 0-10.8z"
       />
-    </svg>
-  )
-}
-
-function AmexIcon() {
-  return (
-    <svg viewBox="0 0 48 32" className="h-full w-auto" aria-label="American Express">
-      <rect width="48" height="32" rx="4" fill="#1F72CD" />
-      <text
-        x="24"
-        y="19"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontWeight="700"
-        fontSize="8"
-        fill="#fff"
-        letterSpacing="0.5"
-      >
-        AMEX
-      </text>
     </svg>
   )
 }
@@ -115,25 +93,12 @@ function GooglePayIcon() {
   )
 }
 
-function TransferIcon() {
-  return (
-    <div
-      className="h-full aspect-[3/2] flex items-center justify-center bg-white border border-gray-200 rounded"
-      aria-label="Transferencia bancaria"
-    >
-      <Landmark className="h-4 w-4 text-gray-700" />
-    </div>
-  )
-}
-
 const METHODS = [
   { key: "visa", label: "Visa", Icon: VisaIcon },
   { key: "mastercard", label: "Mastercard", Icon: MastercardIcon },
-  { key: "amex", label: "American Express", Icon: AmexIcon },
-  { key: "bizum", label: "Bizum", Icon: BizumIcon },
   { key: "applepay", label: "Apple Pay", Icon: ApplePayIcon },
   { key: "googlepay", label: "Google Pay", Icon: GooglePayIcon },
-  { key: "transfer", label: "Transferencia", Icon: TransferIcon },
+  { key: "bizum", label: "Bizum", Icon: BizumIcon },
 ] as const
 
 export function PaymentMethodsBadge({

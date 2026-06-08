@@ -4,20 +4,18 @@ Cosas que no he tocado en este sprint pero conviene tener en el radar.
 
 ## 1. Stripe Checkout sigue limitado a `card`
 
-La V1 de los iconos de pago muestra Visa, Mastercard, AMEX, Bizum, Apple Pay,
-Google Pay y Transferencia en footer y en `/carrito`. Esto fue una decisión
-consciente para preparar la UI a los métodos que están a punto de habilitarse.
+La V1 de los iconos de pago muestra Visa, Mastercard, Apple Pay, Google Pay y
+Bizum en footer y en `/carrito`. Esto fue una decisión consciente para
+preparar la UI a los métodos que están a punto de habilitarse.
 
 **Estado real de la pasarela hoy:**
 - `src/lib/stripe.ts` y `src/app/api/payments/create-checkout/route.ts` crean la
   sesión sin `payment_method_types` ni `automatic_payment_methods`. Stripe usa
   el default del dashboard. Conviene confirmar en el panel de Stripe qué
   métodos están realmente activos: tarjeta, Apple Pay y Google Pay vienen
-  juntos; Bizum hay que habilitarlo explícito; la transferencia bancaria no es
-  parte de Stripe (tu flujo actual la usa solo en presupuestos admin).
-- Bizum y transferencia en la tienda online aún no existen. Si un cliente entra
-  desde el footer creyendo que puede pagar con Bizum y no aparece en checkout,
-  abandona.
+  juntos; Bizum hay que habilitarlo explícito.
+- Bizum en la tienda online aún no existe. Si un cliente entra desde el footer
+  creyendo que puede pagar con Bizum y no aparece en checkout, abandona.
 
 **Riesgo:** los iconos prometen métodos que checkout puede no ofrecer todavía.
 
@@ -25,9 +23,7 @@ consciente para preparar la UI a los métodos que están a punto de habilitarse.
 1. Activar Bizum en el dashboard de Stripe (España, requiere validación
    adicional del comercio).
 2. Confirmar Apple Pay / Google Pay activos para el dominio.
-3. Decidir qué hacer con "Transferencia": o bien añadir flujo manual en la
-   tienda online, o retirar el icono del bloque público.
-4. Si algo no se va a activar en el corto plazo, retirar su icono de
+3. Si algo no se va a activar en el corto plazo, retirar su icono de
    `PaymentMethodsBadge`.
 
 ## 2. Helper `buildWhatsAppUrl` creado pero usado solo en lo nuevo

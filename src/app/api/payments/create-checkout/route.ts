@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
 
     // Crear sesión de Stripe Checkout
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
       success_url: `${baseUrl}/pedidos/gracias?order=${orderNumber}&payment=success`,
