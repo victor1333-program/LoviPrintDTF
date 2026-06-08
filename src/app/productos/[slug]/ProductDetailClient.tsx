@@ -32,7 +32,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatPriceWithTax } from "@/lib/utils"
 import { calculateUnitPrice } from "@/lib/pricing"
 import { FileUpload } from "@/components/FileUpload"
 import { trackViewItem, trackAddToCart } from "@/lib/analytics"
@@ -821,7 +821,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                                 {rangeLabel}
                               </div>
                               <div className="text-sm font-bold whitespace-nowrap sm:text-xs sm:mt-0.5">
-                                {formatCurrency(Number(range.price))}/m
+                                {formatPriceWithTax(Number(range.price))}/m
                               </div>
                             </button>
                           )
@@ -882,10 +882,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     </div>
                     <div className="mt-3 flex items-baseline gap-2">
                       <span className="text-3xl font-bold text-orange-600">
-                        {formatCurrency(priceCalc.subtotal)}
+                        {formatPriceWithTax(priceCalc.subtotal)}
                       </span>
                       <span className="text-lg font-semibold text-orange-600">
-                        + IVA
+                        IVA incl.
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">

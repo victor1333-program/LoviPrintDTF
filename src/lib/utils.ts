@@ -12,6 +12,23 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+// IVA español 21%. Los precios en BD (Product.basePrice, PriceRange.price,
+// ShippingMethod.price) se almacenan SIN IVA. En cualquier display de catálogo
+// orientado al cliente (homepage, detalle de producto, listados) se muestra
+// con IVA incluido usando estos helpers, ya que la web vende con la etiqueta
+// "IVA incluido". Carrito, checkout, factura y pedidos siguen mostrando
+// desglose subtotal + IVA + total como exige la ley.
+export const TAX_RATE = 0.21
+export const TAX_MULTIPLIER = 1 + TAX_RATE
+
+export function withTax(amountWithoutTax: number): number {
+  return amountWithoutTax * TAX_MULTIPLIER
+}
+
+export function formatPriceWithTax(amountWithoutTax: number): string {
+  return formatCurrency(withTax(amountWithoutTax))
+}
+
 export function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat('es-ES', {
     dateStyle: 'medium',

@@ -183,7 +183,7 @@ export default function BonosPage() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-4xl font-bold text-primary-600">190€</span>
-                  <span className="text-xs text-gray-500 ml-1">+ IVA</span>
+                  <span className="text-xs text-gray-500 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-gray-600 mb-4">25 metros incluidos</p>
                 <Badge variant="success" className="mb-6">7.60€/metro - Ahorra 33%</Badge>
@@ -227,7 +227,7 @@ export default function BonosPage() {
                 <h3 className="text-2xl font-bold mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-4xl font-bold">375€</span>
-                  <span className="text-xs text-white/70 ml-1">+ IVA</span>
+                  <span className="text-xs text-white/70 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-primary-100 mb-4">50 metros incluidos</p>
                 <Badge className="mb-6 bg-white text-primary-700">7.50€/metro - Ahorra 33%</Badge>
@@ -268,7 +268,7 @@ export default function BonosPage() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-4xl font-bold text-primary-600">725€</span>
-                  <span className="text-xs text-gray-500 ml-1">+ IVA</span>
+                  <span className="text-xs text-gray-500 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-gray-600 mb-4">100 metros incluidos</p>
                 <Badge variant="success" className="mb-6">7.25€/metro - Ahorra 36%</Badge>

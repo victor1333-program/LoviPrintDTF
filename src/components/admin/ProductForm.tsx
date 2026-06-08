@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Plus, Trash2 } from "lucide-react"
 import { ProductWithRelations } from "@/types"
+import { formatPriceWithTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 
 interface Category {
@@ -275,7 +276,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Precio Base *
+              Precio Base * <span className="text-xs text-gray-500">(sin IVA)</span>
             </label>
             <Input
               type="number"
@@ -285,6 +286,11 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
               placeholder="0.00"
               required
             />
+            {formData.basePrice && !isNaN(parseFloat(formData.basePrice)) && (
+              <p className="text-xs text-gray-500 mt-1">
+                Cliente verá {formatPriceWithTax(parseFloat(formData.basePrice))} IVA incl.
+              </p>
+            )}
           </div>
 
           <div>
@@ -389,7 +395,12 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Precio
+                      Precio <span className="text-gray-500">(sin IVA)</span>
+                      {range.price && !isNaN(parseFloat(range.price.toString())) && (
+                        <span className="text-gray-400 ml-1">
+                          → {formatPriceWithTax(parseFloat(range.price.toString()))} IVA incl.
+                        </span>
+                      )}
                     </label>
                     <Input
                       type="number"

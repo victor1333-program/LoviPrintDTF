@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Badge } from "@/components/ui/Badge"
 import { Trash2, Plus, Minus, Tag, ArrowRight, ShoppingBag, Ticket, FileText, Gift, Sparkles, Truck } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatPriceWithTax } from "@/lib/utils"
 import { estimateDeliveryDate, formatDeliveryDate, minutesUntilCutoff } from "@/lib/delivery"
 
 function isImageFileName(fileName?: string): boolean {
@@ -432,7 +432,9 @@ export default function CarritoPage() {
   }
 
   const TAX_RATE = 0.21
-  const FREE_SHIPPING_THRESHOLD = 100
+  // Threshold en valor SIN IVA. Cliente verá "Envío gratis a partir de 100€",
+  // que con IVA equivale a 82.64€ de subtotal sin IVA.
+  const FREE_SHIPPING_THRESHOLD = 82.64
 
   const subtotal = cart.subtotal || 0
   const voucherDiscount = appliedVoucher?.discountAmount || 0
@@ -979,7 +981,7 @@ export default function CarritoPage() {
 
                   {!hasVoucherShipment && !hasFreeShippingCode && !hasFreeShippingByThreshold && baseShippingCost > 0 && (
                     <p className="text-xs text-gray-500">
-                      Añade {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} más para envío gratis estándar
+                      Añade {formatPriceWithTax(FREE_SHIPPING_THRESHOLD - subtotal)} más para envío gratis estándar
                     </p>
                   )}
 

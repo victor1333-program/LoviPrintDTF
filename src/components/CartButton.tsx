@@ -4,7 +4,7 @@ import { ShoppingCart } from "lucide-react"
 import { Button } from "./ui/Button"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { formatCurrency } from "@/lib/utils"
+import { formatPriceWithTax } from "@/lib/utils"
 
 export function CartButton() {
   const [itemCount, setItemCount] = useState(0)
@@ -47,7 +47,7 @@ export function CartButton() {
           <span className="text-xs font-medium">Carrito</span>
           {itemCount > 0 && (
             <span className="text-xs text-gray-600">
-              {itemCount} {itemCount === 1 ? 'artículo' : 'artículos'} • {formatCurrency(cartTotal)}
+              {itemCount} {itemCount === 1 ? 'artículo' : 'artículos'} • {formatPriceWithTax(cartTotal)}
             </span>
           )}
         </div>

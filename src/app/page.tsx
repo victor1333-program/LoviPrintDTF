@@ -17,7 +17,7 @@ import { OrderProcessSection } from "@/components/OrderProcessSection"
 import { GoogleReviewsSection } from "@/components/GoogleReviewsSection"
 import { B2CB2BSegmentSection } from "@/components/home/B2CB2BSegmentSection"
 import { prisma } from "@/lib/prisma"
-import { formatCurrency } from "@/lib/utils"
+import { formatPriceWithTax } from "@/lib/utils"
 
 // Force dynamic rendering to always fetch fresh data from database
 export const dynamic = 'force-dynamic'
@@ -70,11 +70,11 @@ export default async function HomePage() {
               </p>
               <div className="inline-flex items-center gap-2 sm:gap-3 rounded-full bg-white/15 backdrop-blur px-4 py-2 ring-1 ring-white/25 mb-4 sm:mb-6">
                 <span className="text-xl sm:text-2xl font-bold text-white">
-                  Desde {formatCurrency(fromPricePerMeter)}/m
+                  Desde {formatPriceWithTax(fromPricePerMeter)}/m
                 </span>
                 <span className="text-[11px] sm:text-xs text-primary-100 leading-tight">
                   según volumen<br className="sm:hidden" />
-                  <span className="hidden sm:inline"> · </span>IVA no incluido
+                  <span className="hidden sm:inline"> · </span>IVA incluido
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-8">
@@ -280,10 +280,10 @@ export default async function HomePage() {
                       </div>
 
                       <div className={`text-3xl md:text-4xl font-black ${isLast ? 'text-white drop-shadow-lg' : 'text-gray-900'}`}>
-                        {formatCurrency(price)}
+                        {formatPriceWithTax(price)}
                       </div>
                       <div className={`text-xs mb-2 ${isLast ? 'text-white/70' : 'text-gray-500'}`}>
-                        + IVA
+                        IVA incl.
                       </div>
                       <div className={`text-sm mb-3 font-semibold ${isLast ? 'text-white/90' : 'text-gray-600'}`}>
                         por metro
@@ -368,7 +368,7 @@ export default async function HomePage() {
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-3xl sm:text-4xl font-bold text-primary-600">190€</span>
-                  <span className="text-xs text-gray-500 ml-1">+ IVA</span>
+                  <span className="text-xs text-gray-500 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-gray-600 mb-4">25 metros incluidos</p>
                 <Badge variant="success" className="mb-6">7.60€/metro - Ahorra 33%</Badge>
@@ -412,7 +412,7 @@ export default async function HomePage() {
                 <h3 className="text-xl sm:text-2xl font-bold mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-3xl sm:text-4xl font-bold">375€</span>
-                  <span className="text-xs text-white/70 ml-1">+ IVA</span>
+                  <span className="text-xs text-white/70 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-primary-100 mb-4">50 metros incluidos</p>
                 <Badge className="mb-6 bg-white text-primary-700">7.50€/metro - Ahorra 33%</Badge>
@@ -453,7 +453,7 @@ export default async function HomePage() {
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bono DTF</h3>
                 <div className="mb-2">
                   <span className="text-3xl sm:text-4xl font-bold text-primary-600">725€</span>
-                  <span className="text-xs text-gray-500 ml-1">+ IVA</span>
+                  <span className="text-xs text-gray-500 ml-1">IVA incl.</span>
                 </div>
                 <p className="text-gray-600 mb-4">100 metros incluidos</p>
                 <Badge variant="success" className="mb-6">7.25€/metro - Ahorra 36%</Badge>

@@ -21,7 +21,7 @@ import {
   Zap,
   Infinity
 } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatPriceWithTax } from "@/lib/utils"
 import { trackViewItem, trackAddToCart } from "@/lib/analytics"
 import toast from "react-hot-toast"
 import Link from "next/link"
@@ -319,15 +319,15 @@ export default function VoucherDetailClient({ product, initialShipments }: Vouch
                     </div>
                     <div className="mb-2">
                       <span className="text-gray-400 line-through text-2xl mr-2">
-                        {formatCurrency(regularPrice)}
+                        {formatPriceWithTax(regularPrice)}
                       </span>
                     </div>
                     <div className="text-5xl font-bold text-purple-600 mb-2">
-                      {formatCurrency(Number(product.basePrice))}
+                      {formatPriceWithTax(Number(product.basePrice))}
                     </div>
                     <div className="text-gray-600 text-lg">
                       {product.unit === 'metros' && (
-                        <span>{formatCurrency(Number(product.basePrice) / Number(product.minQuantity))} por metro</span>
+                        <span>{formatPriceWithTax(Number(product.basePrice) / Number(product.minQuantity))} por metro</span>
                       )}
                     </div>
                   </div>

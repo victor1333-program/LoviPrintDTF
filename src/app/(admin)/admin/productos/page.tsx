@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input"
 import { Modal } from "@/components/ui/Modal"
 import { ProductForm } from "@/components/admin/ProductForm"
 import { Plus, Edit, Trash2, Eye } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatPriceWithTax } from "@/lib/utils"
 import toast from "react-hot-toast"
 import Link from "next/link"
 
@@ -196,9 +196,12 @@ export default function AdminProductosPage() {
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Precio Base:</p>
+                        <p className="text-sm text-gray-600 mb-2">Precio Base (sin IVA):</p>
                         <p className="text-xl font-bold text-primary-600">
                           {formatCurrency(Number(product.basePrice))} / {product.unit}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Cliente verá {formatPriceWithTax(Number(product.basePrice))} IVA incl.
                         </p>
                       </div>
 
@@ -213,6 +216,9 @@ export default function AdminProductosPage() {
                                 {Number(range.fromQty)}
                                 {range.toQty ? ` - ${Number(range.toQty)}` : '+'}
                                 {' '}{product.unit}: {formatCurrency(Number(range.price))}
+                                <span className="text-xs text-gray-500 ml-1">
+                                  ({formatPriceWithTax(Number(range.price))} IVA incl.)
+                                </span>
                                 {range.discountPct && Number(range.discountPct) > 0 && (
                                   <Badge variant="success" className="ml-2 text-xs">
                                     -{Number(range.discountPct).toFixed(0)}%

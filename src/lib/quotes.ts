@@ -155,8 +155,9 @@ export function calculateQuotePrice(params: QuotePriceCalculationParams): QuoteP
   // 3. Subtotal (sin IVA ni envío)
   const subtotal = metersSubtotal + cuttingPrice + layoutPrice + priorityPrice
 
-  // 4. Aplicar envío gratuito si el subtotal supera 100€
-  const FREE_SHIPPING_THRESHOLD = 100
+  // 4. Aplicar envío gratuito si el subtotal supera 100€ IVA incl.
+  // (= 82.64€ sin IVA, ya que el subtotal aquí es sin IVA)
+  const FREE_SHIPPING_THRESHOLD = 82.64
   const finalShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : shippingCost
 
   // 5. IVA (0% si está exento)

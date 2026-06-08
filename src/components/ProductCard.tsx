@@ -7,7 +7,7 @@ import { Button } from "./ui/Button"
 import { ShoppingCart, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { formatCurrency } from "@/lib/utils"
+import { formatPriceWithTax } from "@/lib/utils"
 
 interface ProductCardProps {
   product: ProductWithRelations
@@ -73,7 +73,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 
         <div className="flex items-baseline gap-2 mb-4">
           <span className="text-2xl font-bold text-primary-600">
-            Desde {formatCurrency(minPrice)}
+            Desde {formatPriceWithTax(minPrice)}
           </span>
           <span className="text-sm text-gray-500">/{product.unit}</span>
           {maxDiscount > 0 && (

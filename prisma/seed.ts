@@ -3,6 +3,14 @@ import { hash } from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+// Convención de precios en BD: todos los campos monetarios (Product.basePrice,
+// PriceRange.price, ShippingMethod.price, free_shipping_threshold) se guardan
+// SIN IVA. La web vende con la etiqueta "IVA incluido", por lo que los precios
+// de catálogo se eligen de modo que base × 1.21 dé el número visible al
+// cliente (ej. cliente ve 11€ IVA incl. → BD guarda 9.09€). El carrito,
+// checkout y factura aplican el 21% al subtotal y lo desglosan como exige la
+// ley. Helpers `formatPriceWithTax`/`withTax` en src/lib/utils.ts hacen la
+// conversión en displays de catálogo.
 async function main() {
   console.log('🌱 Starting seed...')
 
@@ -70,6 +78,7 @@ async function main() {
   console.log('✅ Categories created')
 
   // 3. Crear productos DTF Textil con rangos de precios
+  // Cliente verá "15€/m IVA incl." → BD guarda 15/1.21 = 12.40€
   const dtfTextil = await prisma.product.upsert({
     where: { slug: 'dtf-textil-premium' },
     update: {},
@@ -80,7 +89,7 @@ async function main() {
       description: 'Nuestro film DTF premium ofrece colores vibrantes, excelente durabilidad y aplicación fácil en todo tipo de textiles. Perfecto para camisetas, sudaderas, bolsas y más.',
       categoryId: categories[0].id,
       productType: ProductType.DTF_TEXTILE,
-      basePrice: 15.00,
+      basePrice: 12.40,
       unit: 'metros',
       minQuantity: 0.5,
       maxQuantity: 100,
@@ -96,7 +105,8 @@ async function main() {
     },
   })
 
-  // Rangos de precio para DTF Textil (basado en la competencia)
+  // Rangos de precio para DTF Textil — precios SIN IVA, derivados de los
+  // precios "IVA incluido" que ve el cliente: 15, 12.50, 11, 9.50.
   await Promise.all([
     prisma.priceRange.upsert({
       where: { id: 'dtf-range-1' },
@@ -106,7 +116,7 @@ async function main() {
         productId: dtfTextil.id,
         fromQty: 0.5,
         toQty: 0.9,
-        price: 15.00,
+        price: 12.40, // 15.00 IVA incl.
       },
     }),
     prisma.priceRange.upsert({
@@ -117,7 +127,7 @@ async function main() {
         productId: dtfTextil.id,
         fromQty: 1,
         toQty: 5,
-        price: 12.50,
+        price: 10.33, // 12.50 IVA incl.
         discountPct: 16.67,
       },
     }),
@@ -129,7 +139,7 @@ async function main() {
         productId: dtfTextil.id,
         fromQty: 6,
         toQty: 10,
-        price: 11.00,
+        price: 9.09, // 11.00 IVA incl.
         discountPct: 26.67,
       },
     }),
@@ -141,13 +151,13 @@ async function main() {
         productId: dtfTextil.id,
         fromQty: 11,
         toQty: null,
-        price: 9.50,
+        price: 7.85, // 9.50 IVA incl.
         discountPct: 36.67,
       },
     }),
   ])
 
-  // 4. Crear producto UV DTF
+  // 4. Crear producto UV DTF (cliente verá "20€/m IVA incl.")
   const uvDtf = await prisma.product.upsert({
     where: { slug: 'uv-dtf-rigidos' },
     update: {},
@@ -158,7 +168,7 @@ async function main() {
       description: 'UV DTF de última generación para aplicar en cristal, metal, madera, plástico y otras superficies rígidas. Acabado brillante y gran adherencia.',
       categoryId: categories[1].id,
       productType: ProductType.DTF_UV,
-      basePrice: 20.00,
+      basePrice: 16.53,
       unit: 'metros',
       minQuantity: 0.25,
       maxQuantity: 50,
@@ -174,7 +184,7 @@ async function main() {
     },
   })
 
-  // Rangos de precio para UV DTF
+  // Rangos de precio para UV DTF — precios SIN IVA
   await Promise.all([
     prisma.priceRange.upsert({
       where: { id: 'uv-range-1' },
@@ -184,7 +194,7 @@ async function main() {
         productId: uvDtf.id,
         fromQty: 0.25,
         toQty: 0.49,
-        price: 20.00,
+        price: 16.53, // 20.00 IVA incl.
       },
     }),
     prisma.priceRange.upsert({
@@ -195,7 +205,7 @@ async function main() {
         productId: uvDtf.id,
         fromQty: 0.5,
         toQty: 2,
-        price: 18.00,
+        price: 14.88, // 18.00 IVA incl.
         discountPct: 10,
       },
     }),
@@ -207,75 +217,118 @@ async function main() {
         productId: uvDtf.id,
         fromQty: 2.1,
         toQty: null,
-        price: 16.00,
+        price: 13.22, // 16.00 IVA incl.
         discountPct: 20,
       },
     }),
   ])
 
-  // 5. Crear bonos prepagados
-  const bono10m = await prisma.product.upsert({
-    where: { slug: 'bono-10-metros' },
-    update: {},
-    create: {
-      name: 'Bono 10 Metros DTF',
-      slug: 'bono-10-metros',
-      shortDescription: 'Ahorra 15% con este bono de 10 metros',
-      description: 'Bono prepagado de 10 metros de DTF textil con 15% de descuento. Válido por 6 meses.',
-      categoryId: categories[3].id,
-      productType: ProductType.VOUCHER,
-      basePrice: 106.25, // 10m * 12.50 (precio con descuento)
-      unit: 'bono',
-      minQuantity: 1,
-      maxQuantity: 10,
-      stockStatus: StockStatus.IN_STOCK,
-      metadata: {
-        meters: 10,
-        validityDays: 180,
-        discountPct: 15,
-      },
-    },
-  })
-
-  await prisma.priceRange.create({
-    data: {
-      productId: bono10m.id,
-      fromQty: 1,
-      toQty: null,
-      price: 106.25,
-    },
-  })
-
+  // 5. Crear bonos prepagados — precios SIN IVA, alineados con los precios
+  // "IVA incluido" visibles al cliente en /bonos y homepage (190€, 375€, 725€).
   const bono25m = await prisma.product.upsert({
     where: { slug: 'bono-25-metros' },
     update: {},
     create: {
       name: 'Bono 25 Metros DTF',
       slug: 'bono-25-metros',
-      shortDescription: 'Ahorra 20% con este bono de 25 metros',
-      description: 'Bono prepagado de 25 metros de DTF textil con 20% de descuento. Válido por 12 meses.',
+      shortDescription: 'Ahorra 33% con este bono de 25 metros',
+      description: 'Bono prepagado de 25 metros de DTF textil con 33% de descuento. Sin caducidad.',
       categoryId: categories[3].id,
       productType: ProductType.VOUCHER,
-      basePrice: 250.00, // 25m * 10 (precio con descuento)
+      basePrice: 157.02, // 190.00 IVA incl.
       unit: 'bono',
-      minQuantity: 1,
+      minQuantity: 25,
       maxQuantity: 5,
       stockStatus: StockStatus.IN_STOCK,
       isFeatured: true,
       metadata: {
         meters: 25,
-        validityDays: 365,
-        discountPct: 20,
+        validityDays: null,
+        discountPct: 33,
       },
     },
   })
 
-  await prisma.priceRange.create({
-    data: {
+  await prisma.priceRange.upsert({
+    where: { id: 'bono-25-range' },
+    update: {},
+    create: {
+      id: 'bono-25-range',
       productId: bono25m.id,
       fromQty: 1,
       toQty: null,
-      price: 250.00,
+      price: 157.02,
+    },
+  })
+
+  const bono50m = await prisma.product.upsert({
+    where: { slug: 'bono-50-metros' },
+    update: {},
+    create: {
+      name: 'Bono 50 Metros DTF',
+      slug: 'bono-50-metros',
+      shortDescription: 'Ahorra 33% con este bono de 50 metros',
+      description: 'Bono prepagado de 50 metros de DTF textil con 33% de descuento. Sin caducidad.',
+      categoryId: categories[3].id,
+      productType: ProductType.VOUCHER,
+      basePrice: 309.92, // 375.00 IVA incl.
+      unit: 'bono',
+      minQuantity: 50,
+      maxQuantity: 5,
+      stockStatus: StockStatus.IN_STOCK,
+      isFeatured: true,
+      metadata: {
+        meters: 50,
+        validityDays: null,
+        discountPct: 33,
+      },
+    },
+  })
+
+  await prisma.priceRange.upsert({
+    where: { id: 'bono-50-range' },
+    update: {},
+    create: {
+      id: 'bono-50-range',
+      productId: bono50m.id,
+      fromQty: 1,
+      toQty: null,
+      price: 309.92,
+    },
+  })
+
+  const bono100m = await prisma.product.upsert({
+    where: { slug: 'bono-100-metros' },
+    update: {},
+    create: {
+      name: 'Bono 100 Metros DTF',
+      slug: 'bono-100-metros',
+      shortDescription: 'Ahorra 36% con este bono de 100 metros',
+      description: 'Bono prepagado de 100 metros de DTF textil con 36% de descuento. Sin caducidad.',
+      categoryId: categories[3].id,
+      productType: ProductType.VOUCHER,
+      basePrice: 599.17, // 725.00 IVA incl.
+      unit: 'bono',
+      minQuantity: 100,
+      maxQuantity: 5,
+      stockStatus: StockStatus.IN_STOCK,
+      metadata: {
+        meters: 100,
+        validityDays: null,
+        discountPct: 36,
+      },
+    },
+  })
+
+  await prisma.priceRange.upsert({
+    where: { id: 'bono-100-range' },
+    update: {},
+    create: {
+      id: 'bono-100-range',
+      productId: bono100m.id,
+      fromQty: 1,
+      toQty: null,
+      price: 599.17,
     },
   })
 
@@ -653,7 +706,11 @@ async function main() {
       },
     }),
 
-    // Envíos
+    // Envíos. NOTA: el sistema actual NO añade IVA al coste de envío (solo se
+    // aplica IVA al subtotal de productos). Por eso shipping_cost se mantiene
+    // como el monto final que paga el cliente. El umbral de envío gratis sí
+    // está en valor SIN IVA porque se compara contra Order.subtotal (sin IVA);
+    // 82.64€ sin IVA equivale a 100€ que ve el cliente como "IVA incluido".
     prisma.setting.upsert({
       where: { key: 'shipping_cost' },
       update: {},
@@ -670,8 +727,8 @@ async function main() {
       update: {},
       create: {
         key: 'free_shipping_threshold',
-        value: '100.00',
-        label: 'Envío gratis a partir de (€)',
+        value: '82.64',
+        label: 'Envío gratis a partir de (€ sin IVA, equivale a 100€ IVA incl.)',
         type: 'NUMBER',
         category: 'shipping',
       },
@@ -833,7 +890,9 @@ async function main() {
   ])
   console.log('✅ Settings created')
 
-  // 8. Crear métodos de envío
+  // 8. Crear métodos de envío. NOTA: el sistema actual NO aplica IVA al envío
+  // (solo al subtotal de productos), por lo que ShippingMethod.price es el
+  // monto final que paga el cliente — coincide con "IVA incluido".
   await Promise.all([
     prisma.shippingMethod.upsert({
       where: { id: 'shipping-standard' },
