@@ -28,6 +28,7 @@ import toast from "react-hot-toast"
 import { LoyaltyPointsSlider } from "@/components/LoyaltyPointsSlider"
 import { CheckoutModal, CheckoutData } from "@/components/CheckoutModal"
 import { AuthModal } from "@/components/AuthModal"
+import { PaymentMethodsBadge } from "@/components/PaymentMethodsBadge"
 import { trackBeginCheckout, trackViewCart, trackAddShippingInfo } from "@/lib/analytics"
 
 interface CartItem {
@@ -988,6 +989,10 @@ export default function CarritoPage() {
                       {formatCurrency(total)}
                     </span>
                   </div>
+                </div>
+
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <PaymentMethodsBadge variant="checkout" />
                 </div>
 
                 <Button
