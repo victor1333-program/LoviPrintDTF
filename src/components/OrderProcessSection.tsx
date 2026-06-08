@@ -10,7 +10,6 @@ interface ProcessStep {
   icon: React.ReactNode
   title: string
   description: string
-  time: string
   color: string
 }
 
@@ -21,7 +20,6 @@ export function OrderProcessSection() {
       icon: <FileUp className="w-12 h-12" />,
       title: 'Envía tu Diseño',
       description: 'Sube tu archivo en PNG, PDF, AI o SVG. Nuestro equipo lo revisa y optimiza para garantizar la mejor calidad de impresión.',
-      time: '1 hora',
       color: 'from-blue-500 to-blue-600'
     },
     {
@@ -29,7 +27,6 @@ export function OrderProcessSection() {
       icon: <CheckCircle className="w-12 h-12" />,
       title: 'Confirmación',
       description: 'Revisamos tu pedido y te enviamos una prueba digital para tu aprobación. Puedes solicitar ajustes sin coste adicional.',
-      time: '2 horas',
       color: 'from-purple-500 to-purple-600'
     },
     {
@@ -37,7 +34,6 @@ export function OrderProcessSection() {
       icon: <Printer className="w-12 h-12" />,
       title: 'Producción DTF',
       description: 'Imprimimos tu diseño con tecnología DTF de última generación. Colores vibrantes, alta resolución y máxima durabilidad.',
-      time: '9 horas',
       color: 'from-orange-500 to-orange-600'
     },
     {
@@ -45,7 +41,6 @@ export function OrderProcessSection() {
       icon: <Truck className="w-12 h-12" />,
       title: 'Envío Express',
       description: 'Empaquetamos cuidadosamente tu pedido y lo enviamos por mensajería express. Seguimiento en tiempo real incluido.',
-      time: '12 horas',
       color: 'from-green-500 to-green-600'
     }
   ]
@@ -96,15 +91,9 @@ export function OrderProcessSection() {
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-xl font-bold mb-2 text-center">
+                  <h3 className="text-xl font-bold mb-4 text-center">
                     {step.title}
                   </h3>
-
-                  <div className="text-center mb-4">
-                    <Badge className="bg-white/20 text-white text-xs">
-                      ⏱️ {step.time}
-                    </Badge>
-                  </div>
 
                   <p className="text-gray-300 text-sm text-center leading-relaxed flex-1">
                     {step.description}
